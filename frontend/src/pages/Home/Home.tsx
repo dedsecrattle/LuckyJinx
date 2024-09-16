@@ -1,7 +1,8 @@
+import { ReactElement } from "react";
 import logo from "../../logo.svg";
 import "./Home.scss";
 
-function Home() {
+const Home = (): ReactElement => {
   return (
     <div className="Home">
       <header className="Home-header">
