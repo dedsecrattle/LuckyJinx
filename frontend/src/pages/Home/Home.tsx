@@ -11,6 +11,6 @@ const Home = (): ReactElement => {
       </header>
     </div>
   );
-}
+};
 
 export default Home;
