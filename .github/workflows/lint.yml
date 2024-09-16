@@ -9,7 +9,7 @@ on:
       - main
 
 jobs:
-  prettier:
+  lint:
     runs-on: ubuntu-latest
 
     steps:
@@ -26,9 +26,9 @@ jobs:
         working-directory: ./frontend
 
       - name: ESLint
-        run: eslint **/*.js
+        run: npx eslint **/*.js
         working-directory: ./frontend
 
       - name: Lint
-        run: prettier --check .
+        run: npx prettier --check .
         working-directory: ./frontend
