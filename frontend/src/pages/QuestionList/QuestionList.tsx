@@ -10,7 +10,6 @@ interface Question {
   complexity: string;
 }
 
-
 const QuestionList: React.FC = () => {
   const [questions, setQuestions] = useState<Question[]>([]);
   // const [loading, setLoading] = useState<boolean>(true);
@@ -34,7 +33,8 @@ const QuestionList: React.FC = () => {
       {
         id: 1,
         title: "What is a Binary Search Tree?",
-        description: "A binary search tree is a data structure that facilitates fast lookup, addition, and removal of items.",
+        description:
+          "A binary search tree is a data structure that facilitates fast lookup, addition, and removal of items.",
         category: ["Algorithms", "Data Structures"],
         complexity: "Medium",
       },
@@ -48,7 +48,8 @@ const QuestionList: React.FC = () => {
       {
         id: 3,
         title: "What is polymorphism in OOP?",
-        description: "Polymorphism is the ability of different objects to respond in different ways to the same method call.",
+        description:
+          "Polymorphism is the ability of different objects to respond in different ways to the same method call.",
         category: ["OOP"],
         complexity: "Easy",
       },
@@ -66,7 +67,7 @@ const QuestionList: React.FC = () => {
   //   return <p>{error}</p>;
   // }
 
-   // Function to truncate long descriptions
+  // Function to truncate long descriptions
   const truncateDescription = (description: string, maxLength: number) => {
     if (description.length > maxLength) {
       return description.substring(0, maxLength) + "...";
