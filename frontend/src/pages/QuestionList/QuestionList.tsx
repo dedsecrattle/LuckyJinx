@@ -57,6 +57,14 @@ const QuestionList: React.FC = () => {
         category: ["OOP"],
         complexity: "Easy",
       },
+			{
+				id: 4,
+				title: "Reverse a String",
+				description:
+					"Write a function that reverses a string. The input string is given as an array of characters.",
+				category: ["Strings", "Algorithms"],
+				complexity: "Easy",
+			},
     ];
 
     // dummy questions
