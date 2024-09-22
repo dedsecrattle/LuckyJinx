@@ -16,6 +16,7 @@ app.use(bodyParser.json());
 // Routes
 app.use("/api/questions", questionRoutes);
 
+console.log(process.env.MONGODB_URI);
 // Start the server
 app.listen(PORT, () => {
   connectToDB(

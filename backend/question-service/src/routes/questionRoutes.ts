@@ -5,15 +5,17 @@ const router: Router = Router();
 
 // Create a new question (POST)
 router.post("/", async (req: Request, res: Response) => {
-  const { questionId, title, description, category, complexity } = req.body;
+  const { questionId, title, description, categories, complexity, link } =
+    req.body;
 
   try {
     const newQuestion = new Question({
       questionId,
       title,
       description,
-      category,
+      categories,
       complexity,
+      link,
     });
     const savedQuestion = await newQuestion.save();
     res.status(201).json(savedQuestion);
