@@ -2,9 +2,11 @@ import express, { Application } from "express";
 import bodyParser from "body-parser";
 import questionRoutes from "./routes/questionRoutes";
 import { connectToDB } from "./util/db";
+import dotenv from "dotenv";
 
 // Initialize the app
 const app: Application = express();
+dotenv.config();
 
 const PORT = process.env.PORT || 3000;
 
@@ -16,6 +18,10 @@ app.use("/api/questions", questionRoutes);
 
 // Start the server
 app.listen(PORT, () => {
-  connectToDB();
+  connectToDB(
+    process.env.MONGODB_URI
+      ? process.env.MONGODB_URI
+      : "mongodb://localhost:27017/peerprep"
+  );
   console.log(`Server running on port ${PORT}`);
 });

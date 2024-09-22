@@ -1,8 +1,8 @@
 import mongoose from "mongoose";
 
-export const connectToDB = async () => {
+export const connectToDB = async (uri: string) => {
   try {
-    await mongoose.connect("mongodb://localhost:27017/peerprep", {});
+    await mongoose.connect(uri, {});
     console.log("Connected to MongoDB");
   } catch (err) {
     console.log(err);
