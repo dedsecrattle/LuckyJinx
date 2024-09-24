@@ -16,13 +16,8 @@ app.use(bodyParser.json());
 // Routes
 app.use("/api/questions", questionRoutes);
 
-console.log(process.env.MONGODB_URI);
 // Start the server
 app.listen(PORT, () => {
-  connectToDB(
-    process.env.MONGODB_URI
-      ? process.env.MONGODB_URI
-      : "mongodb://localhost:27017/peerprep"
-  );
+  connectToDB();
   console.log(`Server running on port ${PORT}`);
 });
