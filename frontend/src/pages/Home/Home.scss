@@ -1,8 +1,41 @@
 .Home {
   background: var(--Grey-10, #1A1A1A);
-  padding: 40px 60px;
-
+  padding: 40px 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
   min-height: 100rem;
+
+  &-welcome {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+
+    &-text {
+      max-width: 45vw;
+    }
+
+    &-title {
+      display: inline;
+      font-size: 2rem !important;
+      font-weight: 700;
+    }
+
+    &-description {
+      padding-block: 30px;
+      font-size: 0.8rem !important;
+      font-weight: 200;
+      color: var(--White-90, #E4E4E7) !important;
+    }
+
+    &-image {
+      width: 100%;
+      height: auto;
+      max-width: 20vw;
+      object-fit: contain;
+    }
+  }
+
 }
 
 .Home-button {

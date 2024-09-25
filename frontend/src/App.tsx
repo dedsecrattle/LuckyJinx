@@ -35,6 +35,9 @@ const theme = createTheme({
         root: {
           color: "#ffffff",
         },
+        body2: {
+          color: "#caff33",
+        },
       },
     },
   },
