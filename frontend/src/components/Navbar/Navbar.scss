@@ -1,0 +1,20 @@
+.Navbar {
+    display: flex;
+    padding: 20px 34px;
+    margin-inline: 20px;
+    justify-content: space-between;
+    align-items: center;
+    border-radius: 100px;
+    border: 1px solid var(--Grey-15, #262626);
+    background: var(--Grey-11, #1C1C1C);
+
+    &-buttons {
+        display: flex;
+        gap: 20px;
+    }
+
+    &-title {
+        font-size: 1.5rem !important;
+        font-weight: 700 !important;
+    }
+}
