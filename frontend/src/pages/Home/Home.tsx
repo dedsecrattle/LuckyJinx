@@ -4,6 +4,7 @@ import "./Home.scss";
 import Navbar from "../../components/Navbar/Navbar";
 import { Box, Button, Typography } from "@mui/material";
 import CodeEditorImage from "../../assets/code_editor.svg";
+import Footer from "../../components/Footer/Footer";
 
 const Home = (): ReactElement => {
   const navigate = useNavigate();
@@ -15,6 +16,7 @@ const Home = (): ReactElement => {
   return (
     <Box className="Home">
       <Navbar />
+
       <Box className="Home-welcome">
         <Box className="Home-welcome-text">
           <Typography className="Home-welcome-title">
@@ -43,6 +45,8 @@ const Home = (): ReactElement => {
       <button onClick={goToQuestionList} className="Home-button">
         Go to Question List
       </button>
+
+      <Footer />
     </Box>
   );
 };

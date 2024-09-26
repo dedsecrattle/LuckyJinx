@@ -7,6 +7,13 @@
     border: 1px solid var(--Grey-15, #262626);
     background: var(--Grey-11, #1C1C1C);
 
+    &-logo {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 10px;
+    }
+
     &-buttons {
         display: flex;
         gap: 20px;
