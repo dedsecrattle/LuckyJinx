@@ -32,9 +32,11 @@ const Home = (): ReactElement => {
             start on developing a solution to the problem.
           </Typography>
 
-          <Button color="primary" variant="contained">
-            Get Started
-          </Button>
+          <a href="#questions">
+            <Button color="primary" variant="contained">
+              Get Started
+            </Button>
+          </a>
         </Box>
 
         <Box className="Home-welcome-image">
@@ -42,7 +44,7 @@ const Home = (): ReactElement => {
         </Box>
       </Box>
 
-      <button onClick={goToQuestionList} className="Home-button">
+      <button id="questions" onClick={goToQuestionList} className="Home-button">
         Go to Question List
       </button>
 

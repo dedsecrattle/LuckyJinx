@@ -5,6 +5,8 @@ import { Route, Routes } from "react-router-dom";
 import Home from "./pages/Home/Home";
 import QuestionList from "./pages/QuestionList/QuestionList";
 import { createTheme, ThemeProvider } from "@mui/material";
+import MainDialog from "./components/MainDialog/MainDialog";
+import { MainDialogContextProvider } from "./contexts/MainDialogContext";
 
 const theme = createTheme({
   typography: {
@@ -40,16 +42,28 @@ const theme = createTheme({
         },
       },
     },
+    MuiDialog: {
+      styleOverrides: {
+        paper: {
+          borderRadius: "10px",
+          background: "#1c1c1c",
+          padding: "20px 20px",
+        },
+      },
+    },
   },
 });
 
 const App = (): ReactElement => {
   return (
     <ThemeProvider theme={theme}>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/questions" element={<QuestionList />} />
-      </Routes>
+      <MainDialogContextProvider>
+        <MainDialog />
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/questions" element={<QuestionList />} />
+        </Routes>
+      </MainDialogContextProvider>
     </ThemeProvider>
   );
 };
