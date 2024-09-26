@@ -1,17 +1,36 @@
-import { ReactElement } from "react";
-import { useNavigate } from "react-router-dom";
+import { ReactElement, useEffect, useState } from "react";
+//import { useNavigate } from "react-router-dom";
 import "./Home.scss";
 import Navbar from "../../components/Navbar/Navbar";
 import { Box, Button, Typography } from "@mui/material";
 import CodeEditorImage from "../../assets/code_editor.svg";
 import Footer from "../../components/Footer/Footer";
+import QuestionList, { Question } from "../../components/QuestionList/QuestionList";
+import axios from "axios";
 
 const Home = (): ReactElement => {
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
 
-  const goToQuestionList = () => {
-    navigate("/questions");
-  };
+  // const goToQuestionList = () => {
+  //   navigate("/questions");
+  // };
+  const [questionList, setQuestionList] = useState<Question[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Fetch data from the backend REST API
+    axios
+      .get("/api/questions")
+      .then((response) => {
+        setQuestionList(response.data);
+        setLoading(false);
+      })
+      .catch((error) => {
+        setError("Failed to fetch questions");
+        setLoading(false);
+      });
+  }, []);
 
   return (
     <Box className="Home">
@@ -44,9 +63,13 @@ const Home = (): ReactElement => {
         </Box>
       </Box>
 
-      <button id="questions" onClick={goToQuestionList} className="Home-button">
+      <Box id="questions">
+        <QuestionList questionList={questionList} loading={loading} error={error} />
+      </Box>
+
+      {/* <button id="questions" onClick={goToQuestionList} className="Home-button">
         Go to Question List
-      </button>
+      </button> */}
 
       <Footer />
     </Box>

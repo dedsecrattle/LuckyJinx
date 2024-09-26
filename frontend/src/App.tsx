@@ -3,7 +3,7 @@ import "@fontsource/lexend";
 import { ReactElement } from "react";
 import { Route, Routes } from "react-router-dom";
 import Home from "./pages/Home/Home";
-import QuestionList from "./pages/QuestionList/QuestionList";
+//import QuestionList from "./pages/QuestionList/QuestionList";
 import { createTheme, ThemeProvider } from "@mui/material";
 import MainDialog from "./components/MainDialog/MainDialog";
 import { MainDialogContextProvider } from "./contexts/MainDialogContext";
@@ -61,7 +61,7 @@ const App = (): ReactElement => {
         <MainDialog />
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/questions" element={<QuestionList />} />
+          {/* <Route path="/questions" element={<QuestionList />} /> */}
         </Routes>
       </MainDialogContextProvider>
     </ThemeProvider>
