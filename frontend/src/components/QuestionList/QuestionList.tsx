@@ -2,16 +2,26 @@ import { ReactElement, useEffect, useState } from "react";
 import styles from "./QuestionList.module.scss";
 import { Question } from "../../models/question.model";
 import QuestionService from "../../services/question.service";
+import { useMainDialog } from "../../contexts/MainDialogContext";
+import { Button } from "@mui/material";
 
 const QuestionList = (): ReactElement => {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  const [sortKey, setSortKey] = useState<keyof Question>("id");
+  const [sortKey, setSortKey] = useState<keyof Question>("questionId");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const complexityOrder = ["Easy", "Medium", "Hard"];
   const getComplexityValue = (complexity: string) => complexityOrder.indexOf(complexity);
+
+  const { setTitle, setContent, openDialog } = useMainDialog();
+
+  const showQuestionDetails = (question: Question) => () => {
+    setTitle(question.title);
+    setContent(question.description);
+    openDialog();
+  };
 
   const fetchQuestions = async () => {
     try {
@@ -36,20 +46,18 @@ const QuestionList = (): ReactElement => {
     return <p>{error}</p>;
   }
 
-  // Function to truncate long descriptions
-  const truncateDescription = (description: string, maxLength: number) => {
-    if (description.length > maxLength) {
-      return description.substring(0, maxLength) + "...";
-    }
-    return description;
-  };
-
   const handleSort = (key: keyof Question) => {
     const order = sortKey === key && sortOrder === "asc" ? "desc" : "asc";
     setSortKey(key);
     setSortOrder(order);
 
     const sortedQuestions = [...questions].sort((a, b) => {
+      if (key === "questionId") {
+        const aId = parseInt(a[key]);
+        const bId = parseInt(b[key]);
+        return order === "asc" ? aId - bId : bId - aId;
+      }
+
       if (key === "complexity") {
         const aValue = getComplexityValue(a.complexity);
         const bValue = getComplexityValue(b.complexity);
@@ -75,8 +83,8 @@ const QuestionList = (): ReactElement => {
         <thead>
           <tr>
             <th
-              onClick={() => handleSort("id")}
-              className={`${styles.clickable} ${sortKey === "id" ? styles[sortOrder] : ""}`}
+              onClick={() => handleSort("questionId")}
+              className={`${styles.clickable} ${sortKey === "questionId" ? styles[sortOrder] : ""}`}
             >
               ID
             </th>
@@ -86,8 +94,7 @@ const QuestionList = (): ReactElement => {
             >
               Title
             </th>
-            <th>Description</th>
-            <th>Category</th>
+            <th>Categories</th>
             <th
               onClick={() => handleSort("complexity")}
               className={`${styles.clickable} ${sortKey === "complexity" ? styles[sortOrder] : ""}`}
@@ -98,13 +105,16 @@ const QuestionList = (): ReactElement => {
         </thead>
         <tbody>
           {questions.map((question) => (
-            <tr key={question.id}>
-              <td>{question.id}</td>
-              <td>{question.title}</td>
-              <td>{truncateDescription(question.description, 100)}</td>
+            <tr key={question.questionId}>
+              <td>{question.questionId}</td>
+              <td>
+                <Button className={`${styles.questiontitle}`} onClick={showQuestionDetails(question)}>
+                  {question.title}
+                </Button>
+              </td>
               <td>
                 <div className={styles.tags}>
-                  {question.category.map((tag, index) => (
+                  {question.categories.map((tag, index) => (
                     <span key={index} className={styles.tag}>
                       {tag}
                     </span>
