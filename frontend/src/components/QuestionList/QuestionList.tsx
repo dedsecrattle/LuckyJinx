@@ -1,55 +1,31 @@
-import React, { ReactElement, useEffect, useState } from "react";
+import { ReactElement, useEffect, useState } from "react";
 import styles from "./QuestionList.module.scss";
+import { Question } from "../../models/question.model";
+import QuestionService from "../../services/question.service";
 
-export interface Question {
-  id: number;
-  title: string;
-  description: string;
-  category: Array<string>;
-  complexity: string;
-}
+const QuestionList = (): ReactElement => {
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
-const QuestionList = (props: { questionList: Question[]; loading: boolean; error: string | null }): ReactElement => {
-  const { questionList, loading, error } = props;
-  const [questions, setQuestions] = useState<Question[]>(questionList);
   const [sortKey, setSortKey] = useState<keyof Question>("id");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const complexityOrder = ["Easy", "Medium", "Hard"];
   const getComplexityValue = (complexity: string) => complexityOrder.indexOf(complexity);
 
+  const fetchQuestions = async () => {
+    try {
+      const response = await QuestionService.getQuestions();
+      setQuestions(response);
+      setLoading(false);
+    } catch (error) {
+      setError("Failed to fetch questions");
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const dummyQuestions: Question[] = [
-      {
-        id: 1,
-        title: "What is a Binary Search Tree?",
-        description:
-          "A binary search tree is a data structure that facilitates fast lookup, addition, and removal of items.",
-        category: ["Algorithms", "Data Structures"],
-        complexity: "Medium",
-      },
-      {
-        id: 2,
-        title: "Explain the concept of closures in JavaScript",
-        description: "Closures are a way to access variables defined outside of a function's scope.",
-        category: ["JavaScript", "Functional Programming"],
-        complexity: "Hard",
-      },
-      {
-        id: 3,
-        title: "What is polymorphism in OOP?",
-        description:
-          "Polymorphism is the ability of different objects to respond in different ways to the same method call.",
-        category: ["OOP"],
-        complexity: "Easy",
-      },
-      {
-        id: 4,
-        title: "Reverse a String",
-        description: "Write a function that reverses a string. The input string is given as an array of characters.",
-        category: ["Strings", "Algorithms"],
-        complexity: "Easy",
-      },
-    ];
+    fetchQuestions();
   }, []);
 
   if (loading) {
