@@ -1,4 +1,4 @@
-import { Box, Button, FormControl, InputLabel, MenuItem, Select, TextField, Typography } from "@mui/material";
+import { Box, Button, Chip, FormControl, InputLabel, MenuItem, Select, TextField, Typography } from "@mui/material";
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
@@ -7,6 +7,12 @@ import { ReactElement, useEffect, useState } from "react";
 import "./QuestionDialog.scss";
 import { QuestionComplexity } from "../../models/question.model";
 import { stringifyCategories } from "../../util/category.helper";
+import QuestionService from "../../services/question.service";
+import {
+  QuestionValidationError,
+  QuestionValidationMaxLength,
+  QuestionValidationMinLength,
+} from "../../util/question.helper";
 
 const QuestionDialog = (props: {
   isAddNew: boolean;
@@ -24,6 +30,7 @@ const QuestionDialog = (props: {
   setCategories: (categories: string[]) => void;
   setComplexity: (complexity: QuestionComplexity) => void;
   setLink: (link: string) => void;
+  questionCallback: (question: any, action: string) => void;
 }): ReactElement => {
   const {
     isAddNew,
@@ -40,11 +47,15 @@ const QuestionDialog = (props: {
     setDescription,
     setComplexity,
     setLink,
+    questionCallback,
   } = props;
 
   const [categoriesString, setCategoriesString] = useState<string>("");
+  const [error, setError] = useState<string>("");
+  const [isErrorDisplayed, setIsErrorDisplayed] = useState<boolean>(false);
 
   useEffect(() => {
+    setIsErrorDisplayed(false);
     setCategoriesString(stringifyCategories(categories));
   }, [categories]);
 
@@ -52,7 +63,22 @@ const QuestionDialog = (props: {
     setIsOpen(false);
   };
 
-  const handleSubmit = () => {};
+  const handleSubmit = async () => {
+    setIsErrorDisplayed(false);
+
+    try {
+      const response = isAddNew
+        ? await QuestionService.addQuestion(id, title, description, categoriesString, complexity, link)
+        : await QuestionService.editQuestion(id, title, description, categoriesString, complexity, link);
+      closeDialog();
+      questionCallback(response, isAddNew ? "added" : "updated");
+    } catch (error: any) {
+      setError(error?.message ?? "An unknown error occurred");
+      setIsErrorDisplayed(true);
+      if (error instanceof QuestionValidationError) {
+      }
+    }
+  };
 
   return (
     <Dialog className="QuestionDialog" open={isOpen}>
@@ -65,7 +91,11 @@ const QuestionDialog = (props: {
           <TextField
             className="QuestionDialog-input QuestionDialog-input-id"
             slotProps={{
-              htmlInput: { className: "QuestionDialog-input-text" },
+              htmlInput: {
+                className: "QuestionDialog-input-text",
+                maxLength: QuestionValidationMaxLength.id,
+                minLength: QuestionValidationMinLength.id,
+              },
               inputLabel: { className: "QuestionDialog-input-label" },
             }}
             disabled={!isAddNew}
@@ -78,7 +108,11 @@ const QuestionDialog = (props: {
           <TextField
             className="QuestionDialog-input QuestionDialog-input-title"
             slotProps={{
-              htmlInput: { className: "QuestionDialog-input-text" },
+              htmlInput: {
+                className: "QuestionDialog-input-text",
+                maxLength: QuestionValidationMaxLength.title,
+                minLength: QuestionValidationMinLength.title,
+              },
               inputLabel: { className: "QuestionDialog-input-label" },
             }}
             margin="dense"
@@ -106,7 +140,11 @@ const QuestionDialog = (props: {
           <TextField
             className="QuestionDialog-input QuestionDialog-input-categories"
             slotProps={{
-              htmlInput: { className: "QuestionDialog-input-text" },
+              htmlInput: {
+                className: "QuestionDialog-input-text",
+                maxLength: QuestionValidationMaxLength.categories,
+                minLength: QuestionValidationMinLength.categories,
+              },
               inputLabel: { className: "QuestionDialog-input-label" },
             }}
             margin="dense"
@@ -120,7 +158,11 @@ const QuestionDialog = (props: {
         <TextField
           className="QuestionDialog-input"
           slotProps={{
-            htmlInput: { className: "QuestionDialog-input-text" },
+            htmlInput: {
+              className: "QuestionDialog-input-text",
+              maxLength: QuestionValidationMaxLength.description,
+              minLength: QuestionValidationMinLength.description,
+            },
             inputLabel: { className: "QuestionDialog-input-label" },
           }}
           margin="dense"
@@ -136,8 +178,14 @@ const QuestionDialog = (props: {
         <TextField
           className="QuestionDialog-input"
           slotProps={{
-            htmlInput: { className: "QuestionDialog-input-text" },
-            inputLabel: { className: "QuestionDialog-input-label" },
+            htmlInput: {
+              className: "QuestionDialog-input-text",
+              maxLength: QuestionValidationMaxLength.link,
+              minLength: QuestionValidationMinLength.link,
+            },
+            inputLabel: {
+              className: "QuestionDialog-input-label",
+            },
           }}
           margin="dense"
           label="Link"
@@ -146,6 +194,9 @@ const QuestionDialog = (props: {
           value={link}
           onChange={(e) => setLink(e.target.value)}
         />
+        <Box className="QuestionDialog-error" hidden={!isErrorDisplayed}>
+          <Chip color="error" className="QuestionDialog-error-text" label={error} />
+        </Box>
       </DialogContent>
 
       <DialogActions>

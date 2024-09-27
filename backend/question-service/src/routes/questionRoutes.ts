@@ -5,8 +5,7 @@ const router: Router = Router();
 
 // Create a new question (POST)
 router.post("/", async (req: Request, res: Response) => {
-  const { questionId, title, description, categories, complexity, link } =
-    req.body;
+  const { questionId, title, description, categories, complexity, link } = req.body;
 
   try {
     const newQuestion = new Question({
@@ -47,16 +46,15 @@ router.get("/:id", async (req: Request, res: Response) => {
 
 // Update a question by ID (PUT)
 router.put("/:id", async (req: Request, res: Response) => {
-  const { title, description, category, complexity } = req.body;
+  const { title, description, categories, complexity } = req.body;
 
   try {
     const updatedQuestion = await Question.findOneAndUpdate(
       { questionId: req.params.id },
-      { title, description, category, complexity },
+      { title, description, categories, complexity },
       { new: true }
     );
-    if (!updatedQuestion)
-      return res.status(404).json({ error: "Question not found" });
+    if (!updatedQuestion) return res.status(404).json({ error: "Question not found" });
     res.json(updatedQuestion);
   } catch (err) {
     res.status(500).json({ error: (err as Error).message });
@@ -69,8 +67,7 @@ router.delete("/:id", async (req: Request, res: Response) => {
     const deletedQuestion = await Question.findOneAndDelete({
       questionId: req.params.id,
     });
-    if (!deletedQuestion)
-      return res.status(404).json({ error: "Question not found" });
+    if (!deletedQuestion) return res.status(404).json({ error: "Question not found" });
     res.json({ message: "Question deleted successfully" });
   } catch (err) {
     res.status(500).json({ error: (err as Error).message });

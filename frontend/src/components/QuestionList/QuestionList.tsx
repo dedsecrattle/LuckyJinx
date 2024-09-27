@@ -41,6 +41,15 @@ const QuestionList = (): ReactElement => {
     setIsQuestionDialogOpen(true);
   };
 
+  const questionCallback = (question: Question | undefined, action: string) => {
+    if (question) {
+      fetchQuestions();
+      setTitle("Success");
+      setContent(`Question ${question.questionId}: "${question.title}" has been ${action} successfully`);
+      openDialog();
+    }
+  };
+
   const showQuestionDetails = (question: Question) => () => {
     setTitle(question.title);
     setContent(question.description);
@@ -183,6 +192,7 @@ const QuestionList = (): ReactElement => {
         setCategories={setNewQuestionCategories}
         setComplexity={setNewQuestionComplexity}
         setLink={setNewQuestionLink}
+        questionCallback={questionCallback}
       />
     </div>
   );
