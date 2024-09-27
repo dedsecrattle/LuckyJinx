@@ -1,9 +1,11 @@
 import { ReactElement, useEffect, useState } from "react";
 import styles from "./QuestionList.module.scss";
-import { Question } from "../../models/question.model";
+import { Question, QuestionComplexity } from "../../models/question.model";
 import QuestionService from "../../services/question.service";
 import { useMainDialog } from "../../contexts/MainDialogContext";
-import { Button } from "@mui/material";
+import { Button, IconButton } from "@mui/material";
+import QuestionDialog from "../QuestionDialog/QuestionDialog";
+import { DeleteForever, EditNote, OpenInNew } from "@mui/icons-material";
 
 const QuestionList = (): ReactElement => {
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -16,6 +18,28 @@ const QuestionList = (): ReactElement => {
   const getComplexityValue = (complexity: string) => complexityOrder.indexOf(complexity);
 
   const { setTitle, setContent, openDialog } = useMainDialog();
+
+  // Shared states for adding or editing question
+  const [isAddNew, setIsAddNew] = useState<boolean>(true);
+  const [isQuestionDialogOpen, setIsQuestionDialogOpen] = useState<boolean>(false);
+  const [newQuestionId, setNewQuestionId] = useState<string>("");
+  const [newQuestionTitle, setNewQuestionTitle] = useState<string>("");
+  const [newQuestionDescription, setNewQuestionDescription] = useState<string>("");
+  const [newQuestionCategories, setNewQuestionCategories] = useState<string[]>([]);
+  const [newQuestionComplexity, setNewQuestionComplexity] = useState<QuestionComplexity>("Easy");
+  const [newQuestionLink, setNewQuestionLink] = useState<string>("");
+
+  const openQuestionDialog = (question: Question | null) => {
+    setIsAddNew(!question);
+    setNewQuestionId(question?.questionId ?? "");
+    setNewQuestionTitle(question?.title ?? "");
+    setNewQuestionDescription(question?.description ?? "");
+    setNewQuestionCategories(question?.categories ?? []);
+    setNewQuestionComplexity(question?.complexity ?? "Easy");
+    setNewQuestionLink(question?.link ?? "");
+
+    setIsQuestionDialogOpen(true);
+  };
 
   const showQuestionDetails = (question: Question) => () => {
     setTitle(question.title);
@@ -101,6 +125,7 @@ const QuestionList = (): ReactElement => {
             >
               Complexity
             </th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -111,6 +136,11 @@ const QuestionList = (): ReactElement => {
                 <Button className={`${styles.questiontitle}`} onClick={showQuestionDetails(question)}>
                   {question.title}
                 </Button>
+                <a href={question.link} target="_blank" rel="noreferrer">
+                  <IconButton>
+                    <OpenInNew className={styles.questionlinkicon} color="primary" />
+                  </IconButton>
+                </a>
               </td>
               <td>
                 <div className={styles.tags}>
@@ -122,10 +152,38 @@ const QuestionList = (): ReactElement => {
                 </div>
               </td>
               <td className={styles.complexity}>{question.complexity}</td>
+              <td className={styles.actions}>
+                <IconButton onClick={() => openQuestionDialog(question)}>
+                  <EditNote />
+                </IconButton>
+                <IconButton className={styles.questiondeleteicon} onClick={() => {}}>
+                  <DeleteForever />
+                </IconButton>
+              </td>
             </tr>
           ))}
         </tbody>
       </table>
+      <Button color="primary" variant="contained" onClick={() => openQuestionDialog(null)}>
+        Add question
+      </Button>
+      <QuestionDialog
+        isAddNew={isAddNew}
+        isOpen={isQuestionDialogOpen}
+        id={newQuestionId}
+        title={newQuestionTitle}
+        description={newQuestionDescription}
+        categories={newQuestionCategories}
+        complexity={newQuestionComplexity}
+        link={newQuestionLink}
+        setIsOpen={setIsQuestionDialogOpen}
+        setId={setNewQuestionId}
+        setTitle={setNewQuestionTitle}
+        setDescription={setNewQuestionDescription}
+        setCategories={setNewQuestionCategories}
+        setComplexity={setNewQuestionComplexity}
+        setLink={setNewQuestionLink}
+      />
     </div>
   );
 };
