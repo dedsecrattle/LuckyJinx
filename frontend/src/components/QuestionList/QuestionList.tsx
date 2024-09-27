@@ -19,6 +19,7 @@ const QuestionList = (): ReactElement => {
 
   const { setTitle, setContent, openDialog } = useMainDialog();
 
+  // Shared states for adding or editing question
   const [isAddNew, setIsAddNew] = useState<boolean>(true);
   const [isQuestionDialogOpen, setIsQuestionDialogOpen] = useState<boolean>(false);
   const [newQuestionId, setNewQuestionId] = useState<string>("");
@@ -42,7 +43,6 @@ const QuestionList = (): ReactElement => {
 
   const questionCallback = (question: Question | undefined, action: string) => {
     if (question) {
-      fetchQuestions();
       setTitle("Success");
       setContent(`Question ${question.questionId}: "${question.title}" has been ${action} successfully`);
       openDialog();
@@ -55,44 +55,20 @@ const QuestionList = (): ReactElement => {
     openDialog();
   };
 
-  useEffect(() => {
-    const dummyQuestions: Question[] = [
-      {
-        questionId: "1",
-        title: "What is a Binary Search Tree?",
-        description: "A binary search tree is a data structure for fast lookup, addition, and removal of items.",
-        categories: ["Algorithms", "Data Structures"],
-        complexity: "Medium",
-        link: "#",
-      },
-      {
-        questionId: "2",
-        title: "Explain closures in JavaScript.",
-        description: "Closures allow functions to access variables from an outer scope.",
-        categories: ["JavaScript", "Functional Programming"],
-        complexity: "Hard",
-        link: "#",
-      },
-      {
-        questionId: "3",
-        title: "What is polymorphism in OOP?",
-        description: "Polymorphism allows different objects to respond in various ways to the same method call.",
-        categories: ["OOP"],
-        complexity: "Easy",
-        link: "#",
-      },
-      {
-        questionId: "4",
-        title: "Reverse a String",
-        description: "Write a function that reverses a string, given as an array of characters.",
-        categories: ["Strings", "Algorithms"],
-        complexity: "Easy",
-        link: "#",
-      },
-    ];
+  const fetchQuestions = async () => {
+    try {
+      setLoading(true);
+      const questions = await QuestionService.getQuestions();
+      setQuestions(questions);
+      setLoading(false);
+    } catch (error) {
+      setError("Failed to fetch questions");
+      setLoading(false);
+    }
+  };
 
-    setQuestions(dummyQuestions);
-    setLoading(false);
+  useEffect(() => {
+    fetchQuestions();
   }, []);
 
   if (loading) {
@@ -100,7 +76,11 @@ const QuestionList = (): ReactElement => {
   }
 
   if (error) {
-    return <Typography variant="h6" color="error">{error}</Typography>;
+    return (
+      <Typography variant="h6" color="error">
+        {error}
+      </Typography>
+    );
   }
 
   const handleSort = (key: keyof Question) => {
