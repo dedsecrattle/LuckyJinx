@@ -5,9 +5,9 @@ export type QuestionValidationFields = "id" | "title" | "description" | "categor
 
 export const QuestionValidationMaxLength: Partial<Record<QuestionValidationFields, number | null>> = {
   id: 9,
-  title: 100,
+  title: 80,
   description: 2000,
-  categories: 100,
+  categories: 30,
   link: 200,
 };
 

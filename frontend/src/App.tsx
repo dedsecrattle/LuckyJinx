@@ -45,7 +45,7 @@ const theme = createTheme({
     MuiDialog: {
       styleOverrides: {
         paper: {
-          minWidth: "50vw",
+          minWidth: "40vw",
           borderRadius: "10px",
           background: "#1c1c1c",
           padding: "20px 20px",
