@@ -1,15 +1,15 @@
 import { ReactElement, useEffect, useState } from "react";
+import { Button, IconButton, Typography } from "@mui/material";
+import { DeleteForever, EditNote, OpenInNew } from "@mui/icons-material";
+import { useMainDialog } from "../../contexts/MainDialogContext";
 import styles from "./QuestionList.module.scss";
 import { Question, QuestionComplexity } from "../../models/question.model";
-import QuestionService from "../../services/question.service";
-import { useMainDialog } from "../../contexts/MainDialogContext";
-import { Button, IconButton } from "@mui/material";
 import QuestionDialog from "../QuestionDialog/QuestionDialog";
-import { DeleteForever, EditNote, OpenInNew } from "@mui/icons-material";
+import QuestionService from "../../services/question.service";
 
 const QuestionList = (): ReactElement => {
   const [questions, setQuestions] = useState<Question[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
   const [sortKey, setSortKey] = useState<keyof Question>("questionId");
@@ -19,7 +19,6 @@ const QuestionList = (): ReactElement => {
 
   const { setTitle, setContent, openDialog } = useMainDialog();
 
-  // Shared states for adding or editing question
   const [isAddNew, setIsAddNew] = useState<boolean>(true);
   const [isQuestionDialogOpen, setIsQuestionDialogOpen] = useState<boolean>(false);
   const [newQuestionId, setNewQuestionId] = useState<string>("");
@@ -47,27 +46,52 @@ const QuestionList = (): ReactElement => {
     openDialog();
   };
 
-  const fetchQuestions = async () => {
-    try {
-      const response = await QuestionService.getQuestions();
-      setQuestions(response);
-      setLoading(false);
-    } catch (error) {
-      setError("Failed to fetch questions");
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    fetchQuestions();
+    const dummyQuestions: Question[] = [
+      {
+        questionId: "1",
+        title: "What is a Binary Search Tree?",
+        description: "A binary search tree is a data structure for fast lookup, addition, and removal of items.",
+        categories: ["Algorithms", "Data Structures"],
+        complexity: "Medium",
+        link: "#",
+      },
+      {
+        questionId: "2",
+        title: "Explain closures in JavaScript.",
+        description: "Closures allow functions to access variables from an outer scope.",
+        categories: ["JavaScript", "Functional Programming"],
+        complexity: "Hard",
+        link: "#",
+      },
+      {
+        questionId: "3",
+        title: "What is polymorphism in OOP?",
+        description: "Polymorphism allows different objects to respond in various ways to the same method call.",
+        categories: ["OOP"],
+        complexity: "Easy",
+        link: "#",
+      },
+      {
+        questionId: "4",
+        title: "Reverse a String",
+        description: "Write a function that reverses a string, given as an array of characters.",
+        categories: ["Strings", "Algorithms"],
+        complexity: "Easy",
+        link: "#",
+      },
+    ];
+
+    setQuestions(dummyQuestions);
+    setLoading(false);
   }, []);
 
   if (loading) {
-    return <p>Loading questions...</p>;
+    return <Typography variant="h6">Loading questions...</Typography>;
   }
 
   if (error) {
-    return <p>{error}</p>;
+    return <Typography variant="h6" color="error">{error}</Typography>;
   }
 
   const handleSort = (key: keyof Question) => {
@@ -102,7 +126,9 @@ const QuestionList = (): ReactElement => {
 
   return (
     <div className={styles.container}>
-      <h1>Question Repository</h1>
+      <Typography variant="h4" align="center" gutterBottom>
+        Question Repository
+      </Typography>
       <table className={styles.table}>
         <thead>
           <tr>
@@ -133,7 +159,7 @@ const QuestionList = (): ReactElement => {
             <tr key={question.questionId}>
               <td>{question.questionId}</td>
               <td>
-                <Button className={`${styles.questiontitle}`} onClick={showQuestionDetails(question)}>
+                <Button className={styles.questiontitle} onClick={showQuestionDetails(question)}>
                   {question.title}
                 </Button>
                 <a href={question.link} target="_blank" rel="noreferrer">
