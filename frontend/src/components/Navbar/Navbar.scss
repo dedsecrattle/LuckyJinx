@@ -1,26 +1,26 @@
 .Navbar {
+  display: flex;
+  padding: 20px 34px;
+  justify-content: space-between;
+  align-items: center;
+  border-radius: 100px;
+  border: 1px solid var(--Grey-15, #262626);
+  background: var(--Grey-11, #1c1c1c);
+
+  &-logo {
     display: flex;
-    padding: 20px 34px;
-    justify-content: space-between;
+    flex-direction: row;
     align-items: center;
-    border-radius: 100px;
-    border: 1px solid var(--Grey-15, #262626);
-    background: var(--Grey-11, #1C1C1C);
+    gap: 10px;
+  }
 
-    &-logo {
-        display: flex;
-        flex-direction: row;
-        align-items: center;
-        gap: 10px;
-    }
+  &-buttons {
+    display: flex;
+    gap: 20px;
+  }
 
-    &-buttons {
-        display: flex;
-        gap: 20px;
-    }
-
-    &-title {
-        font-size: 1.5rem !important;
-        font-weight: 700 !important;
-    }
+  &-title {
+    font-size: 1.5rem !important;
+    font-weight: 700 !important;
+  }
 }

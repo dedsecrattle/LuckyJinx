@@ -1,13 +1,11 @@
 .ConfirmationDialog {
+  &-title {
+    word-wrap: break-word;
+    font-size: 1.5rem !important;
+    font-weight: 700 !important;
+  }
 
-    &-title {
-        word-wrap: break-word;
-        font-size: 1.5rem !important;
-        font-weight: 700 !important;
-    }
-
-    &-content {
-        word-wrap: break-word;
-    }
-
+  &-content {
+    word-wrap: break-word;
+  }
 }

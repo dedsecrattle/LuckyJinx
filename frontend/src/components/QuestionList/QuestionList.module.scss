@@ -2,16 +2,16 @@
   width: 90%;
   margin: 0 auto;
   padding: 20px;
-  background-color: #1c1c1c; 
+  background-color: #1c1c1c;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   border-radius: 10px;
-  color: #f1f1f1; 
-  font-family: 'Lexend', 'Roboto', 'Arial', sans-serif; /* Ensuring the font is coherent */
+  color: #f1f1f1;
+  font-family: "Lexend", "Roboto", "Arial", sans-serif; /* Ensuring the font is coherent */
 }
 
 h1 {
   text-align: center;
-  color: #caff33; 
+  color: #caff33;
   font-size: 28px;
   margin-bottom: 20px;
 }
@@ -19,7 +19,7 @@ h1 {
 .table {
   width: 100%;
   border-collapse: collapse;
-  background-color: #282828; 
+  background-color: #282828;
   border-radius: 8px;
   overflow: hidden;
 }
@@ -28,13 +28,13 @@ h1 {
 .table td {
   padding: 10px;
   text-align: left;
-  border-bottom: 1px solid #333; 
+  border-bottom: 1px solid #333;
 }
 
 .table th {
   background-color: #333;
   font-weight: bold;
-  color: #caff33; 
+  color: #caff33;
   position: relative;
 }
 
@@ -74,19 +74,19 @@ h1 {
 
 .clickable::after {
   top: 60%;
-  border-top: 6px solid #456300; 
+  border-top: 6px solid #456300;
 }
 
 .asc::before {
-  border-bottom: 6px solid #caff33; 
+  border-bottom: 6px solid #caff33;
 }
 
 .desc::after {
-  border-top: 6px solid #caff33; 
+  border-top: 6px solid #caff33;
 }
 
 .table td {
-  color: #f1f1f1; 
+  color: #f1f1f1;
 }
 
 .tags {
@@ -95,7 +95,7 @@ h1 {
 }
 
 .tag {
-  background-color: #61dafb; 
+  background-color: #61dafb;
   color: white;
   padding: 5px 10px;
   border-radius: 5px;
@@ -104,20 +104,20 @@ h1 {
 }
 
 .tag:nth-child(2n) {
-  background-color: #ff6f61; 
+  background-color: #ff6f61;
 }
 
 .tag:nth-child(3n) {
-  background-color: #8e44ad; 
+  background-color: #8e44ad;
 }
 
 .tag:nth-child(4n) {
-  background-color: #2ecc71; 
+  background-color: #2ecc71;
 }
 
 .complexity {
   font-weight: bold;
-  color: #caff33; 
+  color: #caff33;
 }
 
 .table tr:hover {
@@ -138,11 +138,11 @@ h1 {
 
 .questionlinkicon {
   width: 80% !important;
-  color: #caff33 !important; 
+  color: #caff33 !important;
 }
 
 .questiontitle {
-  color: #f1f1f1 !important; 
+  color: #f1f1f1 !important;
   text-decoration: underline !important;
 }
 

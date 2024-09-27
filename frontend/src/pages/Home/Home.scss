@@ -1,5 +1,5 @@
 .Home {
-  background: var(--Grey-10, #1A1A1A);
+  background: var(--Grey-10, #1a1a1a);
   padding: 40px 80px;
   display: flex;
   flex-direction: column;
@@ -25,7 +25,7 @@
       padding-block: 30px;
       font-size: 0.8rem !important;
       font-weight: 200;
-      color: var(--White-90, #E4E4E7) !important;
+      color: var(--White-90, #e4e4e7) !important;
     }
 
     &-image {
@@ -35,7 +35,6 @@
       object-fit: contain;
     }
   }
-
 }
 
 .Home-button {
