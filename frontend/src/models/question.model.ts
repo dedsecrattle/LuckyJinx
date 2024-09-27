@@ -1,7 +1,7 @@
 export type QuestionComplexity = "Easy" | "Medium" | "Hard";
 
 export interface Question {
-  questionId: string;
+  questionId: number;
   title: string;
   description: string;
   categories: string[];

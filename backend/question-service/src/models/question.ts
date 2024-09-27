@@ -1,7 +1,7 @@
 import { Schema, model, Document } from "mongoose";
 
 interface IQuestion extends Document {
-  questionId: string;
+  questionId: Number;
   title: string;
   description: string;
   categories: string[];
@@ -10,7 +10,7 @@ interface IQuestion extends Document {
 }
 
 const questionSchema = new Schema<IQuestion>({
-  questionId: { type: String, required: true, unique: true },
+  questionId: { type: Number, required: true, unique: true },
   title: { type: String, required: true },
   description: { type: String, required: true },
   categories: { type: [String], required: true },

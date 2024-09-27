@@ -17,14 +17,14 @@ import {
 const QuestionDialog = (props: {
   isAddNew: boolean;
   isOpen: boolean;
-  id: string;
+  id: number;
   title: string;
   description: string;
   categories: string[];
   complexity: QuestionComplexity;
   link: string;
   setIsOpen: (isOpen: boolean) => void;
-  setId: (id: string) => void;
+  setId: (id: number) => void;
   setMainDialogTitle: (title: string) => void;
   setDescription: (description: string) => void;
   setCategories: (categories: string[]) => void;
@@ -103,7 +103,7 @@ const QuestionDialog = (props: {
             label="ID"
             type="text"
             value={id}
-            onChange={(e) => setId(e.target.value)}
+            onChange={(e) => setId(Number(e.target.value))}
           />
           <TextField
             className="QuestionDialog-input QuestionDialog-input-title"

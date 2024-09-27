@@ -9,7 +9,7 @@ export default class QuestionService {
   }
 
   static async addQuestion(
-    id: string,
+    id: number,
     title: string,
     description: string,
     categoriesString: string,
@@ -22,7 +22,7 @@ export default class QuestionService {
   }
 
   static async editQuestion(
-    id: string,
+    id: number,
     title: string,
     description: string,
     categoriesString: string,
@@ -34,7 +34,7 @@ export default class QuestionService {
     return response.data;
   }
 
-  static async deleteQuestion(id: string): Promise<any> {
+  static async deleteQuestion(id: number): Promise<any> {
     const response = await axios.delete(`/api/questions/${id}`);
     return response.data;
   }
