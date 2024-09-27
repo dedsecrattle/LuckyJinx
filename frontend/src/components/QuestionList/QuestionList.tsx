@@ -207,7 +207,7 @@ const QuestionList = (): ReactElement => {
               <td className={styles.complexity}>{question.complexity}</td>
               <td className={styles.actions}>
                 <IconButton onClick={() => openQuestionDialog(question)}>
-                  <EditNote />
+                  <EditNote className={styles.questionediticon} />
                 </IconButton>
                 <IconButton className={styles.questiondeleteicon} onClick={handleDelete(question)}>
                   <DeleteForever />
@@ -217,7 +217,12 @@ const QuestionList = (): ReactElement => {
           ))}
         </tbody>
       </table>
-      <Button color="primary" variant="contained" onClick={() => openQuestionDialog(null)}>
+      <Button
+        className={styles.questionaddicon}
+        color="primary"
+        variant="contained"
+        onClick={() => openQuestionDialog(null)}
+      >
         Add question
       </Button>
       <QuestionDialog
