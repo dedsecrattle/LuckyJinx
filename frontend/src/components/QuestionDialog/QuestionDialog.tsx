@@ -25,7 +25,7 @@ const QuestionDialog = (props: {
   link: string;
   setIsOpen: (isOpen: boolean) => void;
   setId: (id: string) => void;
-  setTitle: (title: string) => void;
+  setMainDialogTitle: (title: string) => void;
   setDescription: (description: string) => void;
   setCategories: (categories: string[]) => void;
   setComplexity: (complexity: QuestionComplexity) => void;
@@ -43,7 +43,7 @@ const QuestionDialog = (props: {
     link,
     setIsOpen,
     setId,
-    setTitle,
+    setMainDialogTitle,
     setDescription,
     setComplexity,
     setLink,
@@ -59,7 +59,7 @@ const QuestionDialog = (props: {
     setCategoriesString(stringifyCategories(categories));
   }, [categories]);
 
-  const closeDialog = () => {
+  const closeMainDialog = () => {
     setIsOpen(false);
   };
 
@@ -70,7 +70,7 @@ const QuestionDialog = (props: {
       const response = isAddNew
         ? await QuestionService.addQuestion(id, title, description, categoriesString, complexity, link)
         : await QuestionService.editQuestion(id, title, description, categoriesString, complexity, link);
-      closeDialog();
+      closeMainDialog();
       questionCallback(response, isAddNew ? "added" : "updated");
     } catch (error: any) {
       setError(error?.message ?? "An unknown error occurred");
@@ -119,7 +119,7 @@ const QuestionDialog = (props: {
             label="Title"
             type="text"
             value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            onChange={(e) => setMainDialogTitle(e.target.value)}
           />
         </Box>
 
@@ -200,7 +200,7 @@ const QuestionDialog = (props: {
       </DialogContent>
 
       <DialogActions>
-        <Button onClick={closeDialog} color="secondary" variant="contained">
+        <Button onClick={closeMainDialog} color="secondary" variant="contained">
           Cancel
         </Button>
         <Button onClick={handleSubmit} color="primary" variant="contained">

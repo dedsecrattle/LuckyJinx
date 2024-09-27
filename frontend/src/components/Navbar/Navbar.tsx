@@ -5,12 +5,12 @@ import ApiIcon from "@mui/icons-material/Api";
 import { useMainDialog } from "../../contexts/MainDialogContext";
 
 const Navbar = (): ReactElement => {
-  const { openDialog, setTitle, setContent } = useMainDialog();
+  const { openMainDialog, setMainDialogTitle, setMainDialogContent } = useMainDialog();
 
   const login = () => {
-    setTitle("Work in Progress");
-    setContent("User service is under construction. Check back in a future milestone!");
-    openDialog();
+    setMainDialogTitle("Work in Progress");
+    setMainDialogContent("User service is under construction. Check back in a future milestone!");
+    openMainDialog();
   };
 
   return (

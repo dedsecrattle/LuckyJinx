@@ -9,10 +9,10 @@ import { useMainDialog } from "../../contexts/MainDialogContext";
 import "./MainDialog.scss";
 
 const MainDialog = (): ReactElement => {
-  const { isOpen, title, content, closeDialog } = useMainDialog();
+  const { isOpen, title, content, closeMainDialog } = useMainDialog();
 
   return (
-    <Dialog className="MainDialog" open={isOpen} onClose={closeDialog}>
+    <Dialog className="MainDialog" open={isOpen} onClose={closeMainDialog}>
       <DialogTitle>
         <Typography className="MainDialog-title">{title}</Typography>
       </DialogTitle>
@@ -24,7 +24,7 @@ const MainDialog = (): ReactElement => {
       </DialogContent>
 
       <DialogActions>
-        <Button color="primary" variant="contained" onClick={closeDialog}>
+        <Button color="primary" variant="contained" onClick={closeMainDialog}>
           OK
         </Button>
       </DialogActions>

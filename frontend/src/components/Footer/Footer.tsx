@@ -7,12 +7,12 @@ import { gitHubUrl } from "../../constants/urls";
 import { useMainDialog } from "../../contexts/MainDialogContext";
 
 const Footer = (): ReactElement => {
-  const { openDialog, setTitle, setContent } = useMainDialog();
+  const { openMainDialog, setMainDialogTitle, setMainDialogContent } = useMainDialog();
 
   const openTermsOfService = () => {
-    setTitle("Work in Progress");
-    setContent("Terms of service is under construction. Check back in a future milestone!");
-    openDialog();
+    setMainDialogTitle("Work in Progress");
+    setMainDialogContent("Terms of service is under construction. Check back in a future milestone!");
+    openMainDialog();
   };
 
   return (

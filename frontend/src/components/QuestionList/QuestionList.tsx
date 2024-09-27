@@ -6,6 +6,7 @@ import styles from "./QuestionList.module.scss";
 import { Question, QuestionComplexity } from "../../models/question.model";
 import QuestionDialog from "../QuestionDialog/QuestionDialog";
 import QuestionService from "../../services/question.service";
+import { useConfirmationDialog } from "../../contexts/ConfirmationDialogContext";
 
 const QuestionList = (): ReactElement => {
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -17,7 +18,10 @@ const QuestionList = (): ReactElement => {
   const complexityOrder = ["Easy", "Medium", "Hard"];
   const getComplexityValue = (complexity: string) => complexityOrder.indexOf(complexity);
 
-  const { setTitle, setContent, openDialog } = useMainDialog();
+  const { setMainDialogTitle, setMainDialogContent, openMainDialog } = useMainDialog();
+
+  const { setConfirmationDialogTitle, setConfirmationDialogContent, setConfirmationCallBack, openConfirmationDialog } =
+    useConfirmationDialog();
 
   // Shared states for adding or editing question
   const [isAddNew, setIsAddNew] = useState<boolean>(true);
@@ -43,16 +47,25 @@ const QuestionList = (): ReactElement => {
 
   const questionCallback = (question: Question | undefined, action: string) => {
     if (question) {
-      setTitle("Success");
-      setContent(`Question ${question.questionId}: "${question.title}" has been ${action} successfully`);
-      openDialog();
+      // add question in frontend
+      const index = questions.findIndex((q) => q.questionId === question.questionId);
+      if (index !== -1) {
+        questions[index] = question;
+      } else {
+        questions.push(question);
+      }
+      setQuestions([...questions]);
+
+      setMainDialogTitle("Success");
+      setMainDialogContent(`Question ${question.questionId}: "${question.title}" has been ${action} successfully`);
+      openMainDialog();
     }
   };
 
   const showQuestionDetails = (question: Question) => () => {
-    setTitle(question.title);
-    setContent(question.description);
-    openDialog();
+    setMainDialogTitle(question.title);
+    setMainDialogContent(question.description);
+    openMainDialog();
   };
 
   const fetchQuestions = async () => {
@@ -113,6 +126,31 @@ const QuestionList = (): ReactElement => {
     setQuestions(sortedQuestions);
   };
 
+  const handleDelete = (question: Question) => {
+    return () => {
+      setConfirmationDialogTitle("Delete Question");
+      setConfirmationDialogContent(
+        `Are you sure you want to delete question ${question.questionId}: "${question.title}"?`,
+      );
+      setConfirmationCallBack(() => async () => {
+        try {
+          await QuestionService.deleteQuestion(question.questionId);
+          setQuestions(questions.filter((q) => q.questionId !== question.questionId));
+          setMainDialogTitle("Success");
+          setMainDialogContent(`Question ${question.questionId}: "${question.title}" has been deleted successfully`);
+          openMainDialog();
+        } catch (error: any) {
+          setMainDialogTitle("Error");
+          setMainDialogContent(
+            `Failed to delete question ${question.questionId}: ${error?.message ?? "An unknown error occurred"}`,
+          );
+          openMainDialog();
+        }
+      });
+      openConfirmationDialog();
+    };
+  };
+
   return (
     <div className={styles.container}>
       <Typography variant="h4" align="center" gutterBottom>
@@ -171,7 +209,7 @@ const QuestionList = (): ReactElement => {
                 <IconButton onClick={() => openQuestionDialog(question)}>
                   <EditNote />
                 </IconButton>
-                <IconButton className={styles.questiondeleteicon} onClick={() => {}}>
+                <IconButton className={styles.questiondeleteicon} onClick={handleDelete(question)}>
                   <DeleteForever />
                 </IconButton>
               </td>
@@ -193,7 +231,7 @@ const QuestionList = (): ReactElement => {
         link={newQuestionLink}
         setIsOpen={setIsQuestionDialogOpen}
         setId={setNewQuestionId}
-        setTitle={setNewQuestionTitle}
+        setMainDialogTitle={setNewQuestionTitle}
         setDescription={setNewQuestionDescription}
         setCategories={setNewQuestionCategories}
         setComplexity={setNewQuestionComplexity}

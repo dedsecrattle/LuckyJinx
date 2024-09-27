@@ -1,17 +1,11 @@
 import axios from "axios";
 import { Question, QuestionComplexity } from "../models/question.model";
-import { QuestionValidationError, verifyNewQuestion } from "../util/question.helper";
-//import { mockQuestions } from "../constants/mock_questions";
+import { verifyNewQuestion } from "../util/question.helper";
 
 export default class QuestionService {
   static async getQuestions(): Promise<Question[]> {
-    try {
-      const response = await axios.get("/api/questions");
-      return response.data;
-      // return mockQuestions;
-    } catch (error) {
-      throw new Error("Failed to fetch questions");
-    }
+    const response = await axios.get("/api/questions");
+    return response.data;
   }
 
   static async addQuestion(
@@ -22,16 +16,9 @@ export default class QuestionService {
     complexity: QuestionComplexity,
     link: string,
   ): Promise<any> {
-    try {
-      const body = verifyNewQuestion(id, title, description, categoriesString, complexity, link);
-      const response = await axios.post("/api/questions", body);
-      return response.data;
-    } catch (error) {
-      if (error instanceof QuestionValidationError) {
-        throw error;
-      }
-      throw new Error("Failed to add question");
-    }
+    const body = verifyNewQuestion(id, title, description, categoriesString, complexity, link);
+    const response = await axios.post("/api/questions", body);
+    return response.data;
   }
 
   static async editQuestion(
@@ -48,11 +35,7 @@ export default class QuestionService {
   }
 
   static async deleteQuestion(id: string): Promise<any> {
-    try {
-      const response = await axios.delete(`/api/questions/${id}`);
-      return response.data;
-    } catch (error) {
-      throw new Error("Failed to add question");
-    }
+    const response = await axios.delete(`/api/questions/${id}`);
+    return response.data;
   }
 }

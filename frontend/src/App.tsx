@@ -5,8 +5,8 @@ import { Route, Routes } from "react-router-dom";
 import Home from "./pages/Home/Home";
 //import QuestionList from "./pages/QuestionList/QuestionList";
 import { createTheme, ThemeProvider } from "@mui/material";
-import MainDialog from "./components/MainDialog/MainDialog";
 import { MainDialogContextProvider } from "./contexts/MainDialogContext";
+import { ConfirmationDialogContextProvider } from "./contexts/ConfirmationDialogContext";
 
 const theme = createTheme({
   typography: {
@@ -59,11 +59,12 @@ const App = (): ReactElement => {
   return (
     <ThemeProvider theme={theme}>
       <MainDialogContextProvider>
-        <MainDialog />
-        <Routes>
-          <Route path="/" element={<Home />} />
-          {/* <Route path="/questions" element={<QuestionList />} /> */}
-        </Routes>
+        <ConfirmationDialogContextProvider>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            {/* <Route path="/questions" element={<QuestionList />} /> */}
+          </Routes>
+        </ConfirmationDialogContextProvider>
       </MainDialogContextProvider>
     </ThemeProvider>
   );
