@@ -27,7 +27,11 @@
   }
 
   &-github {
-    background: #caff33 !important;
+    justify-self: start;
+
+    &-icon {
+      background: #caff33 !important;
+    }
   }
 
   &-trademark {

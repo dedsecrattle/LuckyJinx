@@ -22,8 +22,8 @@ const Footer = (): ReactElement => {
         <Typography>LuckyJinx</Typography>
       </Container>
       <Box className="Footer-bottom">
-        <a href={gitHubUrl} target="_blank" rel="noreferrer noopener">
-          <IconButton className="Footer-github">
+        <a href={gitHubUrl} className="Footer-github" target="_blank" rel="noreferrer noopener">
+          <IconButton className="Footer-github-icon">
             <GitHubIcon />
           </IconButton>
         </a>
