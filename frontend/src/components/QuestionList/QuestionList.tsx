@@ -84,18 +84,6 @@ const QuestionList = (): ReactElement => {
     fetchQuestions();
   }, []);
 
-  if (loading) {
-    return <Typography variant="h6">Loading questions...</Typography>;
-  }
-
-  if (error) {
-    return (
-      <Typography variant="h6" color="error">
-        {error}
-      </Typography>
-    );
-  }
-
   const handleSort = (key: keyof Question) => {
     const order = sortKey === key && sortOrder === "asc" ? "desc" : "asc";
     setSortKey(key);
@@ -153,78 +141,91 @@ const QuestionList = (): ReactElement => {
 
   return (
     <div className={styles.container}>
-      <Typography variant="h4" align="center" gutterBottom>
+      <Typography variant="h5" gutterBottom>
         Question Repository
       </Typography>
-      <table className={styles.table}>
-        <thead>
-          <tr>
-            <th
-              onClick={() => handleSort("questionId")}
-              className={`${styles.clickable} ${sortKey === "questionId" ? styles[sortOrder] : ""}`}
+      <div className={styles.questiontablebody}>
+        {loading ? (
+          <Typography align="center">Loading questions...</Typography>
+        ) : error ? (
+          <Typography align="center" color="error">
+            {error}
+          </Typography>
+        ) : (
+          <div>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th
+                    onClick={() => handleSort("questionId")}
+                    className={`${styles.clickable} ${sortKey === "questionId" ? styles[sortOrder] : ""}`}
+                  >
+                    ID
+                  </th>
+                  <th
+                    onClick={() => handleSort("title")}
+                    className={`${styles.clickable} ${sortKey === "title" ? styles[sortOrder] : ""}`}
+                  >
+                    Title
+                  </th>
+                  <th>Categories</th>
+                  <th
+                    onClick={() => handleSort("complexity")}
+                    className={`${styles.clickable} ${sortKey === "complexity" ? styles[sortOrder] : ""}`}
+                  >
+                    Complexity
+                  </th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {questions.map((question) => (
+                  <tr key={question.questionId}>
+                    <td>{question.questionId}</td>
+                    <td>
+                      <Button className={styles.questiontitle} onClick={showQuestionDetails(question)}>
+                        {question.title}
+                      </Button>
+                      <a href={question.link} target="_blank" rel="noreferrer">
+                        <IconButton>
+                          <OpenInNew className={styles.questionlinkicon} color="primary" />
+                        </IconButton>
+                      </a>
+                    </td>
+                    <td>
+                      <div className={styles.tags}>
+                        {question.categories.map((tag, index) => (
+                          <span key={index} className={styles.tag}>
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    </td>
+                    <td className={styles.complexity}>{question.complexity}</td>
+                    <td className={styles.actions}>
+                      <IconButton onClick={() => openQuestionDialog(question)}>
+                        <EditNote className={styles.questionediticon} />
+                      </IconButton>
+                      <IconButton className={styles.questiondeleteicon} onClick={handleDelete(question)}>
+                        <DeleteForever />
+                      </IconButton>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <Button
+              className={styles.questionaddicon}
+              color="primary"
+              variant="contained"
+              onClick={() => openQuestionDialog(null)}
             >
-              ID
-            </th>
-            <th
-              onClick={() => handleSort("title")}
-              className={`${styles.clickable} ${sortKey === "title" ? styles[sortOrder] : ""}`}
-            >
-              Title
-            </th>
-            <th>Categories</th>
-            <th
-              onClick={() => handleSort("complexity")}
-              className={`${styles.clickable} ${sortKey === "complexity" ? styles[sortOrder] : ""}`}
-            >
-              Complexity
-            </th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {questions.map((question) => (
-            <tr key={question.questionId}>
-              <td>{question.questionId}</td>
-              <td>
-                <Button className={styles.questiontitle} onClick={showQuestionDetails(question)}>
-                  {question.title}
-                </Button>
-                <a href={question.link} target="_blank" rel="noreferrer">
-                  <IconButton>
-                    <OpenInNew className={styles.questionlinkicon} color="primary" />
-                  </IconButton>
-                </a>
-              </td>
-              <td>
-                <div className={styles.tags}>
-                  {question.categories.map((tag, index) => (
-                    <span key={index} className={styles.tag}>
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-              </td>
-              <td className={styles.complexity}>{question.complexity}</td>
-              <td className={styles.actions}>
-                <IconButton onClick={() => openQuestionDialog(question)}>
-                  <EditNote className={styles.questionediticon} />
-                </IconButton>
-                <IconButton className={styles.questiondeleteicon} onClick={handleDelete(question)}>
-                  <DeleteForever />
-                </IconButton>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      <Button
-        className={styles.questionaddicon}
-        color="primary"
-        variant="contained"
-        onClick={() => openQuestionDialog(null)}
-      >
-        Add question
-      </Button>
+              Add question
+            </Button>
+          </div>
+        )}
+      </div>
+
       <QuestionDialog
         isAddNew={isAddNew}
         isOpen={isQuestionDialogOpen}
