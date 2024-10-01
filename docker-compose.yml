@@ -8,3 +8,8 @@ services:
     build: ./backend/user-service
     ports:
       - "3001:3001"
+  
+  frontend:
+    build: ./frontend
+    ports:
+      - "80:80"
