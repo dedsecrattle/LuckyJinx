@@ -11,7 +11,7 @@ export default class QuestionService {
   });
 
   static async getQuestions(): Promise<Question[]> {
-    const response = await QuestionService.client.get("/api/questions");
+    const response = await QuestionService.client.get("/");
     return response.data;
   }
 
@@ -24,7 +24,7 @@ export default class QuestionService {
     link: string,
   ): Promise<any> {
     const body = verifyNewQuestion(id, title, description, categoriesString, complexity, link);
-    const response = await QuestionService.client.post("/api/questions", body);
+    const response = await QuestionService.client.post("/", body);
     return response.data;
   }
 
@@ -37,12 +37,12 @@ export default class QuestionService {
     link: string,
   ): Promise<any> {
     const body = verifyNewQuestion(id, title, description, categoriesString, complexity, link);
-    const response = await QuestionService.client.put(`/api/questions/${id}`, body);
+    const response = await QuestionService.client.put(`/${id}`, body);
     return response.data;
   }
 
   static async deleteQuestion(id: number): Promise<any> {
-    const response = await QuestionService.client.delete(`/api/questions/${id}`);
+    const response = await QuestionService.client.delete(`/${id}`);
     return response.data;
   }
 }

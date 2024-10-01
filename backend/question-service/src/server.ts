@@ -18,7 +18,7 @@ app.use(cors({
 }));
 
 // Routes
-app.use("/api/questions", questionRoutes);
+app.use("/", questionRoutes);
 
 // Start the server
 app.listen(PORT, () => {
