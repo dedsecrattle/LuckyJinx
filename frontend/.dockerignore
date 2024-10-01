@@ -1,5 +1,0 @@
-# Ignore node modules, build output, and other unnecessary files
-node_modules
-build
-npm-debug.log
-.DS_Store
