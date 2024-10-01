@@ -8,12 +8,6 @@ import Footer from "../../components/Footer/Footer";
 import QuestionList from "../../components/QuestionList/QuestionList";
 
 const Home = (): ReactElement => {
-  // const navigate = useNavigate();
-
-  // const goToQuestionList = () => {
-  //   navigate("/questions");
-  // };
-
   return (
     <Box className="Home">
       <Navbar />
