@@ -20,7 +20,9 @@ router.post("/", async (req: Request, res: Response) => {
     const savedQuestion = await newQuestion.save();
     res.status(201).json(savedQuestion);
   } catch (err) {
-    res.status(400).json({ error: (err as Error).message });
+    res.status(400).json({
+      message: `Question with questionId ${questionId} already exists`,
+    });
   }
 });
 
@@ -30,7 +32,9 @@ router.get("/", async (req: Request, res: Response) => {
     const questions = await Question.find();
     res.json(questions);
   } catch (err) {
-    res.status(500).json({ error: (err as Error).message });
+    res
+      .status(500)
+      .json({ message: "Server Error : Unable to fetch questions Question" });
   }
 });
 
@@ -44,7 +48,9 @@ router.get("/:id", async (req: Request, res: Response) => {
     if (!question) return res.status(404).json({ error: "Question not found" });
     res.json(question);
   } catch (err) {
-    res.status(500).json({ error: (err as Error).message });
+    res
+      .status(500)
+      .json({ message: "Server Error : Unable to fetch Question" });
   }
 });
 
@@ -63,7 +69,9 @@ router.put("/:id", async (req: Request, res: Response) => {
       return res.status(404).json({ error: "Question not found" });
     res.json(updatedQuestion);
   } catch (err) {
-    res.status(500).json({ error: (err as Error).message });
+    res
+      .status(500)
+      .json({ message: "Server Error : Unable to update Question" });
   }
 });
 
@@ -78,7 +86,9 @@ router.delete("/:id", async (req: Request, res: Response) => {
       return res.status(404).json({ error: "Question not found" });
     res.json({ message: "Question deleted successfully" });
   } catch (err) {
-    res.status(500).json({ error: (err as Error).message });
+    res
+      .status(500)
+      .json({ message: "Server Error : Unable to delete Question" });
   }
 });
 

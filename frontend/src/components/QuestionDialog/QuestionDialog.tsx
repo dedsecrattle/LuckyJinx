@@ -65,18 +65,21 @@ const QuestionDialog = (props: {
 
   const handleSubmit = async () => {
     setIsErrorDisplayed(false);
-
     try {
       const response = isAddNew
         ? await QuestionService.addQuestion(id, title, description, categoriesString, complexity, link)
         : await QuestionService.editQuestion(id, title, description, categoriesString, complexity, link);
-      closeMainDialog();
       questionCallback(response, isAddNew ? "added" : "updated");
+      closeMainDialog();
     } catch (error: any) {
-      setError(error?.message ?? "An unknown error occurred");
-      setIsErrorDisplayed(true);
+      let errorMessage = "An unknown error occurred";
       if (error instanceof QuestionValidationError) {
+        errorMessage = error.message;
+      } else {
+        errorMessage = error.response.data.message;
       }
+      setError(errorMessage);
+      setIsErrorDisplayed(true);
     }
   };
 
