@@ -3,8 +3,15 @@ import { Question, QuestionComplexity } from "../models/question.model";
 import { verifyNewQuestion } from "../util/question.helper";
 
 export default class QuestionService {
+  private static client = axios.create({
+    baseURL: process.env.REACT_APP_QUESTION_SERVICE_URL as string,
+    headers: {
+      "Content-type": "application/json",
+    },
+  });
+
   static async getQuestions(): Promise<Question[]> {
-    const response = await axios.get("/api/questions");
+    const response = await QuestionService.client.get("/api/questions");
     return response.data;
   }
 
@@ -17,7 +24,7 @@ export default class QuestionService {
     link: string,
   ): Promise<any> {
     const body = verifyNewQuestion(id, title, description, categoriesString, complexity, link);
-    const response = await axios.post("/api/questions", body);
+    const response = await QuestionService.client.post("/api/questions", body);
     return response.data;
   }
 
@@ -30,12 +37,12 @@ export default class QuestionService {
     link: string,
   ): Promise<any> {
     const body = verifyNewQuestion(id, title, description, categoriesString, complexity, link);
-    const response = await axios.put(`/api/questions/${id}`, body);
+    const response = await QuestionService.client.put(`/api/questions/${id}`, body);
     return response.data;
   }
 
   static async deleteQuestion(id: number): Promise<any> {
-    const response = await axios.delete(`/api/questions/${id}`);
+    const response = await QuestionService.client.delete(`/api/questions/${id}`);
     return response.data;
   }
 }

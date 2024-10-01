@@ -1,0 +1,10 @@
+services:
+  question:
+    build: ./backend/question-service
+    ports:
+      - "3002:3002"
+  
+  user:
+    build: ./backend/user-service
+    ports:
+      - "3001:3001"
