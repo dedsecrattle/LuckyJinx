@@ -11,5 +11,7 @@ services:
   
   frontend:
     build: ./frontend
+    env_file:
+      - ./frontend/nginx/.env
     ports:
       - "80:80"

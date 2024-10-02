@@ -7,10 +7,10 @@ server {
     }
 
     location /api/questions/ {
-        proxy_pass http://question:3002/;
+        proxy_pass ${QUESTION_SERVICE_URL};
     }
 
     location /api/users/ {
-        proxy_pass http://user:3001/;
+        proxy_pass ${USER_SERVICE_URL};
     }
 }
