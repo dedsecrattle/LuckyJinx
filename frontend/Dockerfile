@@ -14,6 +14,8 @@ COPY .env .
 
 COPY tsconfig.json .
 
+ARG GENERATE_SOURCEMAP=false
+
 RUN npm run build
 
 FROM nginx:latest
