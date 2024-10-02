@@ -8,7 +8,9 @@ const app = express();
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-app.use(cors()); // config cors so that front-end can use
+app.use(cors({
+  origin: process.env.FRONTEND_URL,
+}));
 app.options("*", cors());
 
 // To handle CORS Errors
