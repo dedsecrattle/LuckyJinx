@@ -76,8 +76,11 @@ const QuestionDialog = (props: {
         setError(error.message);
       } else if (error.response) {
         switch (error.response.status) {
+          case 400:
+            setError(`Question with questionId - ${id} already exists`);
+            break;
           case 404:
-            setError("Resource not found");
+            setError("Question not found");
             break;
           case 401:
             setError("Unauthorized - please log in");

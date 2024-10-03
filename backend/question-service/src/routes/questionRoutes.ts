@@ -20,7 +20,7 @@ router.post("/", async (req: Request, res: Response) => {
     const savedQuestion = await newQuestion.save();
     res.status(201).json(savedQuestion);
   } catch (err) {
-    res.status(404).json({
+    res.status(400).json({
       message: `Question with questionId ${questionId} already exists`,
     });
   }
