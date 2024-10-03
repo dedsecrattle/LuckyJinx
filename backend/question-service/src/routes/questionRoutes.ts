@@ -30,7 +30,7 @@ router.post("/", async (req: Request, res: Response) => {
 router.get("/", async (req: Request, res: Response) => {
   try {
     const questions = await Question.find();
-    res.json(questions);
+    res.status(200).json(questions);
   } catch (err) {
     res
       .status(500)
@@ -46,7 +46,7 @@ router.get("/:id", async (req: Request, res: Response) => {
       questionId: id,
     });
     if (!question) return res.status(404).json({ error: "Question not found" });
-    res.json(question);
+    res.status(200).json(question);
   } catch (err) {
     res
       .status(500)
@@ -67,7 +67,7 @@ router.put("/:id", async (req: Request, res: Response) => {
     );
     if (!updatedQuestion)
       return res.status(404).json({ error: "Question not found" });
-    res.json(updatedQuestion);
+    res.status(200).json(updatedQuestion);
   } catch (err) {
     res
       .status(500)
@@ -84,7 +84,7 @@ router.delete("/:id", async (req: Request, res: Response) => {
     });
     if (!deletedQuestion)
       return res.status(404).json({ error: "Question not found" });
-    res.json({ message: "Question deleted successfully" });
+    res.status(200).json({ message: "Question deleted successfully" });
   } catch (err) {
     res
       .status(500)
