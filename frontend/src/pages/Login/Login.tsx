@@ -55,7 +55,7 @@ const Login = (): ReactElement => {
       if (email === "test@example.com" && password === "password") {
         setLoading(true);
         setTimeout(() => {
-          navigate("/"); 
+          navigate("/");
         }, 3000);
       } else {
         setLoginError("Invalid email or password.");
