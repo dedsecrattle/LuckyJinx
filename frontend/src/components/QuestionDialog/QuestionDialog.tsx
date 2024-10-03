@@ -17,14 +17,14 @@ import {
 const QuestionDialog = (props: {
   isAddNew: boolean;
   isOpen: boolean;
-  id: string;
+  id: number;
   title: string;
   description: string;
   categories: string[];
   complexity: QuestionComplexity;
   link: string;
   setIsOpen: (isOpen: boolean) => void;
-  setId: (id: string) => void;
+  setId: (id: number) => void;
   setMainDialogTitle: (title: string) => void;
   setDescription: (description: string) => void;
   setCategories: (categories: string[]) => void;
@@ -65,18 +65,21 @@ const QuestionDialog = (props: {
 
   const handleSubmit = async () => {
     setIsErrorDisplayed(false);
-
     try {
       const response = isAddNew
         ? await QuestionService.addQuestion(id, title, description, categoriesString, complexity, link)
         : await QuestionService.editQuestion(id, title, description, categoriesString, complexity, link);
-      closeMainDialog();
       questionCallback(response, isAddNew ? "added" : "updated");
+      closeMainDialog();
     } catch (error: any) {
-      setError(error?.message ?? "An unknown error occurred");
-      setIsErrorDisplayed(true);
+      let errorMessage = "An unknown error occurred";
       if (error instanceof QuestionValidationError) {
+        errorMessage = error.message;
+      } else {
+        errorMessage = error.response.data.message;
       }
+      setError(errorMessage);
+      setIsErrorDisplayed(true);
     }
   };
 
@@ -103,7 +106,7 @@ const QuestionDialog = (props: {
             label="ID"
             type="text"
             value={id}
-            onChange={(e) => setId(e.target.value)}
+            onChange={(e) => setId(Number(e.target.value))}
           />
           <TextField
             className="QuestionDialog-input QuestionDialog-input-title"

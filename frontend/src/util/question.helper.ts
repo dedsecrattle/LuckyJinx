@@ -44,9 +44,8 @@ const verifyLength = (value: string, field: QuestionValidationFields): void => {
   }
 };
 
-const verifyId = (id: string): string => {
-  verifyLength(id, "id");
-  return id.trim();
+const verifyId = (id: number): number => {
+  return id;
 };
 
 const verifyTitle = (title: string): string => {
@@ -86,7 +85,7 @@ const verifyLink = (link: string): string => {
 };
 
 export const verifyNewQuestion = (
-  id: string,
+  id: number,
   title: string,
   description: string,
   categoriesString: string,

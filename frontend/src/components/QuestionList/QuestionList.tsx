@@ -26,7 +26,7 @@ const QuestionList = (): ReactElement => {
   // Shared states for adding or editing question
   const [isAddNew, setIsAddNew] = useState<boolean>(true);
   const [isQuestionDialogOpen, setIsQuestionDialogOpen] = useState<boolean>(false);
-  const [newQuestionId, setNewQuestionId] = useState<string>("");
+  const [newQuestionId, setNewQuestionId] = useState<number>(0);
   const [newQuestionTitle, setNewQuestionTitle] = useState<string>("");
   const [newQuestionDescription, setNewQuestionDescription] = useState<string>("");
   const [newQuestionCategories, setNewQuestionCategories] = useState<string[]>([]);
@@ -35,7 +35,7 @@ const QuestionList = (): ReactElement => {
 
   const openQuestionDialog = (question: Question | null) => {
     setIsAddNew(!question);
-    setNewQuestionId(question?.questionId ?? "");
+    setNewQuestionId(question?.questionId ?? 0);
     setNewQuestionTitle(question?.title ?? "");
     setNewQuestionDescription(question?.description ?? "");
     setNewQuestionCategories(question?.categories ?? []);
@@ -91,8 +91,8 @@ const QuestionList = (): ReactElement => {
 
     const sortedQuestions = [...questions].sort((a, b) => {
       if (key === "questionId") {
-        const aId = parseInt(a[key]);
-        const bId = parseInt(b[key]);
+        const aId = a[key];
+        const bId = b[key];
         return order === "asc" ? aId - bId : bId - aId;
       }
 
