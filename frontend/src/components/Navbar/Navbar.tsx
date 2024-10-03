@@ -3,10 +3,8 @@ import { ReactElement } from "react";
 import { useNavigate } from "react-router-dom"; // Import useNavigate for navigation
 import "./Navbar.scss";
 import ApiIcon from "@mui/icons-material/Api";
-import { useMainDialog } from "../../contexts/MainDialogContext";
 
 const Navbar = (): ReactElement => {
-  const { openMainDialog, setMainDialogTitle, setMainDialogContent } = useMainDialog();
   const navigate = useNavigate();
 
   const redirectToSignUp = () => {

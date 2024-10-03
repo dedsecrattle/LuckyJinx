@@ -18,7 +18,6 @@ import "./AccountSettings.scss";
 
 const AccountSettings = (): ReactElement => {
   const [showPassword, setShowPassword] = useState(false);
-  const [showEmail, setShowEmail] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [confirmationMessage, setConfirmationMessage] = useState<string | null>(null);
@@ -29,7 +28,6 @@ const AccountSettings = (): ReactElement => {
   const [password, setPassword] = useState("password");
 
   const handleClickShowPassword = () => setShowPassword(!showPassword);
-  const handleClickShowEmail = () => setShowEmail(!showEmail);
 
   const programmingLanguages = [
     "JavaScript",
@@ -163,7 +161,7 @@ const AccountSettings = (): ReactElement => {
               fullWidth
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              type={showEmail ? "text" : "email"}
+              type="email"
             />
           </Box>
 
