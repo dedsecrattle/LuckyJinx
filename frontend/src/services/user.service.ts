@@ -12,21 +12,20 @@ export default class UserService {
   });
 
   static async login(email: string, password: string): Promise<User | null> {
-    try {
-      console.log("Attempting to log in with email:", email);
-      const response = await UserService.client.post("/auth/login", { email, password });
-      const token = response.data.data.accessToken as string;
-      localStorage.setItem(JWT_TOKEN_KEY, `Bearer ${token}`);
-      return response.data;
-    } catch (error: any) {
-      return error.response.data;
-    }
+    const response = await UserService.client.post("/auth/login", { email, password });
+    const token = response.data.data.accessToken as string;
+    localStorage.setItem(JWT_TOKEN_KEY, `Bearer ${token}`);
+    return response.data;
+  }
+
+  static async signup(email: string, password: string, username: string): Promise<User | null> {
+    const response = await UserService.client.post("/users/", { username, email, password });
+    return response.data;
   }
 
   static async refreshToken(): Promise<User | null> {
     try {
       const response = await UserService.client.get("/auth/verify-token");
-      console.log(response.data);
       return response.data.data;
     } catch (error: any) {
       console.clear();

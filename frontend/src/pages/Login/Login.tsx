@@ -6,9 +6,7 @@ import Footer from "../../components/Footer/Footer";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import "./Login.scss";
-import axios from "axios";
 import UserService from "../../services/user.service";
-import { UserProfile } from "../../types/user.profile";
 import { UserContext } from "../../contexts/UserContext";
 
 const Login = (): ReactElement => {
@@ -54,8 +52,6 @@ const Login = (): ReactElement => {
       setErrors(newErrors);
       return;
     }
-
-    // Simulate login process
     try {
       const response = await UserService.login(email, password);
       if (response) {
@@ -66,11 +62,9 @@ const Login = (): ReactElement => {
           role: response.isAdmin ? "admin" : "user",
           avatar: "https://www.gravatar.com/avatar/",
         });
-        navigate("/");
       } else {
         setLoginError("Invalid email or password. Please try again.");
       }
-      //navigate("/settings");
     } catch (error) {
       setLoginError("An unexpected error occurred. Please try again.");
     }

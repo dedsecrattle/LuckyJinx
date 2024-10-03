@@ -27,8 +27,6 @@ export const UserContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
           role: response.isAdmin ? "admin" : "user",
           avatar: "https://www.gravatar.com/avatar/",
         });
-      } else {
-        setUser(null);
       }
     }
     fetchUser();

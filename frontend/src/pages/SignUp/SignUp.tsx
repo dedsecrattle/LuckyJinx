@@ -6,16 +6,14 @@ import Footer from "../../components/Footer/Footer";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import "./SignUp.scss";
+import UserService from "../../services/user.service";
 
 const SignUp = (): ReactElement => {
   const [showPassword, setShowPassword] = useState(false);
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
+  const [userName, setuserName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [errors, setErrors] = useState<{ firstName?: string; lastName?: string; email?: string; password?: string }>(
-    {},
-  );
+  const [errors, setErrors] = useState<{ userName?: string; email?: string; password?: string }>({});
   const [loading, setLoading] = useState(false);
   const [signUpError, setSignUpError] = useState<string | null>(null);
   const navigate = useNavigate();
@@ -34,23 +32,16 @@ const SignUp = (): ReactElement => {
     return passwordRegex.test(password);
   };
 
-  const handleSignUp = () => {
+  const handleSignUp = async () => {
     setErrors({});
     setSignUpError(null);
 
     let formValid = true;
-    const newErrors: { firstName?: string; lastName?: string; email?: string; password?: string } = {};
+    const newErrors: { userName?: string; email?: string; password?: string } = {};
 
-    // First Name validation
-    if (!firstName) {
+    if (!userName) {
       formValid = false;
-      newErrors.firstName = "First name is required.";
-    }
-
-    // Last Name validation
-    if (!lastName) {
-      formValid = false;
-      newErrors.lastName = "Last name is required.";
+      newErrors.userName = "username is required.";
     }
 
     // Email validation
@@ -76,18 +67,17 @@ const SignUp = (): ReactElement => {
       return;
     }
 
-    // Simulate sign-up process
     try {
-      if (email === "existing@example.com") {
-        setSignUpError("An account with this email already exists.");
-      } else {
-        setLoading(true);
-        setTimeout(() => {
-          navigate("/");
-        }, 3000);
+      const response = await UserService.signup(email, password, userName);
+      navigate("/login");
+    } catch (error: any) {
+      if (error.response) {
+        if (error.response.status === 409) {
+          setSignUpError("User with this email already exists. Please login.");
+        } else {
+          setSignUpError("An unexpected error occurred. Please try again.");
+        }
       }
-    } catch (error) {
-      setSignUpError("An unexpected error occurred. Please try again.");
     }
   };
 
@@ -111,22 +101,13 @@ const SignUp = (): ReactElement => {
             <>
               <Box sx={{ display: "flex", gap: 2, width: "100%", mb: 2 }}>
                 <TextField
-                  label="First Name"
+                  label="username"
                   variant="outlined"
                   fullWidth
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
-                  error={!!errors.firstName}
-                  helperText={errors.firstName}
-                />
-                <TextField
-                  label="Last Name"
-                  variant="outlined"
-                  fullWidth
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
-                  error={!!errors.lastName}
-                  helperText={errors.lastName}
+                  value={userName}
+                  onChange={(e) => setuserName(e.target.value)}
+                  error={!!errors.userName}
+                  helperText={errors.userName}
                 />
               </Box>
 
