@@ -12,7 +12,8 @@ export default class QuestionService {
 
   static async getQuestions(): Promise<Question[]> {
     const response = await QuestionService.client.get("/");
-    return response.data;
+    let questions = response.data.sort((a: Question, b: Question) => a.questionId - b.questionId);
+    return questions;
   }
 
   static async addQuestion(
