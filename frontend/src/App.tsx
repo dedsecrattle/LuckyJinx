@@ -3,6 +3,9 @@ import "@fontsource/lexend";
 import { ReactElement } from "react";
 import { Route, Routes } from "react-router-dom";
 import Home from "./pages/Home/Home";
+import SignUp from "./pages/SignUp/SignUp";
+import Login from "./pages/Login/Login";
+import AccountSettings from "./pages/AccountSettings/AccountSettings";
 //import QuestionList from "./pages/QuestionList/QuestionList";
 import { createTheme, ThemeProvider } from "@mui/material";
 import { MainDialogContextProvider } from "./contexts/MainDialogContext";
@@ -62,6 +65,9 @@ const App = (): ReactElement => {
         <ConfirmationDialogContextProvider>
           <Routes>
             <Route path="/" element={<Home />} />
+            <Route path="/signup" element={<SignUp />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/settings" element={<AccountSettings />} />
             {/* <Route path="/questions" element={<QuestionList />} /> */}
           </Routes>
         </ConfirmationDialogContextProvider>
