@@ -1,4 +1,3 @@
-import { guestUser } from "../constants/guest_user";
 import { User } from "../models/user.model";
 import UserService from "../services/user.service";
 import { UserProfile } from "../types/user.profile";
@@ -22,14 +21,14 @@ export const UserContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
       const response: User | null = await UserService.refreshToken();
       if (response) {
         setUser({
+          id: response.id,
           username: response.username,
           email: response.email,
-          name: response.name,
           role: response.isAdmin ? "admin" : "user",
           avatar: "https://www.gravatar.com/avatar/",
         });
       } else {
-        setUser(guestUser);
+        setUser(null);
       }
     }
     fetchUser();

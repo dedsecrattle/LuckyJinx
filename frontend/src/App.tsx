@@ -1,7 +1,7 @@
 import "./App.scss";
 import "@fontsource/lexend";
-import { ReactElement } from "react";
-import { Route, Routes } from "react-router-dom";
+import { ReactElement, useContext } from "react";
+import { Navigate, Route, Routes } from "react-router-dom";
 import Home from "./pages/Home/Home";
 import SignUp from "./pages/SignUp/SignUp";
 import Login from "./pages/Login/Login";
@@ -10,7 +10,7 @@ import AccountSettings from "./pages/AccountSettings/AccountSettings";
 import { createTheme, ThemeProvider } from "@mui/material";
 import { MainDialogContextProvider } from "./contexts/MainDialogContext";
 import { ConfirmationDialogContextProvider } from "./contexts/ConfirmationDialogContext";
-import { UserContextProvider } from "./contexts/UserContext";
+import { UserContext, UserContextProvider } from "./contexts/UserContext";
 
 const theme = createTheme({
   typography: {
@@ -60,13 +60,14 @@ const theme = createTheme({
 });
 
 const App = (): ReactElement => {
+  const { user, setUser } = useContext(UserContext);
   return (
     <ThemeProvider theme={theme}>
       <UserContextProvider>
         <MainDialogContextProvider>
           <ConfirmationDialogContextProvider>
             <Routes>
-              <Route path="/" element={<Home />} />
+              <Route path="/" element={user ? <Home /> : <Navigate to={"/login"} />} />
               <Route path="/signup" element={<SignUp />} />
               <Route path="/login" element={<Login />} />
               <Route path="/settings" element={<AccountSettings />} />

@@ -58,13 +58,18 @@ const Login = (): ReactElement => {
     // Simulate login process
     try {
       const response = await UserService.login(email, password);
-      setUser({
-        username: response.username,
-        email: response.email,
-        name: response.name,
-        role: response.isAdmin ? "admin" : "user",
-        avatar: "https://www.gravatar.com/avatar/",
-      });
+      if (response) {
+        setUser({
+          id: response.id,
+          username: response.username,
+          email: response.email,
+          role: response.isAdmin ? "admin" : "user",
+          avatar: "https://www.gravatar.com/avatar/",
+        });
+        navigate("/");
+      } else {
+        setLoginError("Invalid email or password. Please try again.");
+      }
       //navigate("/settings");
     } catch (error) {
       setLoginError("An unexpected error occurred. Please try again.");
