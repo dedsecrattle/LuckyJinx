@@ -1,4 +1,4 @@
-import { ReactElement, useState } from "react";
+import { ReactElement, useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Box, Button, Typography, TextField, IconButton, InputAdornment, Alert, CircularProgress } from "@mui/material";
 import Navbar from "../../components/Navbar/Navbar";
@@ -6,6 +6,10 @@ import Footer from "../../components/Footer/Footer";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import "./Login.scss";
+import axios from "axios";
+import UserService from "../../services/user.service";
+import { UserProfile } from "../../types/user.profile";
+import { UserContext } from "../../contexts/UserContext";
 
 const Login = (): ReactElement => {
   const [showPassword, setShowPassword] = useState(false);
@@ -15,6 +19,7 @@ const Login = (): ReactElement => {
   const [loginError, setLoginError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { user, setUser } = useContext(UserContext);
 
   const togglePasswordVisibility = () => {
     setShowPassword((prev) => !prev);
@@ -25,7 +30,7 @@ const Login = (): ReactElement => {
     return emailRegex.test(email);
   };
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     setErrors({});
     setLoginError(null);
 
@@ -52,14 +57,15 @@ const Login = (): ReactElement => {
 
     // Simulate login process
     try {
-      if (email === "test@example.com" && password === "password") {
-        setLoading(true);
-        setTimeout(() => {
-          navigate("/");
-        }, 3000);
-      } else {
-        setLoginError("Invalid email or password.");
-      }
+      const response = await UserService.login(email, password);
+      setUser({
+        username: response.username,
+        email: response.email,
+        name: response.name,
+        role: response.isAdmin ? "admin" : "user",
+        avatar: "https://www.gravatar.com/avatar/",
+      });
+      //navigate("/settings");
     } catch (error) {
       setLoginError("An unexpected error occurred. Please try again.");
     }

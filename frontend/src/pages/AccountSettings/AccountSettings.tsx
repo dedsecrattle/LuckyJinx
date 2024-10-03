@@ -1,4 +1,4 @@
-import { ReactElement, useState } from "react";
+import { ReactElement, useContext, useState } from "react";
 import {
   Autocomplete,
   Box,
@@ -15,8 +15,11 @@ import Footer from "../../components/Footer/Footer";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import "./AccountSettings.scss";
+import { UserProfile } from "../../types/user.profile";
+import { UserContext } from "../../contexts/UserContext";
 
 const AccountSettings = (): ReactElement => {
+  const { user } = useContext(UserContext);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -28,6 +31,8 @@ const AccountSettings = (): ReactElement => {
   const [password, setPassword] = useState("password");
 
   const handleClickShowPassword = () => setShowPassword(!showPassword);
+
+  console.log(user);
 
   const programmingLanguages = [
     "JavaScript",

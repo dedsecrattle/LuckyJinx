@@ -10,6 +10,7 @@ import AccountSettings from "./pages/AccountSettings/AccountSettings";
 import { createTheme, ThemeProvider } from "@mui/material";
 import { MainDialogContextProvider } from "./contexts/MainDialogContext";
 import { ConfirmationDialogContextProvider } from "./contexts/ConfirmationDialogContext";
+import { UserContextProvider } from "./contexts/UserContext";
 
 const theme = createTheme({
   typography: {
@@ -61,17 +62,19 @@ const theme = createTheme({
 const App = (): ReactElement => {
   return (
     <ThemeProvider theme={theme}>
-      <MainDialogContextProvider>
-        <ConfirmationDialogContextProvider>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/signup" element={<SignUp />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/settings" element={<AccountSettings />} />
-            {/* <Route path="/questions" element={<QuestionList />} /> */}
-          </Routes>
-        </ConfirmationDialogContextProvider>
-      </MainDialogContextProvider>
+      <UserContextProvider>
+        <MainDialogContextProvider>
+          <ConfirmationDialogContextProvider>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/signup" element={<SignUp />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/settings" element={<AccountSettings />} />
+              {/* <Route path="/questions" element={<QuestionList />} /> */}
+            </Routes>
+          </ConfirmationDialogContextProvider>
+        </MainDialogContextProvider>
+      </UserContextProvider>
     </ThemeProvider>
   );
 };
