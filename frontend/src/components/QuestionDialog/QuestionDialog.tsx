@@ -72,13 +72,27 @@ const QuestionDialog = (props: {
       questionCallback(response, isAddNew ? "added" : "updated");
       closeMainDialog();
     } catch (error: any) {
-      let errorMessage = "An unknown error occurred";
       if (error instanceof QuestionValidationError) {
-        errorMessage = error.message;
+        setError(error.message);
+      } else if (error.response) {
+        switch (error.response.status) {
+          case 404:
+            setError("Resource not found");
+            break;
+          case 401:
+            setError("Unauthorized - please log in");
+            break;
+          case 403:
+            setError("Forbidden - you don't have permission");
+            break;
+          default:
+            setError(`Server error: ${error.response.status}`);
+        }
+      } else if (error.request) {
+        setError("No response from server");
       } else {
-        errorMessage = error.response.data.message;
+        setError("Unknown Error Occured");
       }
-      setError(errorMessage);
       setIsErrorDisplayed(true);
     }
   };
