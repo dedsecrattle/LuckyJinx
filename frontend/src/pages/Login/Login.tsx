@@ -1,4 +1,4 @@
-import { ReactElement, useState } from "react";
+import { ReactElement, useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Box, Button, Typography, TextField, IconButton, InputAdornment, Alert, CircularProgress } from "@mui/material";
 import Navbar from "../../components/Navbar/Navbar";
@@ -6,6 +6,9 @@ import Footer from "../../components/Footer/Footer";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import "./Login.scss";
+import UserService from "../../services/user.service";
+import { UserContext } from "../../contexts/UserContext";
+import { Axios, AxiosError } from "axios";
 
 const Login = (): ReactElement => {
   const [showPassword, setShowPassword] = useState(false);
@@ -15,6 +18,7 @@ const Login = (): ReactElement => {
   const [loginError, setLoginError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { user, setUser } = useContext(UserContext);
 
   const togglePasswordVisibility = () => {
     setShowPassword((prev) => !prev);
@@ -25,7 +29,7 @@ const Login = (): ReactElement => {
     return emailRegex.test(email);
   };
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     setErrors({});
     setLoginError(null);
 
@@ -49,16 +53,26 @@ const Login = (): ReactElement => {
       setErrors(newErrors);
       return;
     }
-
-    // Simulate login process
     try {
-      if (email === "test@example.com" && password === "password") {
-        setLoading(true);
-        setTimeout(() => {
-          navigate("/");
-        }, 3000);
+      const data = await UserService.login(email, password);
+      if (data instanceof AxiosError) {
+        if (data.response?.status === 401) {
+          setLoginError("Invalid email or password. Please try again.");
+        } else {
+          setLoginError("An unexpected error occurred. Please try again.");
+        }
+        return;
+      }
+      if (data) {
+        setUser({
+          id: data.id,
+          username: data.username,
+          email: data.email,
+          role: data.isAdmin ? "admin" : "user",
+          avatar: "https://www.gravatar.com/avatar/",
+        });
       } else {
-        setLoginError("Invalid email or password.");
+        setLoginError("Invalid email or password. Please try again.");
       }
     } catch (error) {
       setLoginError("An unexpected error occurred. Please try again.");

@@ -1,4 +1,4 @@
-import { ReactElement, useState } from "react";
+import { ReactElement, useContext, useState } from "react";
 import {
   Autocomplete,
   Box,
@@ -15,8 +15,11 @@ import Footer from "../../components/Footer/Footer";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import "./AccountSettings.scss";
+import { UserProfile } from "../../types/user.profile";
+import { UserContext } from "../../contexts/UserContext";
 
 const AccountSettings = (): ReactElement => {
+  const { user } = useContext(UserContext);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -106,7 +109,7 @@ const AccountSettings = (): ReactElement => {
               placeholder="Enter your name"
               className="AccountSettings-input"
               fullWidth
-              value={displayedName}
+              value={user?.username}
               onChange={(e) => setDisplayedName(e.target.value)}
             />
           </Box>
@@ -159,30 +162,9 @@ const AccountSettings = (): ReactElement => {
               variant="outlined"
               className="AccountSettings-input"
               fullWidth
-              value={email}
+              value={user?.email}
               onChange={(e) => setEmail(e.target.value)}
               type="email"
-            />
-          </Box>
-
-          <Box className="AccountSettings-row">
-            <Typography variant="body1">Password</Typography>
-            <TextField
-              variant="outlined"
-              className="AccountSettings-input"
-              fullWidth
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              type={showPassword ? "text" : "password"}
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton onClick={handleClickShowPassword} edge="end">
-                      {showPassword ? <VisibilityOff /> : <Visibility />}
-                    </IconButton>
-                  </InputAdornment>
-                ),
-              }}
             />
           </Box>
 
