@@ -22,10 +22,10 @@ export function verifyAccessToken(req, res, next) {
 
     req.user = {
       id: dbUser.id,
-      avatar: dbUser.avatar,
       username: dbUser.username,
       email: dbUser.email,
       isAdmin: dbUser.isAdmin,
+      avatar: dbUser.avatar,
     };
     next();
   });
