@@ -32,8 +32,6 @@ const AccountSettings = (): ReactElement => {
 
   const handleClickShowPassword = () => setShowPassword(!showPassword);
 
-  console.log(user);
-
   const programmingLanguages = [
     "JavaScript",
     "Python2",
@@ -111,7 +109,7 @@ const AccountSettings = (): ReactElement => {
               placeholder="Enter your name"
               className="AccountSettings-input"
               fullWidth
-              value={displayedName}
+              value={user?.username}
               onChange={(e) => setDisplayedName(e.target.value)}
             />
           </Box>
@@ -164,30 +162,9 @@ const AccountSettings = (): ReactElement => {
               variant="outlined"
               className="AccountSettings-input"
               fullWidth
-              value={email}
+              value={user?.email}
               onChange={(e) => setEmail(e.target.value)}
               type="email"
-            />
-          </Box>
-
-          <Box className="AccountSettings-row">
-            <Typography variant="body1">Password</Typography>
-            <TextField
-              variant="outlined"
-              className="AccountSettings-input"
-              fullWidth
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              type={showPassword ? "text" : "password"}
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton onClick={handleClickShowPassword} edge="end">
-                      {showPassword ? <VisibilityOff /> : <Visibility />}
-                    </IconButton>
-                  </InputAdornment>
-                ),
-              }}
             />
           </Box>
 

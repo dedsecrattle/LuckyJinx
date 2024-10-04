@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom"; // Import useNavigate for naviga
 import "./Navbar.scss";
 import ApiIcon from "@mui/icons-material/Api";
 import { UserContext } from "../../contexts/UserContext";
+import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 
 const Navbar = (): ReactElement => {
   const { user } = useContext(UserContext);
@@ -30,7 +31,8 @@ const Navbar = (): ReactElement => {
       <Box className="Navbar-buttons">
         {user ? (
           <Button color="primary" variant="contained" onClick={redirectToAccount}>
-            {user?.username}
+            <div style={{ padding: "0.5rem" }}>{user?.username}</div>
+            <AccountCircleIcon />
           </Button>
         ) : (
           <>
