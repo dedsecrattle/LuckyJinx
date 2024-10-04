@@ -66,10 +66,10 @@ const App = (): ReactElement => {
       <MainDialogContextProvider>
         <ConfirmationDialogContextProvider>
           <Routes>
-            <Route path="/" element={user ? <Home /> : <Navigate to={"/login"} />} />
+            <Route path="/" element={<Home />} />
             <Route path="/signup" element={user ? <Navigate to={"/"} /> : <SignUp />} />
             <Route path="/login" element={user ? <Navigate to={"/"} /> : <Login />} />
-            <Route path="/login" element={user ? <AccountSettings /> : <Navigate to={"/login"} />} />
+            <Route path="/settings" element={user ? <AccountSettings /> : <Navigate to={"/login"} />} />
             {/* <Route path="/questions" element={<QuestionList />} /> */}
           </Routes>
         </ConfirmationDialogContextProvider>
