@@ -9,7 +9,6 @@ import UserService from "../../services/user.service";
 import { useConfirmationDialog } from "../../contexts/ConfirmationDialogContext";
 import { useNavigate } from "react-router-dom";
 import { supportedProgrammingLanguages } from "../../constants/supported_programming_languages";
-import { AxiosError } from "axios";
 import { useMainDialog } from "../../contexts/MainDialogContext";
 import { UserValidationErrors, validateAvatar, validateEmail, validateName } from "../../util/user.helper";
 
@@ -61,7 +60,7 @@ const AccountSettings = (): ReactElement => {
         profilePhotoUrl,
       );
 
-      if (response instanceof AxiosError) {
+      if (response instanceof Error) {
         setError(response.message || "An unexpected error occurred");
       } else {
         setUser({
@@ -99,7 +98,7 @@ const AccountSettings = (): ReactElement => {
       setConfirmationDialogContent("Are you sure you want to delete your account? This action cannot be undone.");
       setConfirmationCallBack(() => async () => {
         const response = await UserService.deleteAccount(user.id);
-        if (response instanceof AxiosError) {
+        if (response instanceof Error) {
           setMainDialogTitle("Error when deleting account");
           setMainDialogContent(response.message || "An unexpected error occurred");
           openMainDialog();

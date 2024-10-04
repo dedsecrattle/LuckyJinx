@@ -8,7 +8,6 @@ import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import "./Login.scss";
 import UserService from "../../services/user.service";
 import { UserContext } from "../../contexts/UserContext";
-import { AxiosError } from "axios";
 import { useMainDialog } from "../../contexts/MainDialogContext";
 
 const Login = (): ReactElement => {
@@ -64,12 +63,8 @@ const Login = (): ReactElement => {
     }
     try {
       const data = await UserService.login(email, password);
-      if (data instanceof AxiosError) {
-        if (data.response?.status === 401) {
-          setLoginError("Invalid email or password. Please try again.");
-        } else {
-          setLoginError("An unexpected error occurred. Please try again.");
-        }
+      if (data instanceof Error) {
+        setLoginError(data.message || "An unexpected error occurred.");
         return;
       }
       if (data) {
