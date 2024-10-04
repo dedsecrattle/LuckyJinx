@@ -80,13 +80,13 @@ const SignUp = (): ReactElement => {
       <Navbar />
 
       <Box className="SignUp-container">
-        <Typography variant="body2" className="Home-welcome-title">
-          Sign Up
-        </Typography>
-        <Typography className="SignUp-subtitle" sx={{ mb: 3 }}>
-          Empower your interview preparation today! Create an account to unlock exclusive features and personalized
-          experiences.
-        </Typography>
+        <Box className="SignUp-header">
+          <Typography className="SignUp-title">Sign Up</Typography>
+          <Typography className="SignUp-subtitle">
+            Empower your interview preparation today! Create an account to unlock exclusive features and personalized
+            experiences.
+          </Typography>
+        </Box>
 
         <Box className="SignUp-form" sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
           {loading ? (
@@ -95,13 +95,18 @@ const SignUp = (): ReactElement => {
             <>
               <Box sx={{ display: "flex", gap: 2, width: "100%", mb: 2 }}>
                 <TextField
-                  label="username"
+                  label="Display Name (to others)"
                   variant="outlined"
                   fullWidth
                   value={userName}
                   onChange={(e) => setuserName(e.target.value)}
                   error={!!errors.userName}
                   helperText={errors.userName}
+                  slotProps={{
+                    input: {
+                      className: "SignUp-input",
+                    },
+                  }}
                 />
               </Box>
 
@@ -114,6 +119,11 @@ const SignUp = (): ReactElement => {
                   onChange={(e) => setEmail(e.target.value)}
                   error={!!errors.email}
                   helperText={errors.email}
+                  slotProps={{
+                    input: {
+                      className: "SignUp-input",
+                    },
+                  }}
                 />
                 <TextField
                   label="Password"
@@ -124,14 +134,21 @@ const SignUp = (): ReactElement => {
                   onChange={(e) => setPassword(e.target.value)}
                   error={!!errors.password}
                   helperText={errors.password}
-                  InputProps={{
-                    endAdornment: (
-                      <InputAdornment position="end">
-                        <IconButton onClick={togglePasswordVisibility} edge="end">
-                          {showPassword ? <VisibilityOff /> : <Visibility />}
-                        </IconButton>
-                      </InputAdornment>
-                    ),
+                  slotProps={{
+                    input: {
+                      className: "SignUp-input",
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <IconButton
+                            className="SignUp-password-eye-icon"
+                            onClick={togglePasswordVisibility}
+                            edge="end"
+                          >
+                            {showPassword ? <VisibilityOff /> : <Visibility />}
+                          </IconButton>
+                        </InputAdornment>
+                      ),
+                    },
                   }}
                 />
               </Box>

@@ -39,4 +39,12 @@ export default class UserService {
       return null;
     }
   }
+
+  static async deleteAccount(id: String): Promise<void | AxiosError> {
+    try {
+      await UserService.client.delete(`/users/${id}`);
+    } catch (error: any) {
+      return error as AxiosError;
+    }
+  }
 }

@@ -19,19 +19,24 @@
     align-items: center;
   }
 
+  &-header {
+    display: flex;
+    flex-direction: column;
+    width: 90%;
+    gap: 10px;
+    padding-bottom: 40px;
+  }
+
   &-title {
-    font-size: 2.5rem;
-    font-weight: 700;
-    color: #d4ff50;
-    margin-bottom: 40px;
+    font-size: 2.5rem !important;
+    font-weight: 700 !important;
+    color: #d4ff50 !important;
   }
 
   &-subtitle {
     font-size: 1rem;
     font-weight: 300;
     color: #b5b5b5;
-    text-align: center;
-    margin-bottom: 40px;
   }
 
   &-form {
@@ -59,19 +64,21 @@
 
     .SignUp-password {
       position: relative;
-
-      .password-eye-icon {
-        position: absolute;
-        top: 50%;
-        right: 10px;
-        transform: translateY(-50%);
-        cursor: pointer;
-        color: #999;
-      }
     }
   }
 
+  &-password-eye-icon {
+    padding-right: 10px !important;
+    cursor: pointer;
+    color: #999 !important;
+  }
+
+  &-input {
+    color: white !important;
+  }
+
   &-button {
+    align-self: flex-start;
     grid-column: span 2;
     background-color: #d4ff50;
     color: black;
@@ -80,10 +87,6 @@
     font-size: 1.2rem;
     text-transform: none;
     margin-top: 20px;
-
-    &:hover {
-      background-color: #c3ff40;
-    }
   }
 
   &-signup {
@@ -138,13 +141,17 @@
       }
     }
   }
-}
 
-.forgot-password {
-  color: #3f51b5;
-  cursor: pointer;
+  &-prompts {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: center;
+  }
 
-  &:hover {
-    text-decoration: underline;
+  &-forgot-password {
+    &-text {
+      text-decoration: underline;
+    }
   }
 }

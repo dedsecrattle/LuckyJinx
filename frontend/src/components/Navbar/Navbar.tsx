@@ -10,24 +10,28 @@ const Navbar = (): ReactElement => {
   const { user } = useContext(UserContext);
   const navigate = useNavigate();
 
+  const redirectToHome = () => {
+    navigate("/", { replace: true }); // replace serves to prevent repeated navigations to same location
+  };
+
   const redirectToSignUp = () => {
-    navigate("/signup");
+    navigate("/signup", { replace: true });
   };
 
   const redirectToLogin = () => {
-    navigate("/login");
+    navigate("/login", { replace: true });
   };
 
   const redirectToAccount = () => {
-    navigate("/settings");
+    navigate("/settings", { replace: true });
   };
 
   return (
     <nav className="Navbar">
-      <Box className="Navbar-logo">
+      <Button className="Navbar-logo" onClick={redirectToHome}>
         <ApiIcon color="primary" />
         <Typography className="Navbar-title">LuckyJinx</Typography>
-      </Box>
+      </Button>
       <Box className="Navbar-buttons">
         {user ? (
           <Button color="primary" variant="contained" onClick={redirectToAccount}>

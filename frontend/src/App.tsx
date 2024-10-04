@@ -10,7 +10,7 @@ import AccountSettings from "./pages/AccountSettings/AccountSettings";
 import { createTheme, ThemeProvider } from "@mui/material";
 import { MainDialogContextProvider } from "./contexts/MainDialogContext";
 import { ConfirmationDialogContextProvider } from "./contexts/ConfirmationDialogContext";
-import { UserContext, UserContextProvider } from "./contexts/UserContext";
+import { UserContext } from "./contexts/UserContext";
 
 const theme = createTheme({
   typography: {
@@ -33,6 +33,9 @@ const theme = createTheme({
           fontSize: "1rem",
           fontWeight: 400,
           textTransform: "none",
+          "&.Mui-disabled": {
+            backgroundColor: "lightgray",
+          },
         },
       },
     },
@@ -60,7 +63,7 @@ const theme = createTheme({
 });
 
 const App = (): ReactElement => {
-  const { user, setUser } = useContext(UserContext);
+  const { user } = useContext(UserContext);
   return (
     <ThemeProvider theme={theme}>
       <MainDialogContextProvider>

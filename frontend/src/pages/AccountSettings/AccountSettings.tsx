@@ -1,25 +1,17 @@
 import { ReactElement, useContext, useState } from "react";
-import {
-  Autocomplete,
-  Box,
-  Button,
-  TextField,
-  IconButton,
-  InputAdornment,
-  Typography,
-  Alert,
-  CircularProgress,
-} from "@mui/material";
+import { Autocomplete, Box, Button, TextField, Typography, Alert, CircularProgress } from "@mui/material";
 import Navbar from "../../components/Navbar/Navbar";
 import Footer from "../../components/Footer/Footer";
-import Visibility from "@mui/icons-material/Visibility";
-import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import "./AccountSettings.scss";
-import { UserProfile } from "../../types/user.profile";
 import { UserContext } from "../../contexts/UserContext";
+import { JWT_TOKEN_KEY } from "../../util/constants";
+import UserService from "../../services/user.service";
+import { useConfirmationDialog } from "../../contexts/ConfirmationDialogContext";
+import { useNavigate } from "react-router-dom";
+import { supportedProgrammingLanguages } from "../../constants/supported_programming_languages";
 
 const AccountSettings = (): ReactElement => {
-  const { user } = useContext(UserContext);
+  const { user, setUser } = useContext(UserContext);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -30,31 +22,12 @@ const AccountSettings = (): ReactElement => {
   const [email, setEmail] = useState("echomo@gmail.com");
   const [password, setPassword] = useState("password");
 
-  const handleClickShowPassword = () => setShowPassword(!showPassword);
+  const { setConfirmationDialogTitle, setConfirmationDialogContent, setConfirmationCallBack, openConfirmationDialog } =
+    useConfirmationDialog();
 
-  const programmingLanguages = [
-    "JavaScript",
-    "Python2",
-    "Python3",
-    "Java",
-    "C++",
-    "C#",
-    "Ruby",
-    "Go",
-    "PHP",
-    "Swift",
-    "Kotlin",
-    "Rust",
-    "TypeScript",
-    "R",
-    "Perl",
-    "Scala",
-    "Objective-C",
-    "Dart",
-    "Elixir",
-    "Haskell",
-    "MATLAB",
-  ];
+  const navigate = useNavigate();
+
+  const handleClickShowPassword = () => setShowPassword(!showPassword);
 
   const handleSaveChanges = async () => {
     setLoading(true);
@@ -84,6 +57,31 @@ const AccountSettings = (): ReactElement => {
     }
   };
 
+  const logout = () => {
+    localStorage.removeItem(JWT_TOKEN_KEY);
+    setUser(null);
+    navigate("/");
+  };
+
+  const openLogoutConfirmationDialog = () => {
+    setConfirmationDialogTitle("Log out");
+    setConfirmationDialogContent("Are you sure you want to log out?");
+    setConfirmationCallBack(() => logout);
+    openConfirmationDialog();
+  };
+
+  const openDeleteAccountConfirmationDialog = () => {
+    if (user?.id) {
+      setConfirmationDialogTitle("Delete account");
+      setConfirmationDialogContent("Are you sure you want to delete your account? This action cannot be undone.");
+      setConfirmationCallBack(() => async () => {
+        await UserService.deleteAccount(user.id);
+        logout();
+      });
+      openConfirmationDialog();
+    }
+  };
+
   return (
     <Box className="AccountSettings">
       <Navbar />
@@ -103,7 +101,9 @@ const AccountSettings = (): ReactElement => {
           }}
         >
           <Box className="AccountSettings-row">
-            <Typography variant="body1">Displayed Name (to others)</Typography>
+            <Typography className="AccountSettings-label-name" variant="body1">
+              Displayed Name (to others)
+            </Typography>
             <TextField
               variant="outlined"
               placeholder="Enter your name"
@@ -115,7 +115,9 @@ const AccountSettings = (): ReactElement => {
           </Box>
 
           <Box className="AccountSettings-row">
-            <Typography variant="body1">Profile Photo</Typography>
+            <Typography className="AccountSettings-label-avatar" variant="body1">
+              Profile Photo
+            </Typography>
             <Box className="AccountSettings-photo-section">
               <img
                 src={profilePhotoUrl || "https://randomuser.me/api/portraits/men/75.jpg"}
@@ -125,7 +127,7 @@ const AccountSettings = (): ReactElement => {
               <TextField
                 variant="outlined"
                 placeholder="Enter new URL to change"
-                className="AccountSettings-url-input"
+                className="AccountSettings-input"
                 fullWidth
                 value={profilePhotoUrl}
                 onChange={(e) => setProfilePhotoUrl(e.target.value)}
@@ -134,15 +136,18 @@ const AccountSettings = (): ReactElement => {
           </Box>
 
           <Box className="AccountSettings-row">
-            <Typography variant="body1">Preferred Programming Language</Typography>
+            <Typography className="AccountSettings-label-language" variant="body1">
+              Preferred Programming Language
+            </Typography>
             <Autocomplete
-              options={programmingLanguages}
+              className="AccountSettings-autocomplete"
+              options={supportedProgrammingLanguages}
               getOptionLabel={(option) => option}
               renderInput={(params) => (
                 <TextField
                   {...params}
                   variant="outlined"
-                  placeholder="Enter your preferred programming language"
+                  placeholder="Choose your preferred programming language"
                   className="AccountSettings-input"
                   fullWidth
                   value={preferredLanguage}
@@ -152,12 +157,22 @@ const AccountSettings = (): ReactElement => {
               filterOptions={(options, { inputValue }) =>
                 options.filter((option) => option.toLowerCase().includes(inputValue.toLowerCase()))
               }
+              slotProps={{
+                popupIndicator: {
+                  className: "AccountSettings-autocomplete-icon",
+                },
+                clearIndicator: {
+                  className: "AccountSettings-autocomplete-icon",
+                },
+              }}
               fullWidth
             />
           </Box>
 
           <Box className="AccountSettings-row">
-            <Typography variant="body1">Email</Typography>
+            <Typography className="AccountSettings-label-email" variant="body1">
+              Email
+            </Typography>
             <TextField
               variant="outlined"
               className="AccountSettings-input"
@@ -180,15 +195,38 @@ const AccountSettings = (): ReactElement => {
             </Alert>
           )}
 
-          <Button
-            color="primary"
-            variant="contained"
-            className="AccountSettings-save-button"
-            onClick={handleSaveChanges}
-            disabled={loading}
-          >
-            {loading ? <CircularProgress size={24} /> : "Save Changes"}
-          </Button>
+          <Box className="AccountSettings-buttons">
+            <Button
+              color="primary"
+              variant="contained"
+              className="AccountSettings-buttons-save"
+              onClick={handleSaveChanges}
+              disabled={loading}
+            >
+              {loading ? <CircularProgress size={24} /> : "Save Changes"}
+            </Button>
+
+            <Box className="AccountSettings-buttons-logout-section">
+              <Button
+                color="primary"
+                variant="contained"
+                className="AccountSettings-buttons-logout"
+                onClick={openLogoutConfirmationDialog}
+                disabled={loading}
+              >
+                {"Log out"}
+              </Button>
+              <Button
+                color="error"
+                variant="contained"
+                className="AccountSettings-buttons-delete-account"
+                onClick={openDeleteAccountConfirmationDialog}
+                disabled={loading}
+              >
+                {"Delete account"}
+              </Button>
+            </Box>
+          </Box>
         </form>
       </Box>
       <Footer />
