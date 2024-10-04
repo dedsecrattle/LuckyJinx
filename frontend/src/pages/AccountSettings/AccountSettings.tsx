@@ -11,17 +11,19 @@ import { useNavigate } from "react-router-dom";
 import { supportedProgrammingLanguages } from "../../constants/supported_programming_languages";
 import { AxiosError } from "axios";
 import { useMainDialog } from "../../contexts/MainDialogContext";
+import { UserValidationErrors, validateAvatar, validateEmail, validateName } from "../../util/user.helper";
 
 const AccountSettings = (): ReactElement => {
   const { user, setUser } = useContext(UserContext);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<UserValidationErrors>({});
   const [error, setError] = useState<string | null>(null);
   const [confirmationMessage, setConfirmationMessage] = useState<string | null>(null);
-  const [displayedName, setDisplayedName] = useState(user?.username.toString());
-  const [profilePhotoUrl, setProfilePhotoUrl] = useState(user?.avatar.toString());
+  const [displayedName, setDisplayedName] = useState(user?.username.toString() ?? "");
+  const [profilePhotoUrl, setProfilePhotoUrl] = useState(user?.avatar.toString() ?? "");
   const [preferredLanguage, setPreferredLanguage] = useState("");
-  const [email, setEmail] = useState(user?.email.toString());
+  const [email, setEmail] = useState(user?.email.toString() ?? "");
   // const [password, setPassword] = useState("password");
 
   const { setMainDialogTitle, setMainDialogContent, openMainDialog } = useMainDialog();
@@ -38,12 +40,18 @@ const AccountSettings = (): ReactElement => {
     setConfirmationMessage(null);
 
     try {
-      if (!user?.id) {
-        throw new Error("User ID not found");
+      const errors: UserValidationErrors = {
+        name: validateName(displayedName),
+        email: validateEmail(email),
+        avatar: validateAvatar(profilePhotoUrl),
+      };
+
+      setFieldErrors(errors);
+
+      if (errors.name || errors.email || errors.avatar) {
+        return;
       }
-      if (!displayedName || !email || !profilePhotoUrl) {
-        throw new Error("All fields must be non-empty");
-      }
+
       const response = await UserService.updateAccount(
         user!.id.toString(),
         displayedName,
@@ -129,8 +137,10 @@ const AccountSettings = (): ReactElement => {
               placeholder="Enter your name"
               className="AccountSettings-input"
               fullWidth
-              value={user?.username}
+              value={displayedName}
               onChange={(e) => setDisplayedName(e.target.value)}
+              error={!!fieldErrors.name}
+              helperText={fieldErrors.name}
             />
           </Box>
 
@@ -147,6 +157,8 @@ const AccountSettings = (): ReactElement => {
                 fullWidth
                 value={profilePhotoUrl}
                 onChange={(e) => setProfilePhotoUrl(e.target.value)}
+                error={!!fieldErrors.avatar}
+                helperText={fieldErrors.avatar}
               />
             </Box>
           </Box>
@@ -193,9 +205,11 @@ const AccountSettings = (): ReactElement => {
               variant="outlined"
               className="AccountSettings-input"
               fullWidth
-              value={user?.email}
+              value={email}
               onChange={(e) => setEmail(e.target.value)}
               type="email"
+              error={!!fieldErrors.email}
+              helperText={fieldErrors.email}
             />
           </Box>
 
