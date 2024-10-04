@@ -1,3 +1,4 @@
+import { AxiosError } from "axios";
 import { User } from "../models/user.model";
 import UserService from "../services/user.service";
 import { UserProfile } from "../types/user.profile";

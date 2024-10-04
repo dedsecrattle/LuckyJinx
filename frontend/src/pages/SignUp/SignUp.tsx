@@ -7,6 +7,7 @@ import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import "./SignUp.scss";
 import UserService from "../../services/user.service";
+import { AxiosError } from "axios";
 
 const SignUp = (): ReactElement => {
   const [showPassword, setShowPassword] = useState(false);
@@ -66,19 +67,12 @@ const SignUp = (): ReactElement => {
       setErrors(newErrors);
       return;
     }
-
-    try {
-      const response = await UserService.signup(email, password, userName);
-      navigate("/login");
-    } catch (error: any) {
-      if (error.response) {
-        if (error.response.status === 409) {
-          setSignUpError("User with this email already exists. Please login.");
-        } else {
-          setSignUpError("An unexpected error occurred. Please try again.");
-        }
-      }
+    const data = await UserService.signup(email, password, userName);
+    if (data instanceof AxiosError) {
+      setSignUpError("An unexpected error occurred. Please try again.");
+      return;
     }
+    navigate("/login");
   };
 
   return (

@@ -8,6 +8,7 @@ import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import "./Login.scss";
 import UserService from "../../services/user.service";
 import { UserContext } from "../../contexts/UserContext";
+import { Axios, AxiosError } from "axios";
 
 const Login = (): ReactElement => {
   const [showPassword, setShowPassword] = useState(false);
@@ -53,13 +54,21 @@ const Login = (): ReactElement => {
       return;
     }
     try {
-      const response = await UserService.login(email, password);
-      if (response) {
+      const data = await UserService.login(email, password);
+      if (data instanceof AxiosError) {
+        if (data.response?.status === 401) {
+          setLoginError("Invalid email or password. Please try again.");
+        } else {
+          setLoginError("An unexpected error occurred. Please try again.");
+        }
+        return;
+      }
+      if (data) {
         setUser({
-          id: response.id,
-          username: response.username,
-          email: response.email,
-          role: response.isAdmin ? "admin" : "user",
+          id: data.id,
+          username: data.username,
+          email: data.email,
+          role: data.isAdmin ? "admin" : "user",
           avatar: "https://www.gravatar.com/avatar/",
         });
       } else {

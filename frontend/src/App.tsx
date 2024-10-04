@@ -61,14 +61,12 @@ const theme = createTheme({
 
 const App = (): ReactElement => {
   const { user, setUser } = useContext(UserContext);
-
-  console.log(user);
   return (
     <ThemeProvider theme={theme}>
       <MainDialogContextProvider>
         <ConfirmationDialogContextProvider>
           <Routes>
-            <Route path="/" element={user?.id ? <Home /> : <Navigate to={"/login"} />} />
+            <Route path="/" element={user ? <Home /> : <Navigate to={"/login"} />} />
             <Route path="/signup" element={user ? <Navigate to={"/"} /> : <SignUp />} />
             <Route path="/login" element={user ? <Navigate to={"/"} /> : <Login />} />
             <Route path="/login" element={user ? <AccountSettings /> : <Navigate to={"/login"} />} />
