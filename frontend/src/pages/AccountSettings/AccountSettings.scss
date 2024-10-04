@@ -19,11 +19,18 @@
     align-items: center;
   }
 
+  &-header {
+    display: flex;
+    flex-direction: column;
+    width: 90%;
+    gap: 10px;
+    padding-bottom: 40px;
+  }
+
   &-title {
-    color: var(--White-90, #e4e4e7);
-    font-size: 2.5rem;
-    font-weight: 700;
-    margin-bottom: 10px;
+    font-size: 2.5rem !important;
+    font-weight: 700 !important;
+    color: #d4ff50 !important;
   }
 
   &-subtitle {

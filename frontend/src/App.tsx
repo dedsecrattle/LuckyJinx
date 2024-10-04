@@ -6,7 +6,6 @@ import Home from "./pages/Home/Home";
 import SignUp from "./pages/SignUp/SignUp";
 import Login from "./pages/Login/Login";
 import AccountSettings from "./pages/AccountSettings/AccountSettings";
-//import QuestionList from "./pages/QuestionList/QuestionList";
 import { createTheme, ThemeProvider } from "@mui/material";
 import { MainDialogContextProvider } from "./contexts/MainDialogContext";
 import { ConfirmationDialogContextProvider } from "./contexts/ConfirmationDialogContext";
@@ -73,7 +72,6 @@ const App = (): ReactElement => {
             <Route path="/signup" element={user ? <Navigate to={"/"} /> : <SignUp />} />
             <Route path="/login" element={user ? <Navigate to={"/"} /> : <Login />} />
             <Route path="/settings" element={user ? <AccountSettings /> : <Navigate to={"/login"} />} />
-            {/* <Route path="/questions" element={<QuestionList />} /> */}
           </Routes>
         </ConfirmationDialogContextProvider>
       </MainDialogContextProvider>

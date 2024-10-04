@@ -35,9 +35,7 @@ export function verifyIsAdmin(req, res, next) {
   if (req.user.isAdmin) {
     next();
   } else {
-    return res
-      .status(403)
-      .json({ message: "Not authorized to access this resource" });
+    return res.status(403).json({ message: "Not authorized to access this resource" });
   }
 }
 
@@ -52,7 +50,5 @@ export function verifyIsOwnerOrAdmin(req, res, next) {
     return next();
   }
 
-  return res
-    .status(403)
-    .json({ message: "Not authorized to access this resource" });
+  return res.status(403).json({ message: "Not authorized to access this resource" });
 }

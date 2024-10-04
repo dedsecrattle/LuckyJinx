@@ -78,7 +78,7 @@ const Login = (): ReactElement => {
           username: data.username,
           email: data.email,
           role: data.isAdmin ? "admin" : "user",
-          avatar: "https://www.gravatar.com/avatar/",
+          avatar: data.avatar,
         });
       } else {
         setLoginError("Invalid email or password. Please try again.");

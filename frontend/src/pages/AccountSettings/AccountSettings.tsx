@@ -9,6 +9,8 @@ import UserService from "../../services/user.service";
 import { useConfirmationDialog } from "../../contexts/ConfirmationDialogContext";
 import { useNavigate } from "react-router-dom";
 import { supportedProgrammingLanguages } from "../../constants/supported_programming_languages";
+import { AxiosError } from "axios";
+import { useMainDialog } from "../../contexts/MainDialogContext";
 
 const AccountSettings = (): ReactElement => {
   const { user, setUser } = useContext(UserContext);
@@ -16,12 +18,13 @@ const AccountSettings = (): ReactElement => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [confirmationMessage, setConfirmationMessage] = useState<string | null>(null);
-  const [displayedName, setDisplayedName] = useState("Echomo");
-  const [profilePhotoUrl, setProfilePhotoUrl] = useState("");
+  const [displayedName, setDisplayedName] = useState(user?.username.toString());
+  const [profilePhotoUrl, setProfilePhotoUrl] = useState(user?.avatar.toString());
   const [preferredLanguage, setPreferredLanguage] = useState("");
-  const [email, setEmail] = useState("echomo@gmail.com");
-  const [password, setPassword] = useState("password");
+  const [email, setEmail] = useState(user?.email.toString());
+  // const [password, setPassword] = useState("password");
 
+  const { setMainDialogTitle, setMainDialogContent, openMainDialog } = useMainDialog();
   const { setConfirmationDialogTitle, setConfirmationDialogContent, setConfirmationCallBack, openConfirmationDialog } =
     useConfirmationDialog();
 
@@ -35,21 +38,33 @@ const AccountSettings = (): ReactElement => {
     setConfirmationMessage(null);
 
     try {
-      if (!displayedName || !email || !password) {
-        throw new Error("Displayed name, email, and password are required.");
+      if (!user?.id) {
+        throw new Error("User ID not found");
       }
-      // Simulate API call
-      await new Promise((resolve, reject) => {
-        setTimeout(() => {
-          if (email === "error@example.com") {
-            reject(new Error("Email already in use."));
-          } else {
-            resolve("Account details updated successfully!");
-          }
-        }, 3000);
-      });
+      if (!displayedName || !email || !profilePhotoUrl) {
+        throw new Error("All fields must be non-empty");
+      }
+      const response = await UserService.updateAccount(
+        user!.id.toString(),
+        displayedName,
+        email,
+        null,
+        // password,
+        profilePhotoUrl,
+      );
 
-      setConfirmationMessage("Account details saved successfully!");
+      if (response instanceof AxiosError) {
+        setError(response.message || "An unexpected error occurred");
+      } else {
+        setUser({
+          id: response.id,
+          username: response.username,
+          email: response.email,
+          role: response.isAdmin ? "admin" : "user",
+          avatar: response.avatar,
+        });
+        setConfirmationMessage("Account details saved successfully!");
+      }
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -75,8 +90,14 @@ const AccountSettings = (): ReactElement => {
       setConfirmationDialogTitle("Delete account");
       setConfirmationDialogContent("Are you sure you want to delete your account? This action cannot be undone.");
       setConfirmationCallBack(() => async () => {
-        await UserService.deleteAccount(user.id);
-        logout();
+        const response = await UserService.deleteAccount(user.id);
+        if (response instanceof AxiosError) {
+          setMainDialogTitle("Error when deleting account");
+          setMainDialogContent(response.message || "An unexpected error occurred");
+          openMainDialog();
+        } else {
+          logout();
+        }
       });
       openConfirmationDialog();
     }
@@ -86,13 +107,12 @@ const AccountSettings = (): ReactElement => {
     <Box className="AccountSettings">
       <Navbar />
       <Box className="AccountSettings-container">
-        <Typography variant="body2" className="Home-welcome-title">
-          Account Settings
-        </Typography>
-        <Typography className="AccountSettings-subtitle" sx={{ mb: 3 }}>
-          Customize your information and experience here!
-        </Typography>
-
+        <Box className="AccountSettings-header">
+          <Typography variant="body2" className="AccountSettings-title">
+            Account Settings
+          </Typography>
+          <Typography className="AccountSettings-subtitle">Customize your information and experience here!</Typography>
+        </Box>
         <form
           className="AccountSettings-form"
           onSubmit={(e) => {
@@ -119,11 +139,7 @@ const AccountSettings = (): ReactElement => {
               Profile Photo
             </Typography>
             <Box className="AccountSettings-photo-section">
-              <img
-                src={profilePhotoUrl || "https://randomuser.me/api/portraits/men/75.jpg"}
-                alt="Profile"
-                className="AccountSettings-profile-photo"
-              />
+              <img src={profilePhotoUrl} alt="Profile" className="AccountSettings-profile-photo" />
               <TextField
                 variant="outlined"
                 placeholder="Enter new URL to change"

@@ -26,7 +26,7 @@ export const UserContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
           username: response.username,
           email: response.email,
           role: response.isAdmin ? "admin" : "user",
-          avatar: "https://www.gravatar.com/avatar/",
+          avatar: response.avatar,
         });
       }
     }

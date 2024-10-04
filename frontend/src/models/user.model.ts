@@ -6,4 +6,5 @@ export interface User {
   password: String;
   createdAt: Date;
   isAdmin: Boolean;
+  avatar: String;
 }

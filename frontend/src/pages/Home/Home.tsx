@@ -11,7 +11,6 @@ import QuestionList from "../../components/QuestionList/QuestionList";
 
 const Home = (): ReactElement => {
   const { user, setUser } = useContext(UserContext);
-  console.log(user);
   return (
     <Box className="Home">
       <Navbar />

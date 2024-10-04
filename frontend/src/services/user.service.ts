@@ -1,9 +1,9 @@
-import axios, { AxiosError } from "axios";
+import axios, { AxiosError, AxiosInstance } from "axios";
 import { User } from "../models/user.model";
 import { JWT_TOKEN_KEY } from "../util/constants";
 
 export default class UserService {
-  private static client = axios.create({
+  private static client: AxiosInstance = axios.create({
     baseURL: process.env.REACT_APP_USER_SERVICE_URL as string,
     headers: {
       "Content-type": "application/json",
@@ -11,11 +11,25 @@ export default class UserService {
     },
   });
 
+  /**
+   * Creates a new axios client, for updating token when needed
+   */
+  private static createAxiosClient() {
+    UserService.client = axios.create({
+      baseURL: process.env.REACT_APP_USER_SERVICE_URL as string,
+      headers: {
+        "Content-type": "application/json",
+        authorization: localStorage.getItem(JWT_TOKEN_KEY),
+      },
+    });
+  }
+
   static async login(email: string, password: string): Promise<User | AxiosError> {
     try {
       const response = await UserService.client.post("/auth/login", { email, password });
       const token = response.data.data.accessToken as string;
       localStorage.setItem(JWT_TOKEN_KEY, `Bearer ${token}`);
+      this.createAxiosClient();
       return response.data.data;
     } catch (error: any) {
       return error as AxiosError;
@@ -37,6 +51,21 @@ export default class UserService {
       return response.data.data;
     } catch (error: any) {
       return null;
+    }
+  }
+
+  static async updateAccount(
+    id: string,
+    username: string,
+    email: string,
+    password: string | null,
+    avatar: string,
+  ): Promise<User | AxiosError> {
+    try {
+      const response = await UserService.client.patch(`/users/${id}`, { username, email, password, avatar });
+      return response.data.data;
+    } catch (error: any) {
+      return error as AxiosError;
     }
   }
 
