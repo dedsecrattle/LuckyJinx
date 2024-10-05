@@ -42,7 +42,8 @@ export async function updateUserById(
   username,
   email,
   password,
-  avatar
+  avatar,
+  programmingLanguagePreference
 ) {
   return UserModel.findByIdAndUpdate(
     userId,
@@ -52,6 +53,7 @@ export async function updateUserById(
         email,
         password,
         avatar,
+        programmingLanguagePreference,
       },
     },
     { new: true } // return the updated user
