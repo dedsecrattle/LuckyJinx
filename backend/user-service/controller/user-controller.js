@@ -199,5 +199,6 @@ export function formatUserResponse(user) {
     isAdmin: user.isAdmin,
     avatar: user.avatar,
     createdAt: user.createdAt,
+    programmingLanguagePreference: user.programmingLanguagePreference,
   };
 }
