@@ -30,6 +30,11 @@ const UserModelSchema = new Schema({
     type: String,
     default: "https://avatar.iran.liara.run/public/boy",
   },
+  programmingLanguagePreference: {
+    type: String,
+    enum: ["python", "java", "c++"],
+    default: "python",
+  },
 });
 
 export default mongoose.model("UserModel", UserModelSchema);

@@ -26,6 +26,7 @@ export function verifyAccessToken(req, res, next) {
       email: dbUser.email,
       isAdmin: dbUser.isAdmin,
       avatar: dbUser.avatar,
+      programmingLanguagePreference: dbUser.programmingLanguagePreference,
     };
     next();
   });
