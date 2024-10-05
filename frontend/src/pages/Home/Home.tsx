@@ -1,7 +1,4 @@
 import { ReactElement } from "react";
-import { useContext } from "react";
-import { UserContext } from "../../contexts/UserContext";
-//import { useNavigate } from "react-router-dom";
 import "./Home.scss";
 import Navbar from "../../components/Navbar/Navbar";
 import { Box, Button, Typography } from "@mui/material";
@@ -10,7 +7,6 @@ import Footer from "../../components/Footer/Footer";
 import QuestionList from "../../components/QuestionList/QuestionList";
 
 const Home = (): ReactElement => {
-  const { user, setUser } = useContext(UserContext);
   return (
     <Box className="Home">
       <Navbar />
@@ -41,10 +37,6 @@ const Home = (): ReactElement => {
       <Box id="questions">
         <QuestionList />
       </Box>
-
-      {/* <button id="questions" onClick={goToQuestionList} className="Home-button">
-        Go to Question List
-      </button> */}
 
       <Footer />
     </Box>

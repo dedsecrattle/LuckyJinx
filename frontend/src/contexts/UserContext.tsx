@@ -1,8 +1,8 @@
-import { AxiosError } from "axios";
 import { User } from "../models/user.model";
 import UserService from "../services/user.service";
 import { UserProfile } from "../types/user.profile";
-import { createContext, useState, useEffect, useContext } from "react";
+import { createContext, useState, useEffect } from "react";
+import { mapUserResponseToUserProfile } from "../util/user.helper";
 
 interface UserContextType {
   user: UserProfile | null;
@@ -21,13 +21,7 @@ export const UserContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
     async function fetchUser() {
       const response: User | null = await UserService.refreshToken();
       if (response) {
-        setUser({
-          id: response.id,
-          username: response.username,
-          email: response.email,
-          role: response.isAdmin ? "admin" : "user",
-          avatar: response.avatar,
-        });
+        setUser(mapUserResponseToUserProfile(response));
       }
     }
     fetchUser();

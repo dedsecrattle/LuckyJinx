@@ -110,10 +110,14 @@
     }
   }
 
-  &-autocomplete {
-    padding: 10px 30px;
+  &-select {
+    background: var(--Grey-20, #333) !important;
+    border-radius: 50px !important;
+    padding-inline: 10px !important;
+    color: white !important;
 
     &-icon {
+      padding-inline: 10px;
       color: white !important;
     }
   }

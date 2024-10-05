@@ -9,6 +9,7 @@ import "./Login.scss";
 import UserService from "../../services/user.service";
 import { UserContext } from "../../contexts/UserContext";
 import { useMainDialog } from "../../contexts/MainDialogContext";
+import { mapUserResponseToUserProfile } from "../../util/user.helper";
 
 const Login = (): ReactElement => {
   const [showPassword, setShowPassword] = useState(false);
@@ -68,13 +69,7 @@ const Login = (): ReactElement => {
         return;
       }
       if (data) {
-        setUser({
-          id: data.id,
-          username: data.username,
-          email: data.email,
-          role: data.isAdmin ? "admin" : "user",
-          avatar: data.avatar,
-        });
+        setUser(mapUserResponseToUserProfile(data));
       } else {
         setLoginError("Invalid email or password. Please try again.");
       }

@@ -1,5 +1,15 @@
 import { ReactElement, useContext, useState } from "react";
-import { Autocomplete, Box, Button, TextField, Typography, Alert, CircularProgress } from "@mui/material";
+import {
+  Autocomplete,
+  Box,
+  Button,
+  TextField,
+  Typography,
+  Alert,
+  CircularProgress,
+  Select,
+  MenuItem,
+} from "@mui/material";
 import Navbar from "../../components/Navbar/Navbar";
 import Footer from "../../components/Footer/Footer";
 import "./AccountSettings.scss";
@@ -8,9 +18,15 @@ import { JWT_TOKEN_KEY } from "../../util/constants";
 import UserService from "../../services/user.service";
 import { useConfirmationDialog } from "../../contexts/ConfirmationDialogContext";
 import { useNavigate } from "react-router-dom";
-import { supportedProgrammingLanguages } from "../../constants/supported_programming_languages";
+import { SupportedProgrammingLanguages } from "../../constants/supported_programming_languages";
 import { useMainDialog } from "../../contexts/MainDialogContext";
-import { UserValidationErrors, validateAvatar, validateEmail, validateName } from "../../util/user.helper";
+import {
+  mapUserResponseToUserProfile,
+  UserValidationErrors,
+  validateAvatar,
+  validateEmail,
+  validateName,
+} from "../../util/user.helper";
 
 const AccountSettings = (): ReactElement => {
   const { user, setUser } = useContext(UserContext);
@@ -19,10 +35,12 @@ const AccountSettings = (): ReactElement => {
   const [fieldErrors, setFieldErrors] = useState<UserValidationErrors>({});
   const [error, setError] = useState<string | null>(null);
   const [confirmationMessage, setConfirmationMessage] = useState<string | null>(null);
-  const [displayedName, setDisplayedName] = useState(user?.username.toString() ?? "");
-  const [profilePhotoUrl, setProfilePhotoUrl] = useState(user?.avatar.toString() ?? "");
-  const [preferredLanguage, setPreferredLanguage] = useState("");
-  const [email, setEmail] = useState(user?.email.toString() ?? "");
+  const [displayedName, setDisplayedName] = useState(user?.username?.toString() ?? "");
+  const [profilePhotoUrl, setProfilePhotoUrl] = useState(user?.avatar?.toString() ?? "");
+  const [preferredLanguage, setPreferredLanguage] = useState(
+    (user?.language?.toString() as SupportedProgrammingLanguages) ?? SupportedProgrammingLanguages.python,
+  );
+  const [email, setEmail] = useState(user?.email?.toString() ?? "");
   // const [password, setPassword] = useState("password");
 
   const { setMainDialogTitle, setMainDialogContent, openMainDialog } = useMainDialog();
@@ -58,18 +76,13 @@ const AccountSettings = (): ReactElement => {
         null,
         // password,
         profilePhotoUrl,
+        preferredLanguage as SupportedProgrammingLanguages,
       );
 
       if (response instanceof Error) {
         setError(response.message || "An unexpected error occurred");
       } else {
-        setUser({
-          id: response.id,
-          username: response.username,
-          email: response.email,
-          role: response.isAdmin ? "admin" : "user",
-          avatar: response.avatar,
-        });
+        setUser(mapUserResponseToUserProfile(response));
         setConfirmationMessage("Account details saved successfully!");
       }
     } catch (err: any) {
@@ -166,34 +179,25 @@ const AccountSettings = (): ReactElement => {
             <Typography className="AccountSettings-label-language" variant="body1">
               Preferred Programming Language
             </Typography>
-            <Autocomplete
-              className="AccountSettings-autocomplete"
-              options={supportedProgrammingLanguages}
-              getOptionLabel={(option) => option}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  variant="outlined"
-                  placeholder="Choose your preferred programming language"
-                  className="AccountSettings-input"
-                  fullWidth
-                  value={preferredLanguage}
-                  onChange={(e) => setPreferredLanguage(e.target.value)}
-                />
-              )}
-              filterOptions={(options, { inputValue }) =>
-                options.filter((option) => option.toLowerCase().includes(inputValue.toLowerCase()))
-              }
-              slotProps={{
-                popupIndicator: {
-                  className: "AccountSettings-autocomplete-icon",
-                },
-                clearIndicator: {
-                  className: "AccountSettings-autocomplete-icon",
+            <Select
+              className="AccountSettings-select"
+              value={preferredLanguage}
+              onChange={(e) => setPreferredLanguage(e.target.value as SupportedProgrammingLanguages)}
+              fullWidth
+              inputProps={{
+                classes: {
+                  icon: "AccountSettings-select-icon",
                 },
               }}
-              fullWidth
-            />
+            >
+              {Object.values(SupportedProgrammingLanguages).map((language) => {
+                return (
+                  <MenuItem key={language} value={language}>
+                    {language}
+                  </MenuItem>
+                );
+              })}
+            </Select>
           </Box>
 
           <Box className="AccountSettings-row">

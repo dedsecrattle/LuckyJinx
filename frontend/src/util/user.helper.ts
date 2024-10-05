@@ -1,7 +1,19 @@
+import { User } from "../models/user.model";
 import { UserProfile } from "../types/user.profile";
 
 export const isAdmin = (user: UserProfile | null): boolean => {
   return user?.role === "admin";
+};
+
+export const mapUserResponseToUserProfile = (user: User): UserProfile => {
+  return {
+    id: user.id,
+    username: user.username,
+    email: user.email,
+    role: user.isAdmin ? "admin" : "user",
+    avatar: user.avatar,
+    language: user.programmingLanguagePreference,
+  };
 };
 
 export interface UserValidationErrors {

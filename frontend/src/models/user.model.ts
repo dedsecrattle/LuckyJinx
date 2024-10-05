@@ -1,3 +1,5 @@
+import { SupportedProgrammingLanguages } from "../constants/supported_programming_languages";
+
 export interface User {
   id: String;
   username: String;
@@ -7,4 +9,5 @@ export interface User {
   createdAt: Date;
   isAdmin: Boolean;
   avatar: String;
+  programmingLanguagePreference: SupportedProgrammingLanguages;
 }

@@ -1,6 +1,7 @@
 import axios, { AxiosError, AxiosInstance } from "axios";
 import { User } from "../models/user.model";
 import { JWT_TOKEN_KEY } from "../util/constants";
+import { SupportedProgrammingLanguages } from "../constants/supported_programming_languages";
 
 const UNEXPECTED_ERROR_MESSAGE = "An unexpected error occurred.";
 
@@ -71,13 +72,19 @@ export default class UserService {
     email: string,
     password: string | null,
     avatar: string,
+    programmingLanguagePreference: SupportedProgrammingLanguages,
   ): Promise<User | Error> {
     try {
-      const response = await UserService.client.patch(`/users/${id}`, { username, email, password, avatar });
+      const response = await UserService.client.patch(`/users/${id}`, {
+        username,
+        email,
+        password,
+        avatar,
+        programmingLanguagePreference,
+      });
       return response.data.data;
     } catch (error: any) {
       if (error instanceof AxiosError) {
-        console.log(error);
         if (error.response?.status === 401) {
           return new Error("Authentication failed, please log in and try again.");
         }

@@ -1,4 +1,8 @@
-export const supportedProgrammingLanguages = ["Python", "Java", "C++"];
+export enum SupportedProgrammingLanguages {
+  python = "Python",
+  java = "Java",
+  cpp = "C++",
+}
 
 // "JavaScript",
 // "Python2",
