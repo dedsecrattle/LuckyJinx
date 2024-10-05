@@ -32,8 +32,8 @@ const UserModelSchema = new Schema({
   },
   programmingLanguagePreference: {
     type: String,
-    enum: ["python", "java", "c++"],
-    default: "python",
+    enum: ["Python", "Java", "C++"],
+    default: "Python",
   },
 });
 
