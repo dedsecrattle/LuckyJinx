@@ -20,8 +20,8 @@ router.post("/", createUser);
 
 router.get("/:id", verifyAccessToken, verifyIsOwnerOrAdmin, getUser);
 
-router.patch("/:id", verifyAccessToken, verifyIsOwnerOrAdmin, updateUser);
+router.patch("/:id", verifyAccessToken, updateUser);
 
-router.delete("/:id", verifyAccessToken, verifyIsOwnerOrAdmin, deleteUser);
+router.delete("/:id", verifyAccessToken, deleteUser);
 
 export default router;

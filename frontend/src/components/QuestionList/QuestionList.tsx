@@ -1,4 +1,4 @@
-import { ReactElement, useEffect, useState } from "react";
+import { ReactElement, useContext, useEffect, useState } from "react";
 import { Button, IconButton, Typography } from "@mui/material";
 import { DeleteForever, EditNote, OpenInNew } from "@mui/icons-material";
 import { useMainDialog } from "../../contexts/MainDialogContext";
@@ -7,6 +7,8 @@ import { Question, QuestionComplexity } from "../../models/question.model";
 import QuestionDialog from "../QuestionDialog/QuestionDialog";
 import QuestionService from "../../services/question.service";
 import { useConfirmationDialog } from "../../contexts/ConfirmationDialogContext";
+import { UserContext } from "../../contexts/UserContext";
+import { isAdmin } from "../../util/user.helper";
 
 const QuestionList = (): ReactElement => {
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -22,6 +24,9 @@ const QuestionList = (): ReactElement => {
 
   const { setConfirmationDialogTitle, setConfirmationDialogContent, setConfirmationCallBack, openConfirmationDialog } =
     useConfirmationDialog();
+
+  const { user } = useContext(UserContext);
+  const canEditQuestion: boolean = isAdmin(user);
 
   // Shared states for adding or editing question
   const [isAddNew, setIsAddNew] = useState<boolean>(true);
@@ -175,7 +180,7 @@ const QuestionList = (): ReactElement => {
                   >
                     Complexity
                   </th>
-                  <th>Actions</th>
+                  {canEditQuestion ? <th>Actions</th> : <></>}
                 </tr>
               </thead>
               <tbody>
@@ -202,26 +207,34 @@ const QuestionList = (): ReactElement => {
                       </div>
                     </td>
                     <td className={styles.complexity}>{question.complexity}</td>
-                    <td className={styles.actions}>
-                      <IconButton onClick={() => openQuestionDialog(question)}>
-                        <EditNote className={styles.questionediticon} />
-                      </IconButton>
-                      <IconButton className={styles.questiondeleteicon} onClick={handleDelete(question)}>
-                        <DeleteForever />
-                      </IconButton>
-                    </td>
+                    {canEditQuestion ? (
+                      <td className={styles.actions}>
+                        <IconButton onClick={() => openQuestionDialog(question)}>
+                          <EditNote className={styles.questionediticon} />
+                        </IconButton>
+                        <IconButton className={styles.questiondeleteicon} onClick={handleDelete(question)}>
+                          <DeleteForever />
+                        </IconButton>
+                      </td>
+                    ) : (
+                      <></>
+                    )}
                   </tr>
                 ))}
               </tbody>
             </table>
-            <Button
-              className={styles.questionaddicon}
-              color="primary"
-              variant="contained"
-              onClick={() => openQuestionDialog(null)}
-            >
-              Add question
-            </Button>
+            {canEditQuestion ? (
+              <Button
+                className={styles.questionaddicon}
+                color="primary"
+                variant="contained"
+                onClick={() => openQuestionDialog(null)}
+              >
+                Add question
+              </Button>
+            ) : (
+              <></>
+            )}
           </div>
         )}
       </div>

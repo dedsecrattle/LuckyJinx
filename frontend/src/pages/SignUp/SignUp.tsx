@@ -7,14 +7,14 @@ import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import "./SignUp.scss";
 import UserService from "../../services/user.service";
-import { AxiosError } from "axios";
+import { UserValidationErrors, validateEmail, validateName, validatePassword } from "../../util/user.helper";
 
 const SignUp = (): ReactElement => {
   const [showPassword, setShowPassword] = useState(false);
   const [userName, setuserName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [errors, setErrors] = useState<{ userName?: string; email?: string; password?: string }>({});
+  const [errors, setErrors] = useState<UserValidationErrors>({});
   const [loading, setLoading] = useState(false);
   const [signUpError, setSignUpError] = useState<string | null>(null);
   const navigate = useNavigate();
@@ -23,53 +23,25 @@ const SignUp = (): ReactElement => {
     setShowPassword((prev) => !prev);
   };
 
-  const validateEmail = (email: string) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
-
-  const validatePassword = (password: string) => {
-    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
-    return passwordRegex.test(password);
-  };
-
   const handleSignUp = async () => {
     setErrors({});
     setSignUpError(null);
 
-    let formValid = true;
-    const newErrors: { userName?: string; email?: string; password?: string } = {};
+    const errors: UserValidationErrors = {
+      name: validateName(userName),
+      email: validateEmail(email),
+      password: validatePassword(password),
+    };
 
-    if (!userName) {
-      formValid = false;
-      newErrors.userName = "username is required.";
-    }
+    setErrors(errors);
 
-    // Email validation
-    if (!email) {
-      formValid = false;
-      newErrors.email = "Email is required.";
-    } else if (!validateEmail(email)) {
-      formValid = false;
-      newErrors.email = "Please enter a valid email.";
-    }
-
-    // Password validation
-    if (!password) {
-      formValid = false;
-      newErrors.password = "Password is required.";
-    } else if (!validatePassword(password)) {
-      formValid = false;
-      newErrors.password = "Password must be at least 8 characters long and contain letters and numbers.";
-    }
-
-    if (!formValid) {
-      setErrors(newErrors);
+    if (errors.name || errors.email || errors.password) {
       return;
     }
+
     const data = await UserService.signup(email, password, userName);
-    if (data instanceof AxiosError) {
-      setSignUpError("An unexpected error occurred. Please try again.");
+    if (data instanceof Error) {
+      setSignUpError(data.message || "An unexpected error occurred.");
       return;
     }
     navigate("/login");
@@ -80,13 +52,13 @@ const SignUp = (): ReactElement => {
       <Navbar />
 
       <Box className="SignUp-container">
-        <Typography variant="body2" className="Home-welcome-title">
-          Sign Up
-        </Typography>
-        <Typography className="SignUp-subtitle" sx={{ mb: 3 }}>
-          Empower your interview preparation today! Create an account to unlock exclusive features and personalized
-          experiences.
-        </Typography>
+        <Box className="SignUp-header">
+          <Typography className="SignUp-title">Sign Up</Typography>
+          <Typography className="SignUp-subtitle">
+            Empower your interview preparation today! Create an account to unlock exclusive features and personalized
+            experiences.
+          </Typography>
+        </Box>
 
         <Box className="SignUp-form" sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
           {loading ? (
@@ -95,13 +67,18 @@ const SignUp = (): ReactElement => {
             <>
               <Box sx={{ display: "flex", gap: 2, width: "100%", mb: 2 }}>
                 <TextField
-                  label="username"
+                  label="Displayed Name (to others)"
                   variant="outlined"
                   fullWidth
                   value={userName}
                   onChange={(e) => setuserName(e.target.value)}
-                  error={!!errors.userName}
-                  helperText={errors.userName}
+                  error={!!errors.name}
+                  helperText={errors.name}
+                  slotProps={{
+                    input: {
+                      className: "SignUp-input",
+                    },
+                  }}
                 />
               </Box>
 
@@ -114,6 +91,11 @@ const SignUp = (): ReactElement => {
                   onChange={(e) => setEmail(e.target.value)}
                   error={!!errors.email}
                   helperText={errors.email}
+                  slotProps={{
+                    input: {
+                      className: "SignUp-input",
+                    },
+                  }}
                 />
                 <TextField
                   label="Password"
@@ -124,14 +106,21 @@ const SignUp = (): ReactElement => {
                   onChange={(e) => setPassword(e.target.value)}
                   error={!!errors.password}
                   helperText={errors.password}
-                  InputProps={{
-                    endAdornment: (
-                      <InputAdornment position="end">
-                        <IconButton onClick={togglePasswordVisibility} edge="end">
-                          {showPassword ? <VisibilityOff /> : <Visibility />}
-                        </IconButton>
-                      </InputAdornment>
-                    ),
+                  slotProps={{
+                    input: {
+                      className: "SignUp-input",
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <IconButton
+                            className="SignUp-password-eye-icon"
+                            onClick={togglePasswordVisibility}
+                            edge="end"
+                          >
+                            {showPassword ? <VisibilityOff /> : <Visibility />}
+                          </IconButton>
+                        </InputAdornment>
+                      ),
+                    },
                   }}
                 />
               </Box>

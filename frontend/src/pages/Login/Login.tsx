@@ -8,7 +8,8 @@ import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import "./Login.scss";
 import UserService from "../../services/user.service";
 import { UserContext } from "../../contexts/UserContext";
-import { Axios, AxiosError } from "axios";
+import { useMainDialog } from "../../contexts/MainDialogContext";
+import { mapUserResponseToUserProfile } from "../../util/user.helper";
 
 const Login = (): ReactElement => {
   const [showPassword, setShowPassword] = useState(false);
@@ -18,7 +19,9 @@ const Login = (): ReactElement => {
   const [loginError, setLoginError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { user, setUser } = useContext(UserContext);
+
+  const { setUser } = useContext(UserContext);
+  const { setMainDialogTitle, setMainDialogContent, openMainDialog } = useMainDialog();
 
   const togglePasswordVisibility = () => {
     setShowPassword((prev) => !prev);
@@ -27,6 +30,12 @@ const Login = (): ReactElement => {
   const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
+  };
+
+  const handleForgotPassword = () => {
+    setMainDialogTitle("Work in Progress");
+    setMainDialogContent("Password recovery is under construction. Check back in a future milestone!");
+    openMainDialog();
   };
 
   const handleLogin = async () => {
@@ -55,22 +64,12 @@ const Login = (): ReactElement => {
     }
     try {
       const data = await UserService.login(email, password);
-      if (data instanceof AxiosError) {
-        if (data.response?.status === 401) {
-          setLoginError("Invalid email or password. Please try again.");
-        } else {
-          setLoginError("An unexpected error occurred. Please try again.");
-        }
+      if (data instanceof Error) {
+        setLoginError(data.message || "An unexpected error occurred.");
         return;
       }
       if (data) {
-        setUser({
-          id: data.id,
-          username: data.username,
-          email: data.email,
-          role: data.isAdmin ? "admin" : "user",
-          avatar: "https://www.gravatar.com/avatar/",
-        });
+        setUser(mapUserResponseToUserProfile(data));
       } else {
         setLoginError("Invalid email or password. Please try again.");
       }
@@ -84,12 +83,12 @@ const Login = (): ReactElement => {
       <Navbar />
 
       <Box className="Login-container">
-        <Typography variant="body2" className="Home-welcome-title">
-          Login
-        </Typography>
-        <Typography className="Login-subtitle" sx={{ mb: 3 }}>
-          Welcome back! Please log in to access your account.
-        </Typography>
+        <Box className="Login-header">
+          <Typography variant="body2" className="Login-title">
+            Login
+          </Typography>
+          <Typography className="Login-subtitle">Welcome back! Please log in to access your account.</Typography>
+        </Box>
 
         <Box className="Login-form" sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
           {loading ? (
@@ -106,6 +105,11 @@ const Login = (): ReactElement => {
                   onChange={(e) => setEmail(e.target.value)}
                   error={!!errors.email}
                   helperText={errors.email}
+                  slotProps={{
+                    input: {
+                      className: "Login-input",
+                    },
+                  }}
                 />
                 <TextField
                   label="Enter your Password"
@@ -116,26 +120,20 @@ const Login = (): ReactElement => {
                   onChange={(e) => setPassword(e.target.value)}
                   error={!!errors.password}
                   helperText={errors.password}
-                  InputProps={{
-                    endAdornment: (
-                      <InputAdornment position="end">
-                        <IconButton onClick={togglePasswordVisibility} className="password-eye-icon" edge="end">
-                          {showPassword ? <VisibilityOff /> : <Visibility />}
-                        </IconButton>
-                      </InputAdornment>
-                    ),
+                  slotProps={{
+                    input: {
+                      className: "Login-input",
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <IconButton onClick={togglePasswordVisibility} className="Login-password-eye-icon" edge="end">
+                            {showPassword ? <VisibilityOff /> : <Visibility />}
+                          </IconButton>
+                        </InputAdornment>
+                      ),
+                    },
                   }}
                 />
               </Box>
-
-              <Typography
-                component="a"
-                href="/forgot-password"
-                className="forgot-password"
-                sx={{ textDecoration: "underline", textAlign: "center" }}
-              >
-                Forgot password?
-              </Typography>
 
               {loginError && (
                 <Alert severity="error" sx={{ mt: 2 }}>
@@ -143,13 +141,19 @@ const Login = (): ReactElement => {
                 </Alert>
               )}
 
-              <Button color="primary" variant="contained" className="LoginUp-button" onClick={handleLogin}>
+              <Button color="primary" variant="contained" className="Login-button" onClick={handleLogin}>
                 Login
               </Button>
 
-              <Typography className="Login-signup">
-                Not registered yet? <a href="/signup">Sign Up</a>
-              </Typography>
+              <Box className="Login-prompts">
+                <Button className="Login-forgot-password-button" color="secondary" onClick={handleForgotPassword}>
+                  <Typography className="Login-forgot-password-text">Forgot password?</Typography>
+                </Button>
+
+                <Typography className="Login-signup">
+                  Not registered yet? <a href="/signup">Sign Up</a>
+                </Typography>
+              </Box>
             </>
           )}
         </Box>
