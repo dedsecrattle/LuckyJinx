@@ -42,10 +42,7 @@ export const validatePassword = (password: string): string | null => {
   if (!password) {
     return "Password is required.";
   }
-  const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
-  return passwordRegex.test(password)
-    ? null
-    : "Password must be at least 8 characters long and contain letters and numbers.";
+  return password.length >= 8 ? null : "Password must be at least 8 characters long";
 };
 
 export const validateAvatar = (avatar: string): string | null => {
