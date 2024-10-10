@@ -11,6 +11,7 @@ import { MainDialogContextProvider } from "./contexts/MainDialogContext";
 import { ConfirmationDialogContextProvider } from "./contexts/ConfirmationDialogContext";
 import { UserContext } from "./contexts/UserContext";
 import Questions from "./pages/Questions/Questions";
+import Interview from "./pages/Interview/Interview";
 
 const theme = createTheme({
   typography: {
@@ -74,6 +75,7 @@ const App = (): ReactElement => {
             <Route path="/login" element={user ? <Navigate to={"/"} /> : <Login />} />
             <Route path="/settings" element={user ? <AccountSettings /> : <Navigate to={"/login"} />} />
             <Route path="/questions" element={<Questions />} />
+            <Route path="/interview" element={user ? <Interview /> : <Navigate to={"/"} />} />
           </Routes>
         </ConfirmationDialogContextProvider>
       </MainDialogContextProvider>

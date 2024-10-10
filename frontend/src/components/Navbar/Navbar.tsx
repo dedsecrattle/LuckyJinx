@@ -18,6 +18,10 @@ const Navbar = (): ReactElement => {
     navigate("/questions", { replace: true });
   };
 
+  const redirectToInterview = () => {
+    navigate("/interview", { replace: true });
+  };
+
   const redirectToSignUp = () => {
     navigate("/signup", { replace: true });
   };
@@ -37,15 +41,19 @@ const Navbar = (): ReactElement => {
         <Typography className="Navbar-title">LuckyJinx</Typography>
       </Box>
       <Box className="Navbar-links">
-        <Button color="secondary" onClick={redirectToHome}>
+        <Button onClick={redirectToHome}>
           <Typography>Home</Typography>
         </Button>
-        <Button color="secondary" onClick={redirectToQuestions}>
+        <Button onClick={redirectToQuestions}>
           <Typography>Questions</Typography>
         </Button>
-        <Button color="secondary" onClick={redirectToHome}>
-          <Typography>Interview</Typography>
-        </Button>
+        {user ? (
+          <Button onClick={redirectToInterview}>
+            <Typography>Interview</Typography>
+          </Button>
+        ) : (
+          <></>
+        )}
       </Box>
       <Box className="Navbar-buttons">
         {user ? (
