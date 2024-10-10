@@ -5,15 +5,17 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
+  align-items: center;
 
   &-welcome {
+    width: 85vw;
     padding-block: 20px;
     display: flex;
     flex-direction: row;
     justify-content: space-between;
 
     &-text {
-      max-width: 45vw;
+      max-width: 35vw;
     }
 
     &-title {
@@ -24,9 +26,28 @@
 
     &-description {
       padding-block: 30px;
-      font-size: 0.8rem !important;
+      font-size: 1rem !important;
       font-weight: 200;
       color: var(--White-90, #e4e4e7) !important;
+    }
+
+    &-recent {
+      position: relative;
+      width: 45vw;
+
+      &-sessions {
+        position: absolute;
+        width: 55%;
+        z-index: 1;
+        left: 0;
+        top: 5%;
+      }
+
+      &-image {
+        position: absolute;
+        left: 50%;
+        top: 10%;
+      }
     }
 
     &-image {

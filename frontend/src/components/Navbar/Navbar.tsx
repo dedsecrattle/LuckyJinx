@@ -14,6 +14,10 @@ const Navbar = (): ReactElement => {
     navigate("/", { replace: true }); // replace serves to prevent repeated navigations to same location
   };
 
+  const redirectToQuestions = () => {
+    navigate("/questions", { replace: true });
+  };
+
   const redirectToSignUp = () => {
     navigate("/signup", { replace: true });
   };
@@ -28,10 +32,21 @@ const Navbar = (): ReactElement => {
 
   return (
     <nav className="Navbar">
-      <Button className="Navbar-logo" onClick={redirectToHome}>
+      <Box className="Navbar-logo">
         <ApiIcon color="primary" />
         <Typography className="Navbar-title">LuckyJinx</Typography>
-      </Button>
+      </Box>
+      <Box className="Navbar-links">
+        <Button color="secondary" onClick={redirectToHome}>
+          <Typography>Home</Typography>
+        </Button>
+        <Button color="secondary" onClick={redirectToQuestions}>
+          <Typography>Questions</Typography>
+        </Button>
+        <Button color="secondary" onClick={redirectToHome}>
+          <Typography>Interview</Typography>
+        </Button>
+      </Box>
       <Box className="Navbar-buttons">
         {user ? (
           <Button color="primary" variant="contained" onClick={redirectToAccount}>
