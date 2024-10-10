@@ -9,6 +9,11 @@ services:
     ports:
       - "3001:3001"
   
+  code-execution-rabbitmq:
+    image: rabbitmq:4.0-management
+    ports:
+      - "7000:5672"
+  
   frontend:
     build: ./frontend
     env_file:
