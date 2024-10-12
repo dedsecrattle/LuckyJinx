@@ -1,6 +1,6 @@
 import { User } from "../models/user.model";
 import UserService from "../services/user.service";
-import { UserProfile } from "../types/user.profile";
+import { UserProfile } from "../models/user.model";
 import { createContext, useState, useEffect } from "react";
 import { mapUserResponseToUserProfile } from "../util/user.helper";
 
