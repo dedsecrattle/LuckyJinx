@@ -10,7 +10,13 @@ const MOCK_SESSION_NOT_STARTED: Session = {
 
 const MOCK_SESSION_MATCHING: Session = {
   state: SessionState.MATCHING,
-  topics: [Categories.ALGORITHMS, Categories.DATA_STRUCTURES],
+  topics: [
+    Categories.ALGORITHMS,
+    Categories.DATA_STRUCTURES,
+    Categories.RECURSION,
+    Categories.BIT_MANIPULATION,
+    Categories.BRAINTEASER,
+  ],
   difficulty: "Easy",
 };
 
@@ -64,6 +70,6 @@ const MOCK_SESSION_ACCEPTED: Session = {
 
 export default class SessionService {
   static async getSession(): Promise<Session> {
-    return MOCK_SESSION_MATCHING;
+    return MOCK_SESSION_PENDING;
   }
 }

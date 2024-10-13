@@ -16,6 +16,8 @@ const Interview = (): ReactElement => {
     SessionService.getSession().then((session) => setSession(session));
   }, []);
 
+  // TODO: subscribe to websocket event to check session
+
   const getSessionComponent = (): ReactElement => {
     switch (session?.state) {
       case SessionState.NOT_STARTED:
