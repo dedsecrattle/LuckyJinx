@@ -14,6 +14,11 @@ services:
     ports:
       - "7000:5672"
   
+  code-execution-redis:
+    image: redis:alpine
+    ports:
+      - "7001:6379"
+  
   frontend:
     build: ./frontend
     env_file:
