@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from rabbitmq import send_message
-from redis_model import register_task
+from redis_model import register_task, get_task
 
 
 app = FastAPI()
@@ -26,3 +26,13 @@ async def execute_code(body: CodeExecutionRequest):
         "lang": body.lang,
     }))
     return {"id": id}
+
+@app.get("/")
+async def check_status(id: str):
+    task = get_task(id)
+    if not task["started"]:
+        return {"status": "queued"}
+    elif not task["finished"]:
+        return {"status": "running"}
+    else:
+        return {"status": "finished", "output": task["output"]}

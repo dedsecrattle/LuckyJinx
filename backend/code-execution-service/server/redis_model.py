@@ -12,3 +12,6 @@ def register_task() -> str:
     task_id = str(uuid.uuid4())
     r.set(task_id, json.dumps({"started": False, "finished": False, "output": ""}))
     return task_id
+
+def get_task(task_id: str) -> dict:
+    return json.loads(r.get(task_id))
