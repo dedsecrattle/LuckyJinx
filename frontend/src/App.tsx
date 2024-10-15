@@ -10,6 +10,7 @@ import { createTheme, ThemeProvider } from "@mui/material";
 import { MainDialogContextProvider } from "./contexts/MainDialogContext";
 import { ConfirmationDialogContextProvider } from "./contexts/ConfirmationDialogContext";
 import { UserContext } from "./contexts/UserContext";
+import Communication from "./pages/Communication/Commincation";
 
 const theme = createTheme({
   typography: {
@@ -72,6 +73,7 @@ const App = (): ReactElement => {
             <Route path="/signup" element={user ? <Navigate to={"/"} /> : <SignUp />} />
             <Route path="/login" element={user ? <Navigate to={"/"} /> : <Login />} />
             <Route path="/settings" element={user ? <AccountSettings /> : <Navigate to={"/login"} />} />
+            <Route path="/video" element={<Communication />} />
           </Routes>
         </ConfirmationDialogContextProvider>
       </MainDialogContextProvider>
