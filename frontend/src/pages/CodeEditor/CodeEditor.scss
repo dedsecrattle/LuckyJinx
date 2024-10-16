@@ -11,7 +11,7 @@
   display: flex;
   flex-direction: column;
   flex-grow: 1;
-  background: var(--Grey-10, #1a1a1a); 
+  background: var(--Grey-10, #1a1a1a);
 }
 
 .top-section {
@@ -50,7 +50,7 @@
       border: 1px solid #3c3c3c;
       padding: 20px;
       color: #fff;
-      height: 500px; 
+      height: 500px;
       overflow: auto;
     }
   }
@@ -77,7 +77,7 @@
       }
 
       .submit-button {
-        background-color: #a6c046;
+        background-color: #caff33;
         color: #121212;
         border-radius: 5px;
       }
@@ -155,7 +155,7 @@
 
           .message-timestamp {
             font-size: 0.8em;
-            color: #ccc;
+            color: #ababab;
             position: absolute;
             bottom: 5px;
             right: 10px;
@@ -168,8 +168,8 @@
         }
 
         .chat-message-right {
-          background-color: #4a90e2;
-          align-self: flex-end;
+          background-color: #c9ff3399;
+          align-self: end;
         }
       }
 
@@ -189,7 +189,7 @@
         }
 
         .chat-send-button {
-          background-color: #a6c046;
+          background-color: #caff33;
           color: #121212;
           border-radius: 5px;
         }

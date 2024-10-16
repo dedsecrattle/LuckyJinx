@@ -1,12 +1,11 @@
-import React, { useState } from 'react';
-import MDEditor from '@uiw/react-md-editor';
-import { Editor } from '@monaco-editor/react';
-import { Box, Button, Chip, Typography } from '@mui/material';
-import Navbar from '../../components/Navbar/Navbar';
-import './CodeEditor.scss';
+import React, { useState } from "react";
+import MDEditor from "@uiw/react-md-editor";
+import { Editor } from "@monaco-editor/react";
+import { Button, Chip, Typography } from "@mui/material";
+import Navbar from "../../components/Navbar/Navbar";
+import "./CodeEditor.scss";
 import Footer from "../../components/Footer/Footer";
-import OpenInNewIcon from '@mui/icons-material/OpenInNew';
-
+import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 
 interface QuestionData {
   title: string;
@@ -23,30 +22,47 @@ interface ChatMessage {
 }
 
 const App: React.FC = () => {
-  const [code, setCode] = useState<string>('// Write your solution here');
-  const [language, setLanguage] = useState<string>('python');
+  const [code, setCode] = useState<string>("# Write your solution here\ndef twoSums(nums, target):\n");
+  const [language, setLanguage] = useState<string>("python");
 
   const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setLanguage(e.target.value);
   };
 
-  const currentUser = 'Bob';
+  const currentUser = "Bob";
 
   // Question data
   const questionData: QuestionData = {
-    title: 'Two Sum',
-    difficulty: 'Easy',
-    topic: 'Array',
-    url: 'https://leetcode.com/problems/two-sum/description/',
-    description: '### Given an array of integers `nums` and an integer `target`, return indices of the two numbers such that they add up to `target`.',
+    title: "Two Sum",
+    difficulty: "Easy",
+    topic: "Array",
+    url: "https://leetcode.com/problems/two-sum/description/",
+    description:
+      "### Given an array of integers `nums` and an integer `target`, return indices of the two numbers such that they add up to `target`.",
   };
 
   // Chat history data
   const chatHistory: ChatMessage[] = [
-    { sender: 'Alice', message: 'Hi Bob, did you understand the question?', timestamp: new Date('2023-10-15T10:00:00') },
-    { sender: 'Bob', message: 'Yes, I think so. We need to find two numbers that add up to the target.', timestamp: new Date('2023-10-15T10:01:00') },
-    { sender: 'Alice', message: 'Exactly! Do you have any idea how to approach it?', timestamp: new Date('2023-10-15T10:02:00') },
-    { sender: 'Bob', message: 'Maybe we can use a hash map to store the numbers.', timestamp: new Date('2023-10-15T10:03:00') },
+    {
+      sender: "Alice",
+      message: "Hi Bob, did you understand the question?",
+      timestamp: new Date("2023-10-15T10:00:00"),
+    },
+    {
+      sender: "Bob",
+      message: "Yes, I think so. We need to find two numbers that add up to the target.",
+      timestamp: new Date("2023-10-15T10:01:00"),
+    },
+    {
+      sender: "Alice",
+      message: "Exactly! Do you have any idea how to approach it?",
+      timestamp: new Date("2023-10-15T10:02:00"),
+    },
+    {
+      sender: "Bob",
+      message: "Maybe we can use a hash map to store the numbers.",
+      timestamp: new Date("2023-10-15T10:03:00"),
+    },
   ];
 
   return (
@@ -63,15 +79,12 @@ const App: React.FC = () => {
             <Chip label={`Difficulty: ${questionData.difficulty}`} className="detail-chip light-grey-chip" />
             <Chip label={`Topic: ${questionData.topic}`} className="detail-chip light-grey-chip" />
             <Chip
-              label="URL: https://leetcode.com/problems/two-sum/description/"
+              label={`URL: ${questionData.url}`}
               className="detail-chip light-grey-chip"
               clickable
-              onClick={() =>
-                window.open('https://leetcode.com/problems/two-sum/description/', '_blank')
-              }
-              icon={<OpenInNewIcon style={{ color: '#caff33' }} />}
+              onClick={() => window.open(questionData.url, "_blank")}
+              icon={<OpenInNewIcon style={{ color: "#caff33" }} />}
             />
-
           </div>
         </div>
 
@@ -79,10 +92,7 @@ const App: React.FC = () => {
         <div className="editors">
           {/* Left Side: Markdown Editor */}
           <div className="left-side">
-            <MDEditor.Markdown
-              source={questionData.description}
-              className="md-editor"
-            />
+            <MDEditor.Markdown source={questionData.description} className="md-editor" />
           </div>
 
           {/* Right Side: Code Editor */}
@@ -90,8 +100,8 @@ const App: React.FC = () => {
             <div className="header">
               <select className="language-select" onChange={handleLanguageChange}>
                 <option value="python">Python</option>
-                <option value="javascript">JavaScript</option>
-                <option value="cpp">C++</option>
+                <option value="java">Java</option>
+                {/* <option value="cpp">C++</option> */}
               </select>
               <Button variant="contained" size="small" className="submit-button">
                 Run code
@@ -99,10 +109,10 @@ const App: React.FC = () => {
             </div>
 
             <Editor
-              height="500px" 
+              height="500px"
               language={language}
               value={code}
-              onChange={(value) => setCode(value || '')}
+              onChange={(value) => setCode(value || "")}
               theme="vs-dark"
               className="code-editor"
             />
@@ -128,7 +138,7 @@ const App: React.FC = () => {
                   return (
                     <div
                       key={index}
-                      className={`chat-message ${isOutgoing ? 'chat-message-right' : 'chat-message-left'}`}
+                      className={`chat-message ${isOutgoing ? "chat-message-right" : "chat-message-left"}`}
                     >
                       <div className="message-sender">{chat.sender}</div>
                       <div className="message-content">{chat.message}</div>
