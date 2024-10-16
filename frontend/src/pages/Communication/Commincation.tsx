@@ -18,10 +18,11 @@ const VideoChat: React.FC = () => {
   const [myId, setMyId] = useState<string>("");
   const [users, setUsers] = useState<string[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [message, setMessage] = useState<string>("");
+  // const [message, setMessage] = useState<string>("");
   const [roomId, setRoomId] = useState<string>("");
   const [peerConnections, setPeerConnections] = useState<PeerVideoConnection[]>([]);
 
+  const inputRef = useRef<HTMLInputElement | null>(null);
   const socketRef = useRef<Socket | null>(null);
   const peerRef = useRef<Peer | null>(null);
   const myVideoRef = useRef<HTMLVideoElement | null>(null);
@@ -74,10 +75,13 @@ const VideoChat: React.FC = () => {
     peerRef.current.on("call", (call: MediaConnection) => {
       call.answer(myStreamRef.current!);
       call.on("stream", (userVideoStream: MediaStream) => {
-        setPeerConnections((prevConnections) => [
-          ...prevConnections,
-          { peerId: call.peer, call, stream: userVideoStream },
-        ]);
+        setPeerConnections((prevConnections) => {
+          // Check if the connection already exists
+          if (!prevConnections.some((conn) => conn.peerId === call.peer)) {
+            return [...prevConnections, { peerId: call.peer, call, stream: userVideoStream }];
+          }
+          return prevConnections;
+        });
       });
     });
 
@@ -91,7 +95,12 @@ const VideoChat: React.FC = () => {
   const connectToNewUser = (userId: string, stream: MediaStream) => {
     const call = peerRef.current!.call(userId, stream);
     call.on("stream", (userVideoStream: MediaStream) => {
-      setPeerConnections((prevConnections) => [...prevConnections, { peerId: userId, call, stream: userVideoStream }]);
+      setPeerConnections((prevConnections) => {
+        if (!prevConnections.some((conn) => conn.peerId === userId)) {
+          return [...prevConnections, { peerId: userId, call, stream: userVideoStream }];
+        }
+        return prevConnections;
+      });
     });
   };
 
@@ -103,10 +112,9 @@ const VideoChat: React.FC = () => {
 
   const sendMessage = (e: React.FormEvent<HTMLFormElement>): void => {
     e.preventDefault();
-    if (message && roomId) {
-      const newMessage: Message = { text: message, sender: myId };
+    if (inputRef.current?.value && roomId) {
+      const newMessage: Message = { text: inputRef.current.value, sender: myId };
       socketRef.current?.emit("send-message", newMessage, roomId);
-      setMessage("");
     }
   };
 
@@ -129,13 +137,14 @@ const VideoChat: React.FC = () => {
       <div className="video-grid">
         <div className="video-container">
           <h3>Your Video</h3>
-          <video ref={myVideoRef} autoPlay muted></video>
+          <video ref={myVideoRef} autoPlay muted playsInline></video>
         </div>
         {peerConnections.map((connection) => (
           <div key={connection.peerId} className="video-container">
             <h3>Peer: {connection.peerId}</h3>
             <video
               autoPlay
+              playsInline
               ref={(ref) => {
                 if (ref) ref.srcObject = connection.stream;
               }}
@@ -153,7 +162,7 @@ const VideoChat: React.FC = () => {
           ))}
         </div>
         <form onSubmit={sendMessage}>
-          <input type="text" value={message} placeholder="Type a message" />
+          <input type="text" ref={inputRef} placeholder="Type a message" />
           <button type="submit">Send</button>
         </form>
       </div>

@@ -2,9 +2,8 @@ import express, { Application, Request, Response } from "express";
 import { Server } from "socket.io";
 import http from "http";
 import cors from "cors";
-import { ExpressPeerServer } from "peer";
+import { PeerServer } from "peer";
 
-// Create Express app
 const app: Application = express();
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -15,8 +14,6 @@ const io = new Server(server, {
 });
 
 app.use(cors());
-const peerServer = ExpressPeerServer(server);
-app.use("/peerjs", peerServer);
 
 const users: Record<string, string> = {};
 
@@ -45,4 +42,14 @@ io.on("connection", (socket) => {
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
+});
+
+const peerServer = PeerServer({ port: 9000, path: "/peerjs" });
+
+peerServer.on("connection", (client) => {
+  console.log(`Peer connected: ${client.getId()}`);
+});
+
+peerServer.on("disconnect", (client) => {
+  console.log(`Peer disconnected: ${client.getId()}`);
 });
