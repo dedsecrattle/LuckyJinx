@@ -93,35 +93,15 @@
 }
 
 .bottom-section {
-  display: flex;
   margin-top: 20px;
 
-  .video-call {
-    flex: 0.4;
-    padding: 10px;
-    display: flex;
-    flex-direction: column;
-
-    .video-placeholder {
-      flex-grow: 1;
-      background-color: #2e2e2e;
-      border-radius: 10px;
-      border: 1px solid #3c3c3c;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-
-      .placeholder-text {
-        color: #fff;
-      }
-    }
-  }
-
   .chatbox {
-    flex: 0.6;
+    width: 70%;
     padding: 10px;
     display: flex;
     flex-direction: column;
+    height: 500px;
+    margin-left: 0;
 
     .chatbox-container {
       flex-grow: 1;
@@ -130,11 +110,14 @@
       border: 1px solid #3c3c3c;
       display: flex;
       flex-direction: column;
+      height: 100%;
 
       .chat-messages {
         flex-grow: 1;
         padding: 10px;
         overflow-y: auto;
+        display: flex;
+        flex-direction: column;
 
         .chat-message {
           margin-bottom: 10px;
@@ -150,12 +133,12 @@
           }
 
           .message-content {
-            margin-bottom: 5px;
+            margin-bottom: 15px;
           }
 
           .message-timestamp {
-            font-size: 0.8em;
-            color: #ababab;
+            font-size: 0.3em;
+            color: #ffffff;
             position: absolute;
             bottom: 5px;
             right: 10px;
@@ -164,12 +147,14 @@
 
         .chat-message-left {
           background-color: #3c3c3c;
-          align-self: flex-start;
+          margin-right: auto;
+          margin-left: 0;
         }
 
         .chat-message-right {
           background-color: #c9ff3399;
-          align-self: end;
+          margin-left: auto;
+          margin-right: 0;
         }
       }
 
@@ -194,6 +179,43 @@
           border-radius: 5px;
         }
       }
+    }
+  }
+}
+
+.video-call {
+  position: fixed;
+  bottom: 10px;
+  right: 10px;
+  width: 400px;
+  height: 300px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+
+  .video-placeholder {
+    flex-grow: 1;
+    background-color: #2e2e2e;
+    border-radius: 10px;
+    border: 1px solid #3c3c3c;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+
+    .placeholder-text {
+      color: #fff;
+    }
+
+    .hangout-button {
+      position: absolute;
+      bottom: 10px;
+      right: 10px;
+      background-color: #ff3333;
+      color: #ffffff;
+      border-radius: 5px;
     }
   }
 }

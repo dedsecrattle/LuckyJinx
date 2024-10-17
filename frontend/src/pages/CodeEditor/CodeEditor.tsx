@@ -24,6 +24,7 @@ interface ChatMessage {
 const App: React.FC = () => {
   const [code, setCode] = useState<string>("# Write your solution here\ndef twoSums(nums, target):\n");
   const [language, setLanguage] = useState<string>("python");
+  const [isVideoHovered, setIsVideoHovered] = useState(false);
 
   const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setLanguage(e.target.value);
@@ -120,15 +121,6 @@ const App: React.FC = () => {
         </div>
 
         <div className="bottom-section">
-          {/* Left Side: Video Call Placeholder */}
-          <div className="video-call">
-            <div className="video-placeholder">
-              <Typography variant="h6" className="placeholder-text">
-                Video Call Placeholder
-              </Typography>
-            </div>
-          </div>
-
           {/* Right Side: Chatbox */}
           <div className="chatbox">
             <div className="chatbox-container">
@@ -158,6 +150,25 @@ const App: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Video Call Floating Window */}
+      <div
+        className="video-call"
+        onMouseEnter={() => setIsVideoHovered(true)}
+        onMouseLeave={() => setIsVideoHovered(false)}
+      >
+        <div className="video-placeholder">
+          <Typography variant="h6" className="placeholder-text">
+            Video Call Placeholder
+          </Typography>
+          {isVideoHovered && (
+            <Button variant="contained" className="hangout-button">
+              Hangout
+            </Button>
+          )}
+        </div>
+      </div>
+
       <Footer />
     </div>
   );
