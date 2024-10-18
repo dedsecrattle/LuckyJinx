@@ -35,4 +35,4 @@ async def check_status(id: str):
     elif not task["finished"]:
         return {"status": "running"}
     else:
-        return {"status": "finished", "output": task["output"]}
+        return {"status": "finished", "output": task["output"], "error": task["error"]}

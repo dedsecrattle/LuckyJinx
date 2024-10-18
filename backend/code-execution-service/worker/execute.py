@@ -18,6 +18,6 @@ def execute_python(code: str, input: str, timeout: int) -> tuple[str | None, str
                                 capture_output=True,
                                 timeout=timeout,
                                 )
-        return result.stdout.decode(), None
+        return result.stdout.decode(), result.stderr.decode()
     except subprocess.TimeoutExpired:
         return None, "Timeout"
