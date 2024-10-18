@@ -8,6 +8,26 @@ interface MatchingRequest {
 
 let matchingPool: MatchingRequest[] = [];
 
+function safeStringify(obj: any) {
+  return JSON.stringify(obj, (key, value) => {
+      if (key === 'timeoutId') {
+          return undefined; // Exclude timeoutId from logging
+      }
+      return value;
+  }, 2);
+}
+
+export async function checkMatchingStatus(
+  userId: string
+): Promise<{ success: boolean; message: string }> {
+  const request = matchingPool.find((req) => req.userId === userId);
+  if (request) {
+      return { success: false, message: 'Waiting for a match...' };
+  } else {
+      return { success: true, message: 'No matching request found' };
+  }
+}
+
 export async function startMatching(
   userId: string,
   topic: string,
@@ -27,10 +47,16 @@ export async function startMatching(
           }, 30000), // 30-second timeout
       };
 
+      console.log(`Received matching request from ${userId} on topic ${topic}, difficulty ${difficulty}`);
+      console.log("Current pool: ", safeStringify(matchingPool));
+
       // Check if there is a match in the pool
       const matchIndex = matchingPool.findIndex(
           (req) => req.topic === topic && req.difficulty === difficulty && req.userId !== userId
       );
+
+      console.log(`Checking for match: User ${userId} looking for topic ${topic}, difficulty ${difficulty}`);
+      console.log(`Match index found: ${matchIndex}`);
 
       if (matchIndex !== -1) {
           // Match found, resolve both users and clear their timeouts
@@ -54,4 +80,18 @@ export async function startMatching(
           console.log(`Added ${userId} to the pool. Waiting for a match...`);
       }
   });
+}
+
+export async function cancelMatching(userId: string): Promise<boolean> {
+  const request = matchingPool.find((req) => req.userId === userId);
+  if (request) {
+      clearTimeout(request.timeoutId);
+
+      matchingPool = matchingPool.filter((req) => req.userId !== userId);
+      console.log(`Removed ${userId} from the pool.`);
+      return true;
+  } else {
+    return false;
+  }
+  
 }
