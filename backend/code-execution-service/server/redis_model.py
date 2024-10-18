@@ -14,4 +14,7 @@ def register_task() -> str:
     return task_id
 
 def get_task(task_id: str) -> dict:
-    return json.loads(r.get(task_id))
+    task = r.get(task_id)
+    if not task:
+        return None
+    return json.loads(task)

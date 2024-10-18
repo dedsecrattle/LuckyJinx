@@ -30,6 +30,9 @@ async def execute_code(body: CodeExecutionRequest):
 @app.get("/")
 async def check_status(id: str):
     task = get_task(id)
+    if not task:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Task not found")
     if not task["started"]:
         return {"status": "queued"}
     elif not task["finished"]:
