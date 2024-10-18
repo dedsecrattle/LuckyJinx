@@ -14,7 +14,7 @@ app = FastAPI()
 
 @app.post("/")
 async def execute_code(body: CodeExecutionRequest):
-    if body.lang not in ["python"]:
+    if body.lang not in ["python", "javascript", "typescript"]:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid language")
     id = register_task()
