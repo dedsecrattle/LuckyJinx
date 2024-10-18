@@ -34,3 +34,5 @@ yarn.lock
 # Ignore temporary files created by editors
 *.swp
 *~
+dev.db
+migrations/
