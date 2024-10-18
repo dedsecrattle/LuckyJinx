@@ -1,97 +1,106 @@
-interface MatchingRequest {
-  userId: string;
-  topic: string;
-  difficulty: string;
-  resolve: (result: { success: boolean; message: string }) => void;
-  timeoutId: NodeJS.Timeout; // For canceling the timeout if matched
+import { sendToQueue, sendDelayedMessage } from './rabbitmq';
+import { io } from './server';
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
+
+const DELAY_TIME = 30000;
+
+export async function handleMatchingRequest(userRequest: any, socketId: string) {
+  userRequest.socketId = socketId;
+
+  addUserToQueue(userRequest);
+  sendDelayedTimeoutMessage(userRequest);
 }
 
-let matchingPool: MatchingRequest[] = [];
-
-function safeStringify(obj: any) {
-  return JSON.stringify(obj, (key, value) => {
-      if (key === 'timeoutId') {
-          return undefined; // Exclude timeoutId from logging
-      }
-      return value;
-  }, 2);
+function addUserToQueue(userRequest: any) {
+  sendToQueue(userRequest);
+  console.log('Sent user request to queue:', userRequest);
 }
 
-export async function checkMatchingStatus(
-  userId: string
-): Promise<{ success: boolean; message: string }> {
-  const request = matchingPool.find((req) => req.userId === userId);
-  if (request) {
-      return { success: false, message: 'Waiting for a match...' };
-  } else {
-      return { success: true, message: 'No matching request found' };
+function sendDelayedTimeoutMessage(userRequest: any) {
+  sendDelayedMessage(userRequest, DELAY_TIME);
+  console.log('Sent delayed message for user request:', userRequest);
+}
+
+export async function handleUserRequest(userRequest: any) {
+  const { userId, topic, difficulty, socketId } = userRequest;
+
+  // check userId present in prisma
+  const user = await prisma.matchRecord.findUnique({
+    where: { userId },
+  });
+  if (user) {
+    console.log("User already present in match record");
+    console.log(user);
+    return;
   }
-}
 
-export async function startMatching(
-  userId: string,
-  topic: string,
-  difficulty: string
-): Promise<{ success: boolean; message: string }> {
-  return new Promise((resolve) => {
-      const newRequest: MatchingRequest = {
+  // check if there is a match
+  const existingMatch = await prisma.matchRecord.findFirst({
+    where: {
+      topic,
+      difficulty,
+      matched: false,
+      NOT: { userId },
+    },
+  });
+
+  if (existingMatch) {
+    // Match found, update both records to mark as matched
+    await prisma.$transaction([
+      prisma.matchRecord.update({
+        where: { userId: existingMatch.userId },
+        data: { matched: true, matchedUserId: userId },
+      }),
+      prisma.matchRecord.create({
+        data: {
           userId,
           topic,
           difficulty,
-          resolve,
-          timeoutId: setTimeout(() => {
-              // Remove the request from the pool after 30 seconds if no match is found
-              matchingPool = matchingPool.filter((req) => req.userId !== userId);
-              console.log(`No match found for ${userId} after 30 seconds. Removing from pool.`);
-              resolve({ success: false, message: 'Failed to find a match after 30 seconds.' });
-          }, 30000), // 30-second timeout
-      };
+          socketId,
+          matched: true,
+          matchedUserId: existingMatch.userId,
+        },
+      }),      
+    ]);
 
-      console.log(`Received matching request from ${userId} on topic ${topic}, difficulty ${difficulty}`);
-      console.log("Current pool: ", safeStringify(matchingPool));
+    console.log(`Matched ${userId} with ${existingMatch.userId} on topic ${topic}, difficulty ${difficulty}`);
 
-      // Check if there is a match in the pool
-      const matchIndex = matchingPool.findIndex(
-          (req) => req.topic === topic && req.difficulty === difficulty && req.userId !== userId
-      );
+    // update both clients about the successful match
+    io.to(socketId).emit("matched", { matchedWith: existingMatch.userId });
+    io.to(existingMatch.socketId).emit("matched", { matchedWith: userId });    
+  } else {
+    await prisma.matchRecord.create({
+      data: {
+        userId,
+        topic,
+        difficulty,
+        socketId,
+        matched: false,
+      },
+    });
 
-      console.log(`Checking for match: User ${userId} looking for topic ${topic}, difficulty ${difficulty}`);
-      console.log(`Match index found: ${matchIndex}`);
+    console.log(`No match found for ${userId}, added to record`);
+  }
+}
 
-      if (matchIndex !== -1) {
-          // Match found, resolve both users and clear their timeouts
-          const matchedRequest = matchingPool[matchIndex];
-
-          // Remove matched request from the pool
-          matchingPool = matchingPool.filter((req) => req.userId !== matchedRequest.userId);
-
-          // Clear both users' timeouts
-          clearTimeout(matchedRequest.timeoutId);
-          clearTimeout(newRequest.timeoutId);
-
-          console.log(`Matched ${userId} with ${matchedRequest.userId} on topic ${topic}, difficulty ${difficulty}`);
-          
-          // Notify both users of successful match
-          matchedRequest.resolve({ success: true, message: `Matched with user ${userId}` });
-          resolve({ success: true, message: `Matched with user ${matchedRequest.userId}` });
-      } else {
-          // No match yet, add to the pool
-          matchingPool.push(newRequest);
-          console.log(`Added ${userId} to the pool. Waiting for a match...`);
-      }
+async function deleteMatchRecord(userId: string) {
+  await prisma.matchRecord.delete({
+    where: { userId },
   });
 }
 
-export async function cancelMatching(userId: string): Promise<boolean> {
-  const request = matchingPool.find((req) => req.userId === userId);
-  if (request) {
-      clearTimeout(request.timeoutId);
+export async function handleTimeout(userRequest: any) {
+  const { userId, socketId } = userRequest;
+  const result = await prisma.matchRecord.findUnique({
+    where: { userId },
+  });
 
-      matchingPool = matchingPool.filter((req) => req.userId !== userId);
-      console.log(`Removed ${userId} from the pool.`);
-      return true;
-  } else {
-    return false;
+  if (!(result?.matched)) {
+    console.log(`Timeout: No match found for user ${userId}`);
+    io.to(socketId).emit('timeout', 'No match found. Please try again.'); 
   }
-  
+  // clean up the database regardless of match status
+  await deleteMatchRecord(userId);
 }
