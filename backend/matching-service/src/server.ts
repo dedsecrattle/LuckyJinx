@@ -8,7 +8,7 @@ const app = express();
 const server = createServer(app);
 export const io = new Server(server);
 
-const PORT = process.env.PORT || 3002;
+const PORT = process.env.PORT || 3003;
 
 function setupSocketIO(io: Server) {
   io.on('connection', (socket) => {
