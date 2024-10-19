@@ -9,6 +9,23 @@ services:
     ports:
       - "3001:3001"
   
+  matching:
+    build: ./backend/matching-service
+    depends_on:
+      - rabbitmq
+    ports:
+      - "3003:3003"
+    environment:
+      DATABASE_URL: "file:./dev.db"
+      RABBITMQ_URL: "amqp://rabbitmq:5672"
+  
+  rabbitmq:
+    build:
+      context: ./backend/rabbitmq
+    ports:
+      - "5672:5672"    # RabbitMQ message broker
+      - "15672:15672"  # RabbitMQ management plugin
+  
   frontend:
     build: ./frontend
     env_file:
