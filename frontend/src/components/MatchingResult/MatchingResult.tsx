@@ -1,5 +1,4 @@
-import { ReactElement, useContext } from "react";
-import { Session, SessionState } from "../../models/session.model";
+import { ReactElement, useContext} from "react";
 import { Box, Button, Typography } from "@mui/material";
 import "./MatchingResult.scss";
 import CountUpTimer from "../CountUpTimer/CountUpTimer";
@@ -7,32 +6,28 @@ import { UserContext } from "../../contexts/UserContext";
 import Bridge from "../../assets/bridge.svg";
 import { Code, Whatshot } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
-import { UserProfile } from "../../models/user.model";
 import UnknownUser from "../../assets/unknown_user.png";
+import { SessionContext, SessionState } from "../../contexts/SessionContext";
 
-const MatchingResult = (props: { session: Session }): ReactElement => {
+const MatchingResult = (): ReactElement => {
   const { user } = useContext(UserContext);
-  const { session } = props;
+  const { sessionState, topic, difficulty, otherUserProfile } = useContext(SessionContext);
   const navigate = useNavigate();
 
-  if (!(user && session)) {
+  if (!(user)) {
     navigate("/");
   }
-
-  const otherUserProfile: UserProfile | undefined = [session.userOneProfile, session.userTwoProfile].find(
-    (profile) => profile && profile.id !== user!.id,
-  );
 
   return (
     <Box>
       <Box className="MatchingResult-title">
         <Box className="MatchingResult-title-progress">
           <Typography className="MatchingResult-title-text">
-            {session.state === SessionState.MATCHING
+            {sessionState === SessionState.MATCHING
               ? "Matching you with another coder..."
               : "Partner found! Accept to start the session"}
           </Typography>
-          {session.state === SessionState.MATCHING ? <CountUpTimer /> : <></>}
+          {sessionState === SessionState.MATCHING ? <CountUpTimer /> : <></>}
         </Box>
 
         <Box className="MatchingResult-users">
@@ -45,7 +40,7 @@ const MatchingResult = (props: { session: Session }): ReactElement => {
             <Box className="MatchingResult-users-bridge-infobox">
               <Whatshot className="MatchingResult-users-bridge-infobox-icon" />
               <Typography variant="h5" className="MatchingResult-users-bridge-text">
-                {session.difficulty}
+                {difficulty}
               </Typography>
             </Box>
 
@@ -65,7 +60,7 @@ const MatchingResult = (props: { session: Session }): ReactElement => {
             <Box className="MatchingResult-users-bridge-infobox">
               <Code className="MatchingResult-users-bridge-infobox-icon" />
               <Typography className="MatchingResult-users-bridge-text">
-                {session.state === SessionState.MATCHING ? session.topics?.join(", ") : session.chosenTopic}
+                {topic}
               </Typography>
             </Box>
           </Box>
@@ -82,7 +77,7 @@ const MatchingResult = (props: { session: Session }): ReactElement => {
           </Box>
         </Box>
 
-        {session.state === SessionState.MATCHING ? (
+        {sessionState === SessionState.MATCHING ? (
           <Box className="MatchingResult-actions">
             <Button variant="contained" color="error" className="MatchingResult-actions-cancel">
               Cancel

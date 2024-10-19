@@ -66,6 +66,21 @@ export default class UserService {
     }
   }
 
+  static async getUser(id: string): Promise<User | Error> {
+    try {
+      const response = await UserService.client.get(`/users/${id}`);
+      return response.data.data;
+    } catch (error: any) {
+      if (error instanceof AxiosError) {
+        if (error.response?.status === 404) {
+          return new Error("User not found.");
+        }
+        return new Error(error.response?.data.message ?? UNEXPECTED_ERROR_MESSAGE);
+      }
+      return error;
+    }
+  }
+
   static async updateAccount(
     id: string,
     username: string,

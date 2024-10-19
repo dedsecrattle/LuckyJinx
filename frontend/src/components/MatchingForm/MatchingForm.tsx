@@ -3,32 +3,37 @@ import { ReactElement, useState } from "react";
 import { Categories, QuestionComplexity } from "../../models/question.model";
 import "./MatchingForm.scss";
 
-const MAX_TOPIC_COUNT = 5;
-const MIN_TOPIC_COUNT = 1;
+// const MAX_TOPIC_COUNT = 5;
+// const MIN_TOPIC_COUNT = 1;
 
-const MatchingForm = (): ReactElement => {
-  const [topics, setTopics] = useState<[Categories]>([Categories.ALGORITHMS]);
+const MatchingForm = (
+  props: {
+    startMatchingCallBack: any;
+  }
+): ReactElement => {
+  const { startMatchingCallBack } = props;
+
+  const [topic, setTopic] = useState<Categories>(Categories.ALGORITHMS);
   const [difficulty, setDifficulty] = useState<QuestionComplexity>("Easy");
 
   const submitForm = () => {
-    console.log("Topics: ", topics);
-    console.log("Difficulty: ", difficulty);
+     startMatchingCallBack(topic, difficulty);
   };
 
   return (
     <Box className="Interview-form">
       <Typography className="Interview-form-title">Select Topic & Difficulty</Typography>
       <Typography className="Interview-form-description" textAlign="center">
-        Choose at least 1, at most {MAX_TOPIC_COUNT} topics to get started. Choosing more than one topic increases the
-        chances of matching and reduces the waiting time.
+        {/* Choose at least 1, at most {MAX_TOPIC_COUNT} topics to get started. Choosing more than one topic increases the
+        chances of matching and reduces the waiting time. */}
+        Choose your desired topic and difficulty. We will match you with a partner who has similar preferences.
       </Typography>
       <Typography className="Interview-form-label">Topic</Typography>
       <Select
         className="Interview-form-topic-select"
-        value={topics}
-        multiple
+        value={topic}
         autoWidth
-        onChange={(e) => setTopics(e.target.value as [Categories])}
+        onChange={(e) => setTopic(e.target.value as Categories)}
         inputProps={{
           classes: {
             icon: "AccountSettings-select-icon",
@@ -47,10 +52,6 @@ const MatchingForm = (): ReactElement => {
             <MenuItem
               key={category}
               value={category}
-              disabled={
-                (topics.length >= MAX_TOPIC_COUNT && !topics.includes(category)) ||
-                (topics.length <= MIN_TOPIC_COUNT && topics.includes(category))
-              }
             >
               {category}
             </MenuItem>
