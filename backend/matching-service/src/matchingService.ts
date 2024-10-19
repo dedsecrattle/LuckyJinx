@@ -34,7 +34,7 @@ export async function handleUserRequest(userRequest: any) {
     console.log("User already present in match record");
     const pastSocketId = user.socketId;
     if (pastSocketId !== socketId) {
-      console.log("Duplicate socket detected");
+      console.log("Duplicate socket detected. New socket will be used.");
       io.to(pastSocketId).emit('duplicate socket', 'New connection detected for the same user. Please close the current page');
 
       // update socket id upon potential reconnection
