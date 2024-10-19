@@ -8,7 +8,8 @@ generator client {
 }
 
 model MatchRecord {
-  userId       String    @id // ID of the user waiting for a match
+  recordId     Int   @id @default(autoincrement())
+  userId       String   // ID of the user waiting for a match
   topic        String   // Preferred topic for the match
   difficulty   String   // Preferred difficulty level for the match
   socketId     String   // Socket Id for communication
