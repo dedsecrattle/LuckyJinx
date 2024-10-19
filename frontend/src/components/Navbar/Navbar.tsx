@@ -57,8 +57,8 @@ const Navbar = (): ReactElement => {
       </Box>
       <Box className="Navbar-buttons">
         {user ? (
-          <Button color="primary" variant="contained" onClick={redirectToAccount}>
-            <div style={{ padding: "0.5rem" }}>{user?.username}</div>
+          <Button className="Navbar-buttons-profile" color="primary" variant="contained" onClick={redirectToAccount}>
+            <Box className="Navbar-buttons-profile-text">{user?.username}</Box>
             <AccountCircleIcon />
           </Button>
         ) : (

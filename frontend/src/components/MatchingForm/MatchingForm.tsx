@@ -6,18 +6,14 @@ import "./MatchingForm.scss";
 // const MAX_TOPIC_COUNT = 5;
 // const MIN_TOPIC_COUNT = 1;
 
-const MatchingForm = (
-  props: {
-    startMatchingCallBack: any;
-  }
-): ReactElement => {
+const MatchingForm = (props: { startMatchingCallBack: any }): ReactElement => {
   const { startMatchingCallBack } = props;
 
   const [topic, setTopic] = useState<Categories>(Categories.ALGORITHMS);
   const [difficulty, setDifficulty] = useState<QuestionComplexity>("Easy");
 
   const submitForm = () => {
-     startMatchingCallBack(topic, difficulty);
+    startMatchingCallBack(topic, difficulty);
   };
 
   return (
@@ -49,10 +45,7 @@ const MatchingForm = (
       >
         {Object.values(Categories).map((category) => {
           return (
-            <MenuItem
-              key={category}
-              value={category}
-            >
+            <MenuItem key={category} value={category}>
               {category}
             </MenuItem>
           );

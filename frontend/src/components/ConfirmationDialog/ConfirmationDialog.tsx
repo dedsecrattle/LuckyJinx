@@ -19,7 +19,9 @@ const ConfirmationDialog = (): ReactElement => {
 
       <DialogContent>
         <DialogContentText>
-          <Typography className="ConfirmationDialog-content">{content}</Typography>
+          <Typography className="ConfirmationDialog-content" component="pre">
+            {content}
+          </Typography>
         </DialogContentText>
       </DialogContent>
 

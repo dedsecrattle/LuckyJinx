@@ -77,7 +77,7 @@ const App = (): ReactElement => {
               <Route path="/login" element={user ? <Navigate to={"/"} /> : <Login />} />
               <Route path="/settings" element={user ? <AccountSettings /> : <Navigate to={"/login"} />} />
               <Route path="/questions" element={<Questions />} />
-                <Route path="/interview" element={user ? <Interview /> : <Navigate to={"/"} />} />
+              <Route path="/interview" element={user ? <Interview /> : <Navigate to={"/"} />} />
             </Routes>
           </SessionContextProvider>
         </ConfirmationDialogContextProvider>
