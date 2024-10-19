@@ -2,7 +2,7 @@ import express from 'express';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import { setupRabbitMQ } from './rabbitmq';
-import { handleMatchingRequest } from './matchingService';
+import { handleMatchingRequest, handleDisconnected } from './matchingService';
 
 const app = express();
 const server = createServer(app);
@@ -19,8 +19,9 @@ function setupSocketIO(io: Server) {
       await handleMatchingRequest(userRequest, socket.id);
     });
 
-    socket.on('disconnect', () => {
+    socket.on('disconnect', async () => {
       console.log('User disconnected:', socket.id);
+      await handleDisconnected(socket.id);
     });
   });
 }

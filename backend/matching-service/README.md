@@ -13,4 +13,5 @@ mv rabbitmq_delayed_message_exchange-4.0.2.ez plugins/
 rabbitmq-plugins enable rabbitmq_delayed_message_exchange
 # prisma database initialization
 npx prisma generate
+npx prisma migrate dev --name init
 ```
