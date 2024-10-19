@@ -14,5 +14,6 @@ model MatchRecord {
   socketId     String   // Socket Id for communication
   matched      Boolean  @default(false) // Whether a match has been made
   matchedUserId String? // Optional field to store matched user's ID
+  isArchived   Boolean @default(false) // Whether a match record has been archived
   createdAt    DateTime @default(now()) // Timestamp for the match attempt
 }

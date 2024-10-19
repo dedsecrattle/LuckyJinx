@@ -42,6 +42,7 @@ export async function handleUserRequest(userRequest: any) {
       topic,
       difficulty,
       matched: false,
+      isArchived: false,
       NOT: { userId },
     },
   });
@@ -51,7 +52,7 @@ export async function handleUserRequest(userRequest: any) {
     await prisma.$transaction([
       prisma.matchRecord.update({
         where: { userId: existingMatch.userId },
-        data: { matched: true, matchedUserId: userId },
+        data: { matched: true, matchedUserId: userId, isArchived: true },
       }),
       prisma.matchRecord.create({
         data: {
@@ -61,6 +62,7 @@ export async function handleUserRequest(userRequest: any) {
           socketId,
           matched: true,
           matchedUserId: existingMatch.userId,
+          isArchived: true,
         },
       }),      
     ]);
@@ -85,12 +87,6 @@ export async function handleUserRequest(userRequest: any) {
   }
 }
 
-async function deleteMatchRecord(userId: string) {
-  await prisma.matchRecord.delete({
-    where: { userId },
-  });
-}
-
 export async function handleTimeout(userRequest: any) {
   const { userId, socketId } = userRequest;
   const result = await prisma.matchRecord.findUnique({
@@ -102,5 +98,20 @@ export async function handleTimeout(userRequest: any) {
     io.to(socketId).emit('timeout', 'No match found. Please try again.'); 
   }
   // clean up the database regardless of match status
-  await deleteMatchRecord(userId);
+  if (result) {
+    await prisma.matchRecord.delete({
+      where: { userId },
+    });
+  }
+}
+
+export async function handleDisconnected(socketId: string) {
+  const result = await prisma.matchRecord.findMany({
+    where: { socketId }
+  })
+  if (result) {
+    await prisma.matchRecord.deleteMany({
+      where: { socketId }
+    })
+  }
 }
