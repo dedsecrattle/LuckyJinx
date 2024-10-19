@@ -9,13 +9,24 @@ import { UserContext } from "../../contexts/UserContext";
 import { Categories, QuestionComplexity } from "../../models/question.model";
 import { io } from "socket.io-client";
 import { SessionContext, SessionState } from "../../contexts/SessionContext";
+import { useMainDialog } from "../../contexts/MainDialogContext";
 
 const WEBSOCKET_URL = process.env.REACT_APP_MATCHING_SERVICE_URL as string;
 
 const Interview = (): ReactElement => {
   const { user } = useContext(UserContext);
-  const { sessionState, setSessionState, setTopic, setDifficulty, setOtherUserId } = useContext(SessionContext);
-  
+  const {
+    sessionState,
+    setSocket,
+    setSessionState,
+    setTopic,
+    setDifficulty,
+    setOtherUserId,
+    setLastMatchingStartTime,
+    clearSession,
+  } = useContext(SessionContext);
+  const { setMainDialogTitle, setMainDialogContent, openMainDialog } = useMainDialog();
+
   const socket = io(WEBSOCKET_URL, { autoConnect: false });
 
   socket.on("matched", (data: any) => {
@@ -26,26 +37,63 @@ const Interview = (): ReactElement => {
 
   socket.on("timeout", (message: string) => {
     console.log("Timeout: ", message);
-    setSessionState(SessionState.NOT_STARTED);
-  })
+    setSessionState(SessionState.TIMEOUT);
+  });
+
+  socket.on("duplicate socket", (message: string) => {
+    console.log("Duplicate socket: ", message);
+    clearSession();
+    setMainDialogTitle("Duplicate matching requests");
+    setMainDialogContent(
+      "Uh-oh, this matching is terminated due to another matching request from your account. Only one matching request is allowed at a time.",
+    );
+    openMainDialog();
+  });
+
+  socket.on("error", () => {
+    console.log("Unexpected error");
+    clearSession();
+    setMainDialogTitle("Error");
+    setMainDialogContent("Your connection with the matching service is interrupted, please try again.");
+    openMainDialog();
+  });
+
+  socket.on("connect_error", (error: any) => {
+    console.log("Socket connection error: ", error);
+    clearSession();
+    setMainDialogTitle("Error");
+    setMainDialogContent("Failed to connect to the matching service, please try again.");
+    openMainDialog();
+  });
+
+  socket.on("connect_timeout", (timeout: any) => {
+    console.log("Socket connection timeout: ", timeout);
+    clearSession();
+    setMainDialogTitle("Error");
+    setMainDialogContent("Failed to connect to the matching service, please try again.");
+    openMainDialog();
+  });
 
   const startMatching = (topic: Categories, difficulty: QuestionComplexity) => {
-    if (!user || !topic || !difficulty) { 
+    if (!user || !topic || !difficulty) {
       return;
     }
     socket.connect();
-    socket.emit("matching_request", {userId: user.id, topic, difficulty});
+    setSocket(socket);
+    socket.emit("matching_request", { userId: user.id, topic, difficulty });
+    setLastMatchingStartTime(Date.now());
     setTopic(topic);
     setDifficulty(difficulty);
     setSessionState(SessionState.MATCHING);
-  }
+  };
 
   const getSessionComponent = (): ReactElement => {
     switch (sessionState) {
       case SessionState.NOT_STARTED:
-        return <MatchingForm startMatchingCallBack={startMatching}/>;
+        return <MatchingForm startMatchingCallBack={startMatching} />;
       case SessionState.MATCHING:
       case SessionState.PENDING:
+      case SessionState.TIMEOUT:
       case SessionState.ACCEPTED:
         return <MatchingResult />;
       default:

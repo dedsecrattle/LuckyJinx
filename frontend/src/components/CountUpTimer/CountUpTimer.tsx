@@ -1,19 +1,34 @@
 import { Box, Typography } from "@mui/material";
-import { ReactElement, useEffect, useState } from "react";
+import { ReactElement, useContext, useEffect, useState } from "react";
+import { SessionContext, SessionState } from "../../contexts/SessionContext";
+
+const MATCHING_TIMEOUT_INTERVAL_SECONDS = 30;
+
+const getTotalMatchingTimeSeconds = (matchCount: number, lastMatchingStartTime: number): number => {
+  const currentTime = Date.now();
+  return Math.floor(matchCount * MATCHING_TIMEOUT_INTERVAL_SECONDS + (currentTime - lastMatchingStartTime) / 1000);
+};
 
 const CountUpTimer = (): ReactElement => {
-  const [time, setTime] = useState<number>(0);
+  const { sessionState, matchCount, lastMatchingStartTime } = useContext(SessionContext);
+
+  const [time, setTime] = useState<number>(
+    sessionState === SessionState.TIMEOUT
+      ? (matchCount + 1) * MATCHING_TIMEOUT_INTERVAL_SECONDS // handle initial timer value when navigate away then back
+      : getTotalMatchingTimeSeconds(matchCount, lastMatchingStartTime),
+  );
   const minutes = Math.floor(time / 60);
   const seconds = time % 60;
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setTime(time + 1);
-      // TODO: check session
+      if (sessionState !== SessionState.TIMEOUT) {
+        setTime(getTotalMatchingTimeSeconds(matchCount, lastMatchingStartTime));
+      }
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [time]);
+  }, [sessionState, time, matchCount, lastMatchingStartTime]);
 
   return (
     <Box>

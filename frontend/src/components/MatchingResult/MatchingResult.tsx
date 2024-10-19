@@ -1,4 +1,4 @@
-import { ReactElement, useContext} from "react";
+import { ReactElement, useContext, useState } from "react";
 import { Box, Button, Typography } from "@mui/material";
 import "./MatchingResult.scss";
 import CountUpTimer from "../CountUpTimer/CountUpTimer";
@@ -8,13 +8,59 @@ import { Code, Whatshot } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import UnknownUser from "../../assets/unknown_user.png";
 import { SessionContext, SessionState } from "../../contexts/SessionContext";
+import { useMainDialog } from "../../contexts/MainDialogContext";
 
 const MatchingResult = (): ReactElement => {
   const { user } = useContext(UserContext);
-  const { sessionState, topic, difficulty, otherUserProfile } = useContext(SessionContext);
+  const {
+    socket,
+    sessionState,
+    topic,
+    difficulty,
+    otherUserProfile,
+    userAccepted,
+    userDeclined,
+    otherUserAccepted,
+    otherUserDeclined,
+    setSessionState,
+    incrementMatchCount,
+    setLastMatchingStartTime,
+    clearSession,
+    setUserAccepted,
+    setUserDeclined,
+    setOtherUserAccepted,
+    setOtherUserDeclined,
+  } = useContext(SessionContext);
+  const { setMainDialogTitle, setMainDialogContent, openMainDialog } = useMainDialog();
   const navigate = useNavigate();
 
-  if (!(user)) {
+  const chooseCancle = () => {
+    clearSession();
+  };
+
+  const chooseContinue = () => {
+    if (user && socket && socket.connected) {
+      socket.emit("matching_request", { userId: user.id, topic, difficulty });
+      incrementMatchCount();
+      setLastMatchingStartTime(Date.now());
+      setSessionState(SessionState.MATCHING);
+    } else {
+      clearSession();
+      setMainDialogTitle("Error");
+      setMainDialogContent("Your connection with the matching service is interrupted, please try again.");
+      openMainDialog();
+    }
+  };
+
+  const chooseAccept = () => {
+    setUserAccepted(true);
+  };
+
+  const chooseDecline = () => {
+    setUserDeclined(true);
+  };
+
+  if (!user) {
     navigate("/");
   }
 
@@ -25,9 +71,11 @@ const MatchingResult = (): ReactElement => {
           <Typography className="MatchingResult-title-text">
             {sessionState === SessionState.MATCHING
               ? "Matching you with another coder..."
-              : "Partner found! Accept to start the session"}
+              : sessionState === SessionState.TIMEOUT
+                ? "No partner found yet. Would you like to continue matching?"
+                : "Partner found! Accept to start the session"}
           </Typography>
-          {sessionState === SessionState.MATCHING ? <CountUpTimer /> : <></>}
+          {sessionState === SessionState.MATCHING || sessionState === SessionState.TIMEOUT ? <CountUpTimer /> : <></>}
         </Box>
 
         <Box className="MatchingResult-users">
@@ -48,20 +96,30 @@ const MatchingResult = (): ReactElement => {
               <img
                 src={Bridge}
                 alt="bridge"
-                className="MatchingResult-users-bridge-image-left MatchingResult-users-bridge-image-accepted"
+                className={
+                  userAccepted
+                    ? "MatchingResult-users-bridge-image-left MatchingResult-users-bridge-image-accepted"
+                    : userDeclined
+                      ? "MatchingResult-users-bridge-image-left MatchingResult-users-bridge-image-declined"
+                      : "MatchingResult-users-bridge-image-left"
+                }
               />
               <img
                 src={Bridge}
                 alt="bridge"
-                className="MatchingResult-users-bridge-image-right MatchingResult-users-bridge-image-declined"
+                className={
+                  otherUserAccepted
+                    ? "MatchingResult-users-bridge-image-right MatchingResult-users-bridge-image-accepted"
+                    : otherUserDeclined
+                      ? "MatchingResult-users-bridge-image-right MatchingResult-users-bridge-image-declined"
+                      : "MatchingResult-users-bridge-image-right"
+                }
               />
             </Box>
 
             <Box className="MatchingResult-users-bridge-infobox">
               <Code className="MatchingResult-users-bridge-infobox-icon" />
-              <Typography className="MatchingResult-users-bridge-text">
-                {topic}
-              </Typography>
+              <Typography className="MatchingResult-users-bridge-text">{topic}</Typography>
             </Box>
           </Box>
 
@@ -77,21 +135,45 @@ const MatchingResult = (): ReactElement => {
           </Box>
         </Box>
 
-        {sessionState === SessionState.MATCHING ? (
+        {sessionState === SessionState.MATCHING || sessionState === SessionState.TIMEOUT ? (
           <Box className="MatchingResult-actions">
-            <Button variant="contained" color="error" className="MatchingResult-actions-cancel">
+            <Button variant="contained" color="error" className="MatchingResult-actions-cancel" onClick={chooseCancle}>
               Cancel
             </Button>
+            {sessionState === SessionState.TIMEOUT ? (
+              <Button
+                variant="contained"
+                color="primary"
+                className="MatchingResult-actions-continue"
+                onClick={chooseContinue}
+              >
+                Continue
+              </Button>
+            ) : (
+              <></>
+            )}
           </Box>
-        ) : (
+        ) : !userAccepted && !userDeclined ? (
           <Box className="MatchingResult-actions">
-            <Button variant="contained" color="primary" className="MatchingResult-actions-accept">
+            <Button
+              variant="contained"
+              color="primary"
+              className="MatchingResult-actions-accept"
+              onClick={chooseAccept}
+            >
               Accept
             </Button>
-            <Button variant="contained" color="error" className="MatchingResult-actions-decline">
+            <Button
+              variant="contained"
+              color="error"
+              className="MatchingResult-actions-decline"
+              onClick={chooseDecline}
+            >
               Decline
             </Button>
           </Box>
+        ) : (
+          <></>
         )}
       </Box>
     </Box>
