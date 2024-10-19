@@ -8,8 +8,8 @@ RUN npm install
 RUN npm install -g prisma
 
 COPY . .
-RUN npx prisma generate
+RUN npx prisma migrate dev --name init
 
-EXPOSE 3002 5672
+EXPOSE 3003
 
 CMD ["npm", "run", "start"]
