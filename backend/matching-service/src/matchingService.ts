@@ -243,7 +243,7 @@ export async function handleConfirmTimeout(recordId: string) {
     where: { recordId: recordIdInt },
   })
   console.log(`Timeout: Confirm timeout for recordId ${recordId}`);
-  if (result !== null) {
+  if (result !== null && result.isConfirmed === false) {
     if (result.isConfirmed === false) {
       console.log(`Timeout: Match not confirmed for recordId ${recordId} with userId ${result.userId}`);
     } else {
