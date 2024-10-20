@@ -1,5 +1,5 @@
 import amqp from 'amqplib';
-import { handleUserRequest, handleTimeout } from './matchingService';
+import { handleUserRequest, handleTimeout, handleConfirmTimeout } from './matchingService';
 
 const RABBITMQ_URL = process.env.RABBITMQ_URL || 'amqp://localhost';
 const QUEUE_NAME = 'topic_queue_math';
@@ -34,7 +34,13 @@ export async function setupRabbitMQ() {
       if (msg !== null) {
         console.log('Received delayed message:', msg.content.toString());
         const userRequest = JSON.parse(msg.content.toString());
-        await handleTimeout(userRequest);
+
+        if (userRequest.type === 'timeout') {
+          await handleTimeout(userRequest);
+        } else if (userRequest.type === 'confirm_timeout') {
+          await handleConfirmTimeout(userRequest.recordId);
+        };
+
         rabbitMQChannel.ack(msg);
       }
     });

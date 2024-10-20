@@ -17,13 +17,20 @@ const Interview = (): ReactElement => {
   const { user } = useContext(UserContext);
   const {
     sessionState,
+    userAccepted,
+    otherUserAccepted,
     setSocket,
     setSessionState,
     setTopic,
     setDifficulty,
     setOtherUserId,
+    accumulateMatchingTime,
     setLastMatchingStartTime,
     clearSession,
+    setUserAccepted,
+    setUserDeclined,
+    setOtherUserAccepted,
+    setOtherUserDeclined,
   } = useContext(SessionContext);
   const { setMainDialogTitle, setMainDialogContent, openMainDialog } = useMainDialog();
 
@@ -32,11 +39,13 @@ const Interview = (): ReactElement => {
   socket.on("matched", (data: any) => {
     console.log("Matched with: ", data.matchedWith);
     setOtherUserId(data.matchedWith);
+    accumulateMatchingTime();
     setSessionState(SessionState.PENDING);
   });
 
   socket.on("timeout", (message: string) => {
     console.log("Timeout: ", message);
+    accumulateMatchingTime();
     setSessionState(SessionState.TIMEOUT);
   });
 
@@ -48,6 +57,42 @@ const Interview = (): ReactElement => {
       "Uh-oh, this matching is terminated due to another matching request from your account. Only one matching request is allowed at a time.",
     );
     openMainDialog();
+  });
+
+  socket.on("other_accepted", () => {
+    console.log("Other user accepted");
+    setOtherUserAccepted(true);
+  });
+
+  socket.on("other_declined", () => {
+    console.log("Other user declined");
+    setOtherUserDeclined(true);
+  });
+
+  socket.on("matching_success", () => {
+    console.log("Matching succeeded");
+    // if user did not accept, it means event not sent and should automatically accept
+    if (!userAccepted) {
+      setUserAccepted(true);
+    }
+    if (!otherUserAccepted) {
+      setOtherUserAccepted(true);
+    }
+    setTimeout(() => {
+      setSessionState(SessionState.SUCCESS);
+    }, 1000); // smoother transition
+  });
+
+  socket.on("matching_fail", () => {
+    console.log("Matching failed");
+    // if user did not accept, it means timeout and should automatically decline
+    if (!userAccepted) {
+      setUserDeclined(true);
+    }
+    if (!otherUserAccepted) {
+      setOtherUserDeclined(true);
+    }
+    setSessionState(SessionState.FAIL);
   });
 
   socket.on("error", () => {
@@ -75,6 +120,8 @@ const Interview = (): ReactElement => {
   });
 
   const startMatching = (topic: Categories, difficulty: QuestionComplexity) => {
+    // restart
+    clearSession();
     if (!user || !topic || !difficulty) {
       return;
     }
@@ -94,8 +141,9 @@ const Interview = (): ReactElement => {
       case SessionState.MATCHING:
       case SessionState.PENDING:
       case SessionState.TIMEOUT:
-      case SessionState.ACCEPTED:
-        return <MatchingResult />;
+      case SessionState.FAIL:
+      case SessionState.SUCCESS:
+        return <MatchingResult startMatchingCallBack={startMatching} />;
       default:
         return <Typography variant="h5">An unexpected error occurred, please try again</Typography>;
     }
