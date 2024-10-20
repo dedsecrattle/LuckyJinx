@@ -10,7 +10,7 @@ import UnknownUser from "../../assets/unknown_user.png";
 import { SessionContext, SessionState } from "../../contexts/SessionContext";
 import { useMainDialog } from "../../contexts/MainDialogContext";
 
-const MatchingResult = (): ReactElement => {
+const MatchingResult = (props: { startMatchingCallBack: any }): ReactElement => {
   const { user } = useContext(UserContext);
   const {
     socket,
@@ -28,8 +28,11 @@ const MatchingResult = (): ReactElement => {
     clearSession,
     setUserAccepted,
     setUserDeclined,
+    setOtherUserAccepted,
+    setOtherUserDeclined,
   } = useContext(SessionContext);
   const { setMainDialogTitle, setMainDialogContent, openMainDialog } = useMainDialog();
+  const { startMatchingCallBack } = props;
   const navigate = useNavigate();
 
   const displayConnectionError = () => {
@@ -49,15 +52,25 @@ const MatchingResult = (): ReactElement => {
       socket.emit("matching_request", { userId: user.id, topic, difficulty });
       setLastMatchingStartTime(Date.now());
       //incrementMatchCount();
+
+      // clear the accepted and declined states
+      setUserAccepted(false);
+      setUserDeclined(false);
+      setOtherUserAccepted(false);
+      setOtherUserDeclined(false);
       setSessionState(SessionState.MATCHING);
     } else {
       displayConnectionError();
     }
   };
 
+  const chooseRetry = () => {
+    startMatchingCallBack(topic, difficulty);
+  };
+
   const chooseAccept = () => {
     if (user && socket && socket.connected) {
-      socket.emit("matching_accept");
+      socket.emit("matching_confirm", { userId: user.id });
       setUserAccepted(true);
     } else {
       displayConnectionError();
@@ -66,7 +79,7 @@ const MatchingResult = (): ReactElement => {
 
   const chooseDecline = () => {
     if (user && socket && socket.connected) {
-      socket.emit("matching_decline");
+      socket.emit("matching_decline", { userId: user.id });
       setUserDeclined(true);
     } else {
       displayConnectionError();
@@ -78,7 +91,7 @@ const MatchingResult = (): ReactElement => {
   }
 
   return sessionState === SessionState.SUCCESS ? (
-    <Typography variant="h5">
+    <Typography variant="h5" textAlign="center">
       Successfully matched {user?.username} with {otherUserProfile?.username}.
       <br />
       <br />
@@ -94,8 +107,8 @@ const MatchingResult = (): ReactElement => {
               : sessionState === SessionState.TIMEOUT
                 ? "No partner found yet. Would you like to continue matching?"
                 : sessionState === SessionState.FAIL
-                  ? "Matching was declined. Would you like to continue matching?"
-                  : "Partner found! Accept to start the session"}
+                  ? "Matching was declined. Would you like to retry matching?"
+                  : "Partner found! Accept the session within 10 seconds"}
           </Typography>
           {sessionState === SessionState.MATCHING ? <CountUpTimer /> : <></>}
         </Box>
@@ -164,7 +177,7 @@ const MatchingResult = (): ReactElement => {
             <Button variant="contained" color="error" className="MatchingResult-actions-cancel" onClick={chooseCancle}>
               Cancel
             </Button>
-            {sessionState === SessionState.TIMEOUT || sessionState === SessionState.FAIL ? (
+            {sessionState === SessionState.TIMEOUT ? (
               <Button
                 variant="contained"
                 color="primary"
@@ -172,6 +185,15 @@ const MatchingResult = (): ReactElement => {
                 onClick={chooseContinue}
               >
                 Continue
+              </Button>
+            ) : sessionState === SessionState.FAIL ? (
+              <Button
+                variant="contained"
+                color="primary"
+                className="MatchingResult-actions-continue"
+                onClick={chooseRetry}
+              >
+                Retry
               </Button>
             ) : (
               <></>

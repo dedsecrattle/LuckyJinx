@@ -107,11 +107,11 @@ export const SessionContextProvider: React.FC<{ children: React.ReactNode }> = (
 
   const accumulateMatchingTime = () => {
     const currentTime = Date.now();
-    console.log("current:", currentTime);
-    console.log("difference:", currentTime - lastMatchingStartTimeRef.current);
+    // console.log("current:", currentTime);
+    // console.log("difference:", currentTime - lastMatchingStartTimeRef.current);
 
     setCumulativeMatchingTime((prev) => {
-      console.log("cumulative:", prev + currentTime - lastMatchingStartTimeRef.current);
+      // console.log("cumulative:", prev + currentTime - lastMatchingStartTimeRef.current);
       return prev + currentTime - lastMatchingStartTimeRef.current;
     });
   };

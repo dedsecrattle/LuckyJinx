@@ -17,6 +17,8 @@ const Interview = (): ReactElement => {
   const { user } = useContext(UserContext);
   const {
     sessionState,
+    userAccepted,
+    otherUserAccepted,
     setSocket,
     setSessionState,
     setTopic,
@@ -25,6 +27,8 @@ const Interview = (): ReactElement => {
     accumulateMatchingTime,
     setLastMatchingStartTime,
     clearSession,
+    setUserAccepted,
+    setUserDeclined,
     setOtherUserAccepted,
     setOtherUserDeclined,
   } = useContext(SessionContext);
@@ -65,9 +69,15 @@ const Interview = (): ReactElement => {
     setOtherUserDeclined(true);
   });
 
-  socket.on("matched_success", () => {
+  socket.on("matching_success", () => {
     console.log("Matching succeeded");
-    accumulateMatchingTime();
+    // if user did not accept, it means event not sent and should automatically accept
+    if (!userAccepted) {
+      setUserAccepted(true);
+    }
+    if (!otherUserAccepted) {
+      setOtherUserAccepted(true);
+    }
     setTimeout(() => {
       setSessionState(SessionState.SUCCESS);
     }, 1000); // smoother transition
@@ -75,7 +85,13 @@ const Interview = (): ReactElement => {
 
   socket.on("matching_fail", () => {
     console.log("Matching failed");
-    accumulateMatchingTime();
+    // if user did not accept, it means timeout and should automatically decline
+    if (!userAccepted) {
+      setUserDeclined(true);
+    }
+    if (!otherUserAccepted) {
+      setOtherUserDeclined(true);
+    }
     setSessionState(SessionState.FAIL);
   });
 
@@ -104,6 +120,8 @@ const Interview = (): ReactElement => {
   });
 
   const startMatching = (topic: Categories, difficulty: QuestionComplexity) => {
+    // restart
+    clearSession();
     if (!user || !topic || !difficulty) {
       return;
     }
@@ -125,7 +143,7 @@ const Interview = (): ReactElement => {
       case SessionState.TIMEOUT:
       case SessionState.FAIL:
       case SessionState.SUCCESS:
-        return <MatchingResult />;
+        return <MatchingResult startMatchingCallBack={startMatching} />;
       default:
         return <Typography variant="h5">An unexpected error occurred, please try again</Typography>;
     }

@@ -3,7 +3,6 @@ import { ReactElement, useContext, useEffect, useState } from "react";
 import { SessionContext, SessionState } from "../../contexts/SessionContext";
 
 const getTotalMatchingTimeSeconds = (cumulativeMatchingTime: number, lastMatchingStartTime: number): number => {
-  console.log("last:", lastMatchingStartTime);
   const currentTime = Date.now();
   return Math.floor((cumulativeMatchingTime + currentTime - lastMatchingStartTime) / 1000);
 };
