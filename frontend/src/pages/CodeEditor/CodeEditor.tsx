@@ -102,6 +102,7 @@ const App: React.FC = () => {
               <select className="language-select" onChange={handleLanguageChange}>
                 <option value="python">Python</option>
                 <option value="java">Java</option>
+                <option value="cpp">C++</option>
                 {/* <option value="cpp">C++</option> */}
               </select>
               <Button variant="contained" size="small" className="submit-button">
@@ -163,7 +164,7 @@ const App: React.FC = () => {
           </Typography>
           {isVideoHovered && (
             <Button variant="contained" className="hangout-button">
-              Hangout
+              Hang Up
             </Button>
           )}
         </div>
