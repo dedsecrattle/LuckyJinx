@@ -30,7 +30,7 @@ export async function handleUserRequest(userRequest: any) {
   const user = await prisma.matchRecord.findFirst({
     where: { userId, isArchived: false },
   });
-  if (user) {
+  if (user !== null) {
     console.log("User already present in match record");
     const pastSocketId = user.socketId;
     if (pastSocketId !== socketId) {
@@ -58,7 +58,7 @@ export async function handleUserRequest(userRequest: any) {
     },
   });
 
-  if (existingMatch) {
+  if (existingMatch !== null) {
     // Match found, update both records to mark as matched
     await prisma.$transaction([
       prisma.matchRecord.update({
@@ -101,19 +101,19 @@ export async function handleUserRequest(userRequest: any) {
 export async function handleTimeout(userRequest: any) {
   const { userId, socketId } = userRequest;
   const result = await prisma.matchRecord.findFirst({
-    where: { userId, isArchived: false },
+    where: { userId, isArchived: false, socketId },
   });
 
-  if (!(result?.matched)) {
-    console.log(`Timeout: No match found for user ${userId}`);
-    io.to(socketId).emit('timeout', 'No match found. Please try again.'); 
-  }
-  // clean up the database regardless of match status
-  if (result) {
+  if (result !== null) {
+    if (result.matched === false) {
+      console.log(`Timeout: No match found for user ${userId}`);
+      io.to(socketId).emit('timeout', 'No match found. Please try again.'); 
+    }
+
     await prisma.matchRecord.update({
       where: { recordId: result.recordId },
       data: { isArchived: true },
-    })
+    })    
   }
 }
 
