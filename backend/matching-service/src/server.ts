@@ -1,8 +1,13 @@
-import express from 'express';
-import { createServer } from 'http';
-import { Server } from 'socket.io';
-import { setupRabbitMQ } from './rabbitmq';
-import { handleMatchingRequest, handleMatchingConfirm, handleMatchingDecline, handleDisconnected } from './matchingService';
+import express from "express";
+import { createServer } from "http";
+import { Server } from "socket.io";
+import { setupRabbitMQ } from "./rabbitmq";
+import {
+  handleMatchingRequest,
+  handleMatchingConfirm,
+  handleMatchingDecline,
+  handleDisconnected,
+} from "./matchingService";
 
 const app = express();
 
@@ -24,23 +29,18 @@ function setupSocketIO(io: Server) {
       await handleMatchingRequest(userRequest, socket.id);
     });
 
-<<<<<<< HEAD
-    socket.on("disconnect", async () => {
-      console.log("User disconnected:", socket.id);
-=======
-    socket.on('matching_confirm', async (userRequest) => {
-      console.log('Matching confirmed:', userRequest);
+    socket.on("matching_confirm", async (userRequest) => {
+      console.log("Matching confirmed:", userRequest);
       await handleMatchingConfirm(userRequest);
     });
 
-    socket.on('matching_decline', async (userRequest) => {
-      console.log('Matching declined:', userRequest);
+    socket.on("matching_decline", async (userRequest) => {
+      console.log("Matching declined:", userRequest);
       await handleMatchingDecline(userRequest);
     });
 
-    socket.on('disconnect', async () => {
-      console.log('User disconnected:', socket.id);
->>>>>>> main
+    socket.on("disconnect", async () => {
+      console.log("User disconnected:", socket.id);
       await handleDisconnected(socket.id);
     });
   });
