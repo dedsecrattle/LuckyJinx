@@ -32,6 +32,12 @@ services:
     depends_on:
       - code-execution-rabbitmq
       - code-execution-redis
+    deploy:
+      replicas: 4
+      restart_policy:
+        condition: any
+        delay: 3s
+        window: 5s
   
   frontend:
     build: ./frontend
