@@ -114,7 +114,7 @@ export async function handleUserRequest(userRequest: any) {
 export async function handleMatchingConfirm(userRequest: any) {
   const { userId } = userRequest;
   const userRecord = await prisma.matchRecord.findFirst({
-    where: { userId, isPending: true, isConfirmed: false, isArchived: false },
+    where: { userId, isPending: true, isArchived: false },
   });
   const matchedRecord = await prisma.matchRecord.findFirst({
     where: { matchedUserId: userId, isPending: true, isArchived: false },
@@ -140,6 +140,11 @@ export async function handleMatchingConfirm(userRequest: any) {
     return;
   }
 
+  if (userRecord.isConfirmed === true) {
+    console.log("User already confirmed match");
+    return;
+  }
+
   // update userRecord isConfirmed
   await prisma.matchRecord.update({
     where: { recordId: userRecord.recordId },
@@ -152,11 +157,11 @@ export async function handleMatchingConfirm(userRequest: any) {
     // mark both archived
     await prisma.matchRecord.update({
       where: { recordId: matchedRecord.recordId },
-      data: { isPending: false, isArchived: true },
+      data: { isArchived: true },
     });
     await prisma.matchRecord.update({
       where: { recordId: userRecord.recordId },
-      data: { isPending: false, isArchived: true },
+      data: { isArchived: true },
     });
 
     io.to(userRecord.socketId).emit("matching_success", "Match confirmed. Proceeding to collaboration service.");
@@ -171,7 +176,7 @@ export async function handleMatchingConfirm(userRequest: any) {
 export async function handleMatchingDecline(userRequest: any) {
   const { userId } = userRequest;
   const userRecord = await prisma.matchRecord.findFirst({
-    where: { userId, isPending: true, isConfirmed: false, isArchived: false },
+    where: { userId, isPending: true, isArchived: false },
   });
   const matchedRecord = await prisma.matchRecord.findFirst({
     where: { matchedUserId: userId, isPending: true, isArchived: false },
