@@ -14,4 +14,8 @@ server {
     location /api/users/ {
         proxy_pass ${USER_SERVICE_URL};
     }
+
+    location /api/matching/ {
+        proxy_pass ${MATCHING_SERVICE_URL};
+    }
 }

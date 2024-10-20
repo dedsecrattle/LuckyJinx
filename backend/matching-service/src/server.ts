@@ -2,7 +2,7 @@ import express from 'express';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import { setupRabbitMQ } from './rabbitmq';
-import { handleMatchingRequest, handleDisconnected } from './matchingService';
+import { handleMatchingRequest, handleMatchingConfirm, handleMatchingDecline, handleDisconnected } from './matchingService';
 
 const app = express();
 const server = createServer(app);
@@ -21,6 +21,16 @@ function setupSocketIO(io: Server) {
     socket.on('matching_request', async (userRequest) => {
       console.log('Matching request received:', userRequest);
       await handleMatchingRequest(userRequest, socket.id);
+    });
+
+    socket.on('matching_confirm', async (userRequest) => {
+      console.log('Matching confirmed:', userRequest);
+      await handleMatchingConfirm(userRequest);
+    });
+
+    socket.on('matching_decline', async (userRequest) => {
+      console.log('Matching declined:', userRequest);
+      await handleMatchingDecline(userRequest);
     });
 
     socket.on('disconnect', async () => {

@@ -1,10 +1,11 @@
-import { sendToQueue, sendDelayedMessage } from './rabbitmq';
-import { io } from './server';
-import { PrismaClient } from '@prisma/client';
+import { sendToQueue, sendDelayedMessage } from "./rabbitmq";
+import { io } from "./server";
+import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
 const DELAY_TIME = 30000;
+const CONFIRM_DELAY_TIME = 10000;
 
 export async function handleMatchingRequest(userRequest: any, socketId: string) {
   userRequest.socketId = socketId;
@@ -15,12 +16,24 @@ export async function handleMatchingRequest(userRequest: any, socketId: string) 
 
 function addUserToQueue(userRequest: any) {
   sendToQueue(userRequest);
-  console.log('Sent user request to queue:', userRequest);
+  console.log("Sent user request to queue:", userRequest);
 }
 
 function sendDelayedTimeoutMessage(userRequest: any) {
+  userRequest["type"] = "timeout";
   sendDelayedMessage(userRequest, DELAY_TIME);
-  console.log('Sent delayed message for user request:', userRequest);
+  console.log("Sent delayed message for user request:", userRequest);
+}
+
+function sendConfirmDelayedTimeoutMessage(recordId: string) {
+  sendDelayedMessage(
+    {
+      recordId: recordId,
+      type: "confirm_timeout",
+    },
+    CONFIRM_DELAY_TIME
+  );
+  console.log("Sent delayed message for confirm timeout for recordId: ", recordId);
 }
 
 export async function handleUserRequest(userRequest: any) {
@@ -28,20 +41,23 @@ export async function handleUserRequest(userRequest: any) {
 
   // check userId present in prisma
   const user = await prisma.matchRecord.findFirst({
-    where: { userId, isArchived: false },
+    where: { userId, isPending: false, isArchived: false },
   });
   if (user !== null) {
     console.log("User already present in match record");
     const pastSocketId = user.socketId;
     if (pastSocketId !== socketId) {
       console.log("Duplicate socket detected. New socket will be used.");
-      io.to(pastSocketId).emit('duplicate socket', 'New connection detected for the same user. Please close the current page');
+      io.to(pastSocketId).emit(
+        "duplicate socket",
+        "New connection detected for the same user. Please close the current page"
+      );
 
       // update socket id upon potential reconnection
       await prisma.matchRecord.update({
         where: { recordId: user.recordId },
         data: { socketId },
-      })
+      });
     }
     console.log(user);
     return;
@@ -59,30 +75,32 @@ export async function handleUserRequest(userRequest: any) {
   });
 
   if (existingMatch !== null) {
-    // Match found, update both records to mark as matched
-    await prisma.$transaction([
-      prisma.matchRecord.update({
-        where: { recordId: existingMatch.recordId },
-        data: { matched: true, matchedUserId: userId, isArchived: true },
-      }),
-      prisma.matchRecord.create({
-        data: {
-          userId,
-          topic,
-          difficulty,
-          socketId,
-          matched: true,
-          matchedUserId: existingMatch.userId,
-          isArchived: true,
-        },
-      }),      
-    ]);
+    // Match found, update both records to mark as isPending
+    await prisma.matchRecord.update({
+      where: { recordId: existingMatch.recordId },
+      data: { matched: true, matchedUserId: userId, isPending: true },
+    });
+    const current = await prisma.matchRecord.create({
+      data: {
+        userId,
+        topic,
+        difficulty,
+        socketId,
+        matched: true,
+        matchedUserId: existingMatch.userId,
+        isPending: true,
+      },
+    });
 
     console.log(`Matched ${userId} with ${existingMatch.userId} on topic ${topic}, difficulty ${difficulty}`);
 
     // update both clients about the successful match
     io.to(socketId).emit("matched", { matchedWith: existingMatch.userId });
-    io.to(existingMatch.socketId).emit("matched", { matchedWith: userId });    
+    io.to(existingMatch.socketId).emit("matched", { matchedWith: userId });
+
+    // add confirm timeout messages
+    sendConfirmDelayedTimeoutMessage(current.recordId.toString());
+    sendConfirmDelayedTimeoutMessage(existingMatch.recordId.toString());
   } else {
     await prisma.matchRecord.create({
       data: {
@@ -98,33 +116,167 @@ export async function handleUserRequest(userRequest: any) {
   }
 }
 
+export async function handleMatchingConfirm(userRequest: any) {
+  const { userId } = userRequest;
+  const userRecord = await prisma.matchRecord.findFirst({
+    where: { userId, isPending: true, isArchived: false },
+  });
+  const matchedRecord = await prisma.matchRecord.findFirst({
+    where: { matchedUserId: userId, isPending: true, isArchived: false },
+  });
+
+  // check if both records are present
+  if (matchedRecord === null || userRecord === null) {
+    // archive both records if one of them is missing
+    if (matchedRecord !== null) {
+      await prisma.matchRecord.update({
+        where: { recordId: matchedRecord.recordId },
+        data: { isArchived: true },
+      });
+      io.to(matchedRecord.socketId).emit("other_declined", "Match not confirmed. Please try again.");
+    }
+    if (userRecord !== null) {
+      await prisma.matchRecord.update({
+        where: { recordId: userRecord.recordId },
+        data: { isArchived: true },
+      });
+      io.to(userRecord.socketId).emit("other_declined", "Match not confirmed. Please try again.");
+    }
+    return;
+  }
+
+  if (userRecord.isConfirmed === true) {
+    console.log("User already confirmed match");
+    return;
+  }
+
+  // update userRecord isConfirmed
+  await prisma.matchRecord.update({
+    where: { recordId: userRecord.recordId },
+    data: { isConfirmed: true },
+  });
+
+  if (matchedRecord.isConfirmed === true) {
+    // both confirmed, match is successful
+    console.log(`User ${userId} confirmed match, both users confirmed`);
+    // mark both archived
+    await prisma.matchRecord.update({
+      where: { recordId: matchedRecord.recordId },
+      data: { isArchived: true },
+    });
+    await prisma.matchRecord.update({
+      where: { recordId: userRecord.recordId },
+      data: { isArchived: true },
+    });
+
+    io.to(userRecord.socketId).emit("matching_success", "Match confirmed. Proceeding to collaboration service.");
+    io.to(matchedRecord.socketId).emit("matching_success", "Match confirmed. Proceeding to collaboration service.");
+    // TODO: add further logic here to proceed to collaboration service
+  } else {
+    console.log(`User ${userId} confirmed match, waiting for other user to confirm`);
+    io.to(matchedRecord.socketId).emit("other_accepted", "Other user confirmed match. Please confirm.");
+  }
+}
+
+export async function handleMatchingDecline(userRequest: any) {
+  const { userId } = userRequest;
+  const userRecord = await prisma.matchRecord.findFirst({
+    where: { userId, isPending: true, isArchived: false },
+  });
+  const matchedRecord = await prisma.matchRecord.findFirst({
+    where: { matchedUserId: userId, isPending: true, isArchived: false },
+  });
+
+  // check if both records are present
+  if (matchedRecord === null || userRecord === null) {
+    // archive both records if one of them is missing
+    if (matchedRecord !== null) {
+      await prisma.matchRecord.update({
+        where: { recordId: matchedRecord.recordId },
+        data: { isArchived: true },
+      });
+      io.to(matchedRecord.socketId).emit("other_declined", "Match not confirmed. Please try again.");
+      io.to(matchedRecord.socketId).emit("matching_fail", "Match not confirmed. Please try again.");
+    }
+    if (userRecord !== null) {
+      await prisma.matchRecord.update({
+        where: { recordId: userRecord.recordId },
+        data: { isArchived: true },
+      });
+      io.to(userRecord.socketId).emit("other_declined", "Match not confirmed. Please try again.");
+      io.to(userRecord.socketId).emit("matching_fail", "Match not confirmed. Please try again.");
+    }
+
+    return;
+  }
+
+  await prisma.matchRecord.update({
+    where: { recordId: userRecord.recordId },
+    data: { isArchived: true },
+  });
+
+  // user decline, match failed regardlessly
+  console.log(`User ${userId} declined match`);
+  io.to(matchedRecord.socketId).emit("other_declined", "Match not confirmed. Please try again.");
+  await prisma.matchRecord.update({
+    where: { recordId: matchedRecord.recordId },
+    data: { isArchived: true },
+  });
+
+  io.to(userRecord.socketId).emit("matching_fail", "Match not confirmed. Please try again.");
+  io.to(matchedRecord.socketId).emit("matching_fail", "Match not confirmed. Please try again.");
+}
+
 export async function handleTimeout(userRequest: any) {
   const { userId, socketId } = userRequest;
+  // only non-active matches are archived
   const result = await prisma.matchRecord.findFirst({
-    where: { userId, isArchived: false, socketId },
+    where: { userId, isPending: false, isArchived: false, socketId },
   });
 
   if (result !== null) {
     if (result.matched === false) {
       console.log(`Timeout: No match found for user ${userId}`);
-      io.to(socketId).emit('timeout', 'No match found. Please try again.'); 
+      io.to(socketId).emit("timeout", "No match found. Please try again.");
     }
 
     await prisma.matchRecord.update({
       where: { recordId: result.recordId },
       data: { isArchived: true },
-    })    
+    });
+  }
+}
+
+export async function handleConfirmTimeout(recordId: string) {
+  const recordIdInt = Number(recordId);
+  const result = await prisma.matchRecord.findUnique({
+    where: { recordId: recordIdInt, isArchived: false },
+  });
+  console.log(`Timeout: Confirm timeout for recordId ${recordId}`);
+  if (result !== null) {
+    if (result.isConfirmed === false) {
+      console.log(`Timeout: Match not confirmed for recordId ${recordId} with userId ${result.userId}`);
+    } else {
+      console.log(
+        `Timeout: Match confirmed for recordId ${recordId} with userId ${result.userId} but other user did not confirm`
+      );
+    }
+    io.to(result.socketId).emit("matching_fail", "Match not confirmed. Please try again.");
+    await prisma.matchRecord.update({
+      where: { recordId: recordIdInt },
+      data: { isArchived: true },
+    });
   }
 }
 
 export async function handleDisconnected(socketId: string) {
   const result = await prisma.matchRecord.findMany({
-    where: { socketId }
-  })
-  if (result) {
+    where: { socketId },
+  });
+  if (result !== null) {
     await prisma.matchRecord.updateMany({
       where: { socketId },
       data: { isArchived: true },
-    })
+    });
   }
 }
