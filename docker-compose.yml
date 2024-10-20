@@ -37,3 +37,8 @@ services:
       - ./frontend/nginx/.env
     ports:
       - "80:80"
+    depends_on:
+      - user
+      - matching
+      - question
+      - rabbitmq
