@@ -10,7 +10,8 @@ export enum SessionState {
   TIMEOUT,
   MATCHING,
   PENDING,
-  ACCEPTED,
+  FAIL,
+  SUCCESS,
 }
 
 interface SessionContextType {
@@ -20,7 +21,8 @@ interface SessionContextType {
   difficulty: QuestionComplexity;
   otherUserId: string | null;
   otherUserProfile: UserProfile | null;
-  matchCount: number; // total number of matching attempts in this connection
+  // cumulativeMatchingTime: number; // total milliseconds spent in this matching attempt
+  matchCount: number; // total number of retries in this matching attempt
   lastMatchingStartTime: number; // millisecond timestamp at the start of the last matching
   userAccepted: boolean;
   userDeclined: boolean;
@@ -32,6 +34,8 @@ interface SessionContextType {
   setTopic: (topic: Categories) => void;
   setDifficulty: (difficulty: QuestionComplexity) => void;
   setOtherUserId: (otherUserId: string) => void;
+  // setCumulativeMatchingTime: (time: number) => void;
+  clearMatchCount: () => void;
   incrementMatchCount: () => void;
   setLastMatchingStartTime: (time: number) => void;
   setUserAccepted: (accepted: boolean) => void;
@@ -49,6 +53,7 @@ export const SessionContext = createContext<SessionContextType>({
   difficulty: "Easy",
   otherUserId: null,
   otherUserProfile: null,
+  // cumulativeMatchingTime: 0,
   matchCount: 0,
   lastMatchingStartTime: 0,
   userAccepted: false,
@@ -61,6 +66,8 @@ export const SessionContext = createContext<SessionContextType>({
   setDifficulty: () => {},
   setOtherUserId: () => {},
   clearSession: () => {},
+  // setCumulativeMatchingTime: () => {},
+  clearMatchCount: () => {},
   incrementMatchCount: () => {},
   setLastMatchingStartTime: () => {},
   setUserAccepted: () => {},
@@ -76,12 +83,17 @@ export const SessionContextProvider: React.FC<{ children: React.ReactNode }> = (
   const [otherUserId, setOtherUserId] = useState<string | null>(null);
   const [otherUserProfile, setOtherUserProfile] = useState<UserProfile | null>(null);
   const [socket, setSocket] = useState<Socket | null>(null);
+  // const [cumulativeMatchingTime, setCumulativeMatchingTime] = useState<number>(0);
   const [matchCount, setMatchCount] = useState<number>(0);
   const [lastMatchingStartTime, setLastMatchingStartTime] = useState<number>(Date.now());
   const [userAccepted, setUserAccepted] = useState<boolean>(false);
   const [userDeclined, setUserDeclined] = useState<boolean>(false);
   const [otherUserAccepted, setOtherUserAccepted] = useState<boolean>(false);
   const [otherUserDeclined, setOtherUserDeclined] = useState<boolean>(false);
+
+  const clearMatchCount = () => {
+    setMatchCount(0);
+  };
 
   const incrementMatchCount = () => {
     setMatchCount(matchCount + 1);
@@ -97,7 +109,8 @@ export const SessionContextProvider: React.FC<{ children: React.ReactNode }> = (
     setDifficulty("Easy");
     setOtherUserId(null);
     setOtherUserProfile(null);
-    setMatchCount(0);
+    // setCumulativeMatchingTime(0);
+    clearMatchCount();
     setLastMatchingStartTime(Date.now());
     setUserAccepted(false);
     setUserDeclined(false);
@@ -124,6 +137,7 @@ export const SessionContextProvider: React.FC<{ children: React.ReactNode }> = (
     difficulty,
     otherUserId,
     otherUserProfile,
+    // cumulativeMatchingTime,
     matchCount,
     lastMatchingStartTime,
     userAccepted,
@@ -135,6 +149,8 @@ export const SessionContextProvider: React.FC<{ children: React.ReactNode }> = (
     setTopic,
     setDifficulty,
     setOtherUserId,
+    // setCumulativeMatchingTime,
+    clearMatchCount,
     incrementMatchCount,
     setLastMatchingStartTime,
     setUserAccepted,

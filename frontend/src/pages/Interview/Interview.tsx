@@ -17,26 +17,39 @@ const Interview = (): ReactElement => {
   const { user } = useContext(UserContext);
   const {
     sessionState,
+    // cumulativeMatchingTime,
     setSocket,
     setSessionState,
     setTopic,
     setDifficulty,
     setOtherUserId,
+    // setCumulativeMatchingTime,
     setLastMatchingStartTime,
     clearSession,
+    setOtherUserAccepted,
+    setOtherUserDeclined,
   } = useContext(SessionContext);
   const { setMainDialogTitle, setMainDialogContent, openMainDialog } = useMainDialog();
 
   const socket = io(WEBSOCKET_URL, { autoConnect: false });
 
+  // const accumulateMatchingTime = () => {
+  //   console.log("cumulative:", cumulativeMatchingTime);
+  //   console.log("last:", lastMatchingStartTime);
+  //   console.log("difference:", Date.now() - lastMatchingStartTime);
+  //   setCumulativeMatchingTime(cumulativeMatchingTime + Date.now() - lastMatchingStartTime);
+  // };
+
   socket.on("matched", (data: any) => {
     console.log("Matched with: ", data.matchedWith);
     setOtherUserId(data.matchedWith);
+    // accumulateMatchingTime();
     setSessionState(SessionState.PENDING);
   });
 
   socket.on("timeout", (message: string) => {
     console.log("Timeout: ", message);
+    // accumulateMatchingTime();
     setSessionState(SessionState.TIMEOUT);
   });
 
@@ -48,6 +61,30 @@ const Interview = (): ReactElement => {
       "Uh-oh, this matching is terminated due to another matching request from your account. Only one matching request is allowed at a time.",
     );
     openMainDialog();
+  });
+
+  socket.on("other_accepted", () => {
+    console.log("Other user accepted");
+    setOtherUserAccepted(true);
+  });
+
+  socket.on("other_declined", () => {
+    console.log("Other user declined");
+    setOtherUserDeclined(true);
+  });
+
+  socket.on("matched_success", () => {
+    console.log("Matching succeeded");
+    // accumulateMatchingTime();
+    setTimeout(() => {
+      setSessionState(SessionState.SUCCESS);
+    }, 1000); // smoother transition
+  });
+
+  socket.on("matching_fail", () => {
+    console.log("Matching failed");
+    // accumulateMatchingTime();
+    setSessionState(SessionState.FAIL);
   });
 
   socket.on("error", () => {
@@ -94,7 +131,8 @@ const Interview = (): ReactElement => {
       case SessionState.MATCHING:
       case SessionState.PENDING:
       case SessionState.TIMEOUT:
-      case SessionState.ACCEPTED:
+      case SessionState.FAIL:
+      case SessionState.SUCCESS:
         return <MatchingResult />;
       default:
         return <Typography variant="h5">An unexpected error occurred, please try again</Typography>;

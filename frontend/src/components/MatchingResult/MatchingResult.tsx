@@ -1,4 +1,4 @@
-import { ReactElement, useContext, useState } from "react";
+import { ReactElement, useContext } from "react";
 import { Box, Button, Typography } from "@mui/material";
 import "./MatchingResult.scss";
 import CountUpTimer from "../CountUpTimer/CountUpTimer";
@@ -23,16 +23,22 @@ const MatchingResult = (): ReactElement => {
     otherUserAccepted,
     otherUserDeclined,
     setSessionState,
-    incrementMatchCount,
     setLastMatchingStartTime,
+    incrementMatchCount,
     clearSession,
     setUserAccepted,
     setUserDeclined,
-    setOtherUserAccepted,
-    setOtherUserDeclined,
   } = useContext(SessionContext);
   const { setMainDialogTitle, setMainDialogContent, openMainDialog } = useMainDialog();
   const navigate = useNavigate();
+
+  const displayConnectionError = () => {
+    // for handling error with session socket or user
+    clearSession();
+    setMainDialogTitle("Error");
+    setMainDialogContent("Your connection with the matching service is interrupted, please try again.");
+    openMainDialog();
+  };
 
   const chooseCancle = () => {
     clearSession();
@@ -41,30 +47,44 @@ const MatchingResult = (): ReactElement => {
   const chooseContinue = () => {
     if (user && socket && socket.connected) {
       socket.emit("matching_request", { userId: user.id, topic, difficulty });
-      incrementMatchCount();
       setLastMatchingStartTime(Date.now());
+      incrementMatchCount();
       setSessionState(SessionState.MATCHING);
     } else {
-      clearSession();
-      setMainDialogTitle("Error");
-      setMainDialogContent("Your connection with the matching service is interrupted, please try again.");
-      openMainDialog();
+      displayConnectionError();
     }
   };
 
   const chooseAccept = () => {
-    setUserAccepted(true);
+    if (user && socket && socket.connected) {
+      socket.emit("matching_accept");
+      setUserAccepted(true);
+    } else {
+      displayConnectionError();
+    }
   };
 
   const chooseDecline = () => {
-    setUserDeclined(true);
+    if (user && socket && socket.connected) {
+      socket.emit("matching_decline");
+      setUserDeclined(true);
+    } else {
+      displayConnectionError();
+    }
   };
 
   if (!user) {
     navigate("/");
   }
 
-  return (
+  return sessionState === SessionState.SUCCESS ? (
+    <Typography variant="h5">
+      Successfully matched {user?.username} with {otherUserProfile?.username}.
+      <br />
+      <br />
+      Collaboration service is under construction. Check back in a future milestone!
+    </Typography>
+  ) : (
     <Box>
       <Box className="MatchingResult-title">
         <Box className="MatchingResult-title-progress">
@@ -73,9 +93,11 @@ const MatchingResult = (): ReactElement => {
               ? "Matching you with another coder..."
               : sessionState === SessionState.TIMEOUT
                 ? "No partner found yet. Would you like to continue matching?"
-                : "Partner found! Accept to start the session"}
+                : sessionState === SessionState.FAIL
+                  ? "Matching was declined. Would you like to continue matching?"
+                  : "Partner found! Accept to start the session"}
           </Typography>
-          {sessionState === SessionState.MATCHING || sessionState === SessionState.TIMEOUT ? <CountUpTimer /> : <></>}
+          {sessionState === SessionState.MATCHING ? <CountUpTimer /> : <></>}
         </Box>
 
         <Box className="MatchingResult-users">
@@ -135,12 +157,14 @@ const MatchingResult = (): ReactElement => {
           </Box>
         </Box>
 
-        {sessionState === SessionState.MATCHING || sessionState === SessionState.TIMEOUT ? (
+        {sessionState === SessionState.MATCHING ||
+        sessionState === SessionState.TIMEOUT ||
+        sessionState === SessionState.FAIL ? (
           <Box className="MatchingResult-actions">
             <Button variant="contained" color="error" className="MatchingResult-actions-cancel" onClick={chooseCancle}>
               Cancel
             </Button>
-            {sessionState === SessionState.TIMEOUT ? (
+            {sessionState === SessionState.TIMEOUT || sessionState === SessionState.FAIL ? (
               <Button
                 variant="contained"
                 color="primary"
