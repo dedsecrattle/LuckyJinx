@@ -28,7 +28,7 @@ const UserModelSchema = new Schema({
   },
   avatar: {
     type: String,
-    default: "https://avatar.iran.liara.run/public/boy",
+    default: "https://prabhat.codes/default-user.png",
   },
   programmingLanguagePreference: {
     type: String,
