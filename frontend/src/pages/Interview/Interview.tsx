@@ -17,13 +17,12 @@ const Interview = (): ReactElement => {
   const { user } = useContext(UserContext);
   const {
     sessionState,
-    // cumulativeMatchingTime,
     setSocket,
     setSessionState,
     setTopic,
     setDifficulty,
     setOtherUserId,
-    // setCumulativeMatchingTime,
+    accumulateMatchingTime,
     setLastMatchingStartTime,
     clearSession,
     setOtherUserAccepted,
@@ -33,23 +32,16 @@ const Interview = (): ReactElement => {
 
   const socket = io(WEBSOCKET_URL, { autoConnect: false });
 
-  // const accumulateMatchingTime = () => {
-  //   console.log("cumulative:", cumulativeMatchingTime);
-  //   console.log("last:", lastMatchingStartTime);
-  //   console.log("difference:", Date.now() - lastMatchingStartTime);
-  //   setCumulativeMatchingTime(cumulativeMatchingTime + Date.now() - lastMatchingStartTime);
-  // };
-
   socket.on("matched", (data: any) => {
     console.log("Matched with: ", data.matchedWith);
     setOtherUserId(data.matchedWith);
-    // accumulateMatchingTime();
+    accumulateMatchingTime();
     setSessionState(SessionState.PENDING);
   });
 
   socket.on("timeout", (message: string) => {
     console.log("Timeout: ", message);
-    // accumulateMatchingTime();
+    accumulateMatchingTime();
     setSessionState(SessionState.TIMEOUT);
   });
 
@@ -75,7 +67,7 @@ const Interview = (): ReactElement => {
 
   socket.on("matched_success", () => {
     console.log("Matching succeeded");
-    // accumulateMatchingTime();
+    accumulateMatchingTime();
     setTimeout(() => {
       setSessionState(SessionState.SUCCESS);
     }, 1000); // smoother transition
@@ -83,7 +75,7 @@ const Interview = (): ReactElement => {
 
   socket.on("matching_fail", () => {
     console.log("Matching failed");
-    // accumulateMatchingTime();
+    accumulateMatchingTime();
     setSessionState(SessionState.FAIL);
   });
 

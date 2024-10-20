@@ -24,7 +24,7 @@ const MatchingResult = (): ReactElement => {
     otherUserDeclined,
     setSessionState,
     setLastMatchingStartTime,
-    incrementMatchCount,
+    //incrementMatchCount,
     clearSession,
     setUserAccepted,
     setUserDeclined,
@@ -48,7 +48,7 @@ const MatchingResult = (): ReactElement => {
     if (user && socket && socket.connected) {
       socket.emit("matching_request", { userId: user.id, topic, difficulty });
       setLastMatchingStartTime(Date.now());
-      incrementMatchCount();
+      //incrementMatchCount();
       setSessionState(SessionState.MATCHING);
     } else {
       displayConnectionError();
