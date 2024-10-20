@@ -14,6 +14,14 @@ const Navbar = (): ReactElement => {
     navigate("/", { replace: true }); // replace serves to prevent repeated navigations to same location
   };
 
+  const redirectToQuestions = () => {
+    navigate("/questions", { replace: true });
+  };
+
+  const redirectToInterview = () => {
+    navigate("/interview", { replace: true });
+  };
+
   const redirectToSignUp = () => {
     navigate("/signup", { replace: true });
   };
@@ -28,14 +36,29 @@ const Navbar = (): ReactElement => {
 
   return (
     <nav className="Navbar">
-      <Button className="Navbar-logo" onClick={redirectToHome}>
+      <Box className="Navbar-logo">
         <ApiIcon color="primary" />
         <Typography className="Navbar-title">LuckyJinx</Typography>
-      </Button>
+      </Box>
+      <Box className="Navbar-links">
+        <Button onClick={redirectToHome}>
+          <Typography>Home</Typography>
+        </Button>
+        <Button onClick={redirectToQuestions}>
+          <Typography>Questions</Typography>
+        </Button>
+        {user ? (
+          <Button onClick={redirectToInterview}>
+            <Typography>Interview</Typography>
+          </Button>
+        ) : (
+          <></>
+        )}
+      </Box>
       <Box className="Navbar-buttons">
         {user ? (
-          <Button color="primary" variant="contained" onClick={redirectToAccount}>
-            <div style={{ padding: "0.5rem" }}>{user?.username}</div>
+          <Button className="Navbar-buttons-profile" color="primary" variant="contained" onClick={redirectToAccount}>
+            <Box className="Navbar-buttons-profile-text">{user?.username}</Box>
             <AccountCircleIcon />
           </Button>
         ) : (

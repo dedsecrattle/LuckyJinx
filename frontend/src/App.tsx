@@ -10,6 +10,9 @@ import { createTheme, ThemeProvider } from "@mui/material";
 import { MainDialogContextProvider } from "./contexts/MainDialogContext";
 import { ConfirmationDialogContextProvider } from "./contexts/ConfirmationDialogContext";
 import { UserContext } from "./contexts/UserContext";
+import Questions from "./pages/Questions/Questions";
+import Interview from "./pages/Interview/Interview";
+import { SessionContextProvider } from "./contexts/SessionContext";
 
 const theme = createTheme({
   typography: {
@@ -67,12 +70,16 @@ const App = (): ReactElement => {
     <ThemeProvider theme={theme}>
       <MainDialogContextProvider>
         <ConfirmationDialogContextProvider>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/signup" element={user ? <Navigate to={"/"} /> : <SignUp />} />
-            <Route path="/login" element={user ? <Navigate to={"/"} /> : <Login />} />
-            <Route path="/settings" element={user ? <AccountSettings /> : <Navigate to={"/login"} />} />
-          </Routes>
+          <SessionContextProvider>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/signup" element={user ? <Navigate to={"/"} /> : <SignUp />} />
+              <Route path="/login" element={user ? <Navigate to={"/"} /> : <Login />} />
+              <Route path="/settings" element={user ? <AccountSettings /> : <Navigate to={"/login"} />} />
+              <Route path="/questions" element={<Questions />} />
+              <Route path="/interview" element={user ? <Interview /> : <Navigate to={"/"} />} />
+            </Routes>
+          </SessionContextProvider>
         </ConfirmationDialogContextProvider>
       </MainDialogContextProvider>
     </ThemeProvider>
