@@ -1,0 +1,91 @@
+.test-cases-box {
+  margin-top: 20px;
+  background-color: #2e2e2e;
+  padding: 20px;
+  border-radius: 10px;
+  border: 1px solid #3c3c3c;
+  color: #fff;
+
+  .test-cases-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+
+  .test-cases-title {
+    margin-bottom: 0;
+  }
+
+  .test-cases-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .test-case {
+    position: relative;
+    background-color: #1e1e1e;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #3c3c3c;
+
+    .delete-test-case-button {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      color: #fff;
+    }
+
+    .test-case-header {
+      margin-bottom: 10px;
+
+      .test-case-number {
+        font-weight: bold;
+        color: #caff33;
+      }
+    }
+
+    .test-case-content {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+
+      .test-case-field {
+        display: flex;
+
+        .field-label {
+          font-weight: bold;
+          width: 150px;
+        }
+
+        .field-value {
+          color: #e4e4e4;
+        }
+      }
+
+      .test-case-textfield {
+        margin-bottom: 10px;
+
+        .MuiInputBase-root {
+          background-color: #2e2e2e;
+          color: #fff;
+        }
+        .MuiInputLabel-root {
+          color: #caff33;
+        }
+        .MuiOutlinedInput-notchedOutline {
+          border-color: #3c3c3c;
+        }
+      }
+
+      .submit-test-case-button {
+        background-color: #caff33;
+        color: #121212;
+        border-radius: 5px;
+        align-self: flex-start;
+        margin-top: 10px;
+      }
+    }
+  }
+}
