@@ -151,8 +151,8 @@
   bottom: 10px;
   left: 10px;
   cursor: pointer;
-  width: 50px;
-  height: 50px;
+  width: 60px;
+  height: 60px;
   background-color: #2e2e2e;
   border-radius: 25px;
   display: flex;
@@ -166,39 +166,22 @@
   }
 }
 
-.video-call {
+.video-call-icon {
   position: fixed;
-  bottom: 10px;
+  bottom: 10px; 
   right: 10px;
-  width: 400px;
-  height: 300px;
-  z-index: 1000;
+  cursor: pointer;
+  width: 60px;
+  height: 60px;
+  background-color: #2e2e2e;
+  border-radius: 25px;
   display: flex;
-  flex-direction: column;
-  padding: 10px;
+  justify-content: center;
+  align-items: center;
+  transition: transform 0.2s ease, background-color 0.2s ease;
 
-  .video-placeholder {
-    flex-grow: 1;
-    background-color: #2e2e2e;
-    border-radius: 10px;
-    border: 1px solid #3c3c3c;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    position: relative;
-
-    .placeholder-text {
-      color: #fff;
-    }
-
-    .hangout-button {
-      position: absolute;
-      bottom: 10px;
-      right: 10px;
-      background-color: #ff3333;
-      color: #ffffff;
-      border-radius: 5px;
-    }
+  &:hover {
+    transform: scale(1.1);
+    background-color: #373737;
   }
 }

@@ -5,8 +5,10 @@ import { Button, Chip, Typography } from "@mui/material";
 import Navbar from "../../components/Navbar/Navbar";
 import Footer from "../../components/Footer/Footer";
 import Chatbox from "../../components/Chatbox/Chatbox";
+import VideoCall from "../../components/VideoCall/VideoCall";
 import TestCases from "../../components/TestCases/TestCases";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
+import VideoCallIcon from "@mui/icons-material/VideoCall";
 import ChatIcon from "@mui/icons-material/Chat";
 import "./CodeEditor.scss";
 
@@ -33,6 +35,7 @@ const App: React.FC = () => {
   const [language, setLanguage] = useState<string>("python");
   const [isVideoHovered, setIsVideoHovered] = useState(false);
   const [isChatboxExpanded, setIsChatboxExpanded] = useState(false);
+  const [isVideoCallExpanded, setIsVideoCallExpanded] = useState(false);
 
   const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setLanguage(e.target.value);
@@ -150,6 +153,7 @@ const App: React.FC = () => {
           </div>
         </div>
 
+        {/* Editors section */}
         <div className="editors">
           {/* Left Side: Markdown Editor */}
           <div className="left-side">
@@ -168,7 +172,7 @@ const App: React.FC = () => {
               >
                 <option value="python">Python</option>
                 <option value="java">Java</option>
-                <option value="cpp">C++</option>
+                {/* <option value="cpp">C++</option> */}
               </select>
               <Button variant="contained" size="small" className="submit-button">
                 Run code
@@ -186,6 +190,7 @@ const App: React.FC = () => {
           </div>
         </div>
 
+        {/* Test Cases Box */}
         <TestCases
           defaultTestCases={defaultTestCases}
           userTestCases={userTestCases}
@@ -196,32 +201,32 @@ const App: React.FC = () => {
         />
       </div>
 
+      {/* Chatbox Icon */}
       {!isChatboxExpanded && (
         <div className="chatbox-icon" onClick={() => setIsChatboxExpanded(true)}>
           <ChatIcon style={{ fontSize: "2rem", color: "#fff" }} />
         </div>
       )}
 
+      {/* Expanded Chatbox */}
       {isChatboxExpanded && (
         <Chatbox onClose={() => setIsChatboxExpanded(false)} />
       )}
 
-      <div
-        className="video-call"
-        onMouseEnter={() => setIsVideoHovered(true)}
-        onMouseLeave={() => setIsVideoHovered(false)}
-      >
-        <div className="video-placeholder">
-          <Typography variant="h6" className="placeholder-text">
-            Video Call Placeholder
-          </Typography>
-          {isVideoHovered && (
-            <Button variant="contained" className="hangout-button">
-              Hang Up
-            </Button>
-          )}
+      {/* Video Call Icon */}
+      {!isVideoCallExpanded && (
+        <div
+          className="video-call-icon"
+          onClick={() => setIsVideoCallExpanded(true)}
+        >
+          <VideoCallIcon style={{ fontSize: "2rem", color: "#fff" }} />
         </div>
-      </div>
+      )}
+
+      {/* Expanded Video Call */}
+      {isVideoCallExpanded && (
+        <VideoCall onClose={() => setIsVideoCallExpanded(false)} />
+      )}
 
       <Footer />
     </div>
