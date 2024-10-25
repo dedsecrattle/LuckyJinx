@@ -15,11 +15,7 @@ interface TestCasesProps {
   defaultTestCases: TestCase[];
   userTestCases: TestCase[];
   addTestCase: () => void;
-  updateTestCase: (
-    index: number,
-    field: "input" | "expectedOutput",
-    value: string
-  ) => void;
+  updateTestCase: (index: number, field: "input" | "expectedOutput", value: string) => void;
   submitTestCase: (index: number) => void;
   deleteTestCase: (index: number) => void;
 }
@@ -38,12 +34,7 @@ const TestCases: React.FC<TestCasesProps> = ({
         <Typography variant="h6" className="test-cases-title">
           Test Cases
         </Typography>
-        <Button
-          variant="contained"
-          size="small"
-          onClick={addTestCase}
-          disabled={userTestCases.length >= 5}
-        >
+        <Button variant="contained" size="small" onClick={addTestCase} disabled={userTestCases.length >= 5}>
           Add Test Case
         </Button>
       </div>
@@ -56,10 +47,7 @@ const TestCases: React.FC<TestCasesProps> = ({
             <div key={testCase.number} className="test-case">
               {/* Delete button */}
               {isUserTestCase && (
-                <IconButton
-                  className="delete-test-case-button"
-                  onClick={() => deleteTestCase(userTestCaseIndex)}
-                >
+                <IconButton className="delete-test-case-button" onClick={() => deleteTestCase(userTestCaseIndex)}>
                   <CloseIcon style={{ color: "#fff" }} />
                 </IconButton>
               )}
@@ -78,13 +66,7 @@ const TestCases: React.FC<TestCasesProps> = ({
                       variant="outlined"
                       fullWidth
                       value={testCase.input}
-                      onChange={(e) =>
-                        updateTestCase(
-                          userTestCaseIndex,
-                          "input",
-                          e.target.value
-                        )
-                      }
+                      onChange={(e) => updateTestCase(userTestCaseIndex, "input", e.target.value)}
                       className="test-case-textfield"
                     />
                     <TextField
@@ -94,13 +76,7 @@ const TestCases: React.FC<TestCasesProps> = ({
                       variant="outlined"
                       fullWidth
                       value={testCase.expectedOutput}
-                      onChange={(e) =>
-                        updateTestCase(
-                          userTestCaseIndex,
-                          "expectedOutput",
-                          e.target.value
-                        )
-                      }
+                      onChange={(e) => updateTestCase(userTestCaseIndex, "expectedOutput", e.target.value)}
                       className="test-case-textfield"
                     />
                     <Button
@@ -121,9 +97,7 @@ const TestCases: React.FC<TestCasesProps> = ({
                     </div>
                     <div className="test-case-field">
                       <span className="field-label">Expected Output:</span>
-                      <span className="field-value">
-                        {testCase.expectedOutput}
-                      </span>
+                      <span className="field-value">{testCase.expectedOutput}</span>
                     </div>
                     <div className="test-case-field">
                       <span className="field-label">Actual Output:</span>

@@ -158,7 +158,9 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  transition: transform 0.2s ease, background-color 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    background-color 0.2s ease;
 
   &:hover {
     transform: scale(1.1);
@@ -168,7 +170,7 @@
 
 .video-call-icon {
   position: fixed;
-  bottom: 10px; 
+  bottom: 10px;
   right: 10px;
   cursor: pointer;
   width: 60px;
@@ -178,7 +180,9 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  transition: transform 0.2s ease, background-color 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    background-color 0.2s ease;
 
   &:hover {
     transform: scale(1.1);

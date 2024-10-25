@@ -21,8 +21,7 @@ const Chatbox: React.FC<ChatboxProps> = ({ onClose }) => {
     },
     {
       sender: "Bob",
-      message:
-        "Yes, I think so. We need to find two numbers that add up to the target.",
+      message: "Yes, I think so. We need to find two numbers that add up to the target.",
       timestamp: new Date("2023-10-15T10:01:00"),
     },
     {
@@ -73,17 +72,10 @@ const Chatbox: React.FC<ChatboxProps> = ({ onClose }) => {
           {chatHistory.map((chat, index) => {
             const isOutgoing = chat.sender === currentUser;
             return (
-              <div
-                key={index}
-                className={`chat-message ${
-                  isOutgoing ? "chat-message-right" : "chat-message-left"
-                }`}
-              >
+              <div key={index} className={`chat-message ${isOutgoing ? "chat-message-right" : "chat-message-left"}`}>
                 <div className="message-sender">{chat.sender}</div>
                 <div className="message-content">{chat.message}</div>
-                <div className="message-timestamp">
-                  {chat.timestamp.toLocaleTimeString()}
-                </div>
+                <div className="message-timestamp">{chat.timestamp.toLocaleTimeString()}</div>
               </div>
             );
           })}
@@ -100,12 +92,7 @@ const Chatbox: React.FC<ChatboxProps> = ({ onClose }) => {
               if (e.key === "Enter") sendMessage();
             }}
           />
-          <Button
-            variant="contained"
-            size="small"
-            className="chat-send-button"
-            onClick={sendMessage}
-          >
+          <Button variant="contained" size="small" className="chat-send-button" onClick={sendMessage}>
             Send
           </Button>
         </div>

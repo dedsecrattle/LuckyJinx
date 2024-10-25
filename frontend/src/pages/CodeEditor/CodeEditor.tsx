@@ -29,9 +29,7 @@ interface TestCase {
 }
 
 const App: React.FC = () => {
-  const [code, setCode] = useState<string>(
-    "# Write your solution here\ndef twoSums(nums, target):\n"
-  );
+  const [code, setCode] = useState<string>("# Write your solution here\ndef twoSums(nums, target):\n");
   const [language, setLanguage] = useState<string>("python");
   const [isVideoHovered, setIsVideoHovered] = useState(false);
   const [isChatboxExpanded, setIsChatboxExpanded] = useState(false);
@@ -50,7 +48,7 @@ const App: React.FC = () => {
       "### Given an array of integers `nums` and an integer `target`, return indices of the two numbers such that they add up to `target`.",
   };
 
-  // Default test cases 
+  // Default test cases
   const defaultTestCases: TestCase[] = [
     {
       number: 1,
@@ -92,11 +90,7 @@ const App: React.FC = () => {
     ]);
   };
 
-  const updateTestCase = (
-    index: number,
-    field: "input" | "expectedOutput",
-    value: string
-  ) => {
+  const updateTestCase = (index: number, field: "input" | "expectedOutput", value: string) => {
     const updatedTestCases = [...userTestCases];
     updatedTestCases[index][field] = value;
     setUserTestCases(updatedTestCases);
@@ -104,10 +98,7 @@ const App: React.FC = () => {
 
   const submitTestCase = (index: number) => {
     const updatedTestCases = [...userTestCases];
-    if (
-      updatedTestCases[index].input.trim() === "" ||
-      updatedTestCases[index].expectedOutput.trim() === ""
-    ) {
+    if (updatedTestCases[index].input.trim() === "" || updatedTestCases[index].expectedOutput.trim() === "") {
       alert("Please fill in both input and expected output.");
       return;
     }
@@ -135,14 +126,8 @@ const App: React.FC = () => {
           </Typography>
 
           <div className="details">
-            <Chip
-              label={`Difficulty: ${questionData.difficulty}`}
-              className="detail-chip light-grey-chip"
-            />
-            <Chip
-              label={`Topic: ${questionData.topic}`}
-              className="detail-chip light-grey-chip"
-            />
+            <Chip label={`Difficulty: ${questionData.difficulty}`} className="detail-chip light-grey-chip" />
+            <Chip label={`Topic: ${questionData.topic}`} className="detail-chip light-grey-chip" />
             <Chip
               label={`URL: ${questionData.url}`}
               className="detail-chip light-grey-chip"
@@ -157,19 +142,13 @@ const App: React.FC = () => {
         <div className="editors">
           {/* Left Side: Markdown Editor */}
           <div className="left-side">
-            <MDEditor.Markdown
-              source={questionData.description}
-              className="md-editor"
-            />
+            <MDEditor.Markdown source={questionData.description} className="md-editor" />
           </div>
 
           {/* Right Side: Code Editor */}
           <div className="right-side">
             <div className="header">
-              <select
-                className="language-select"
-                onChange={handleLanguageChange}
-              >
+              <select className="language-select" onChange={handleLanguageChange}>
                 <option value="python">Python</option>
                 <option value="java">Java</option>
                 {/* <option value="cpp">C++</option> */}
@@ -209,24 +188,17 @@ const App: React.FC = () => {
       )}
 
       {/* Expanded Chatbox */}
-      {isChatboxExpanded && (
-        <Chatbox onClose={() => setIsChatboxExpanded(false)} />
-      )}
+      {isChatboxExpanded && <Chatbox onClose={() => setIsChatboxExpanded(false)} />}
 
       {/* Video Call Icon */}
       {!isVideoCallExpanded && (
-        <div
-          className="video-call-icon"
-          onClick={() => setIsVideoCallExpanded(true)}
-        >
+        <div className="video-call-icon" onClick={() => setIsVideoCallExpanded(true)}>
           <VideoCallIcon style={{ fontSize: "2rem", color: "#fff" }} />
         </div>
       )}
 
       {/* Expanded Video Call */}
-      {isVideoCallExpanded && (
-        <VideoCall onClose={() => setIsVideoCallExpanded(false)} />
-      )}
+      {isVideoCallExpanded && <VideoCall onClose={() => setIsVideoCallExpanded(false)} />}
 
       <Footer />
     </div>
