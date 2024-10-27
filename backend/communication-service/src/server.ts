@@ -3,6 +3,9 @@ import { Server } from "socket.io";
 import http from "http";
 import cors from "cors";
 import { PeerServer } from "peer";
+import { PrismaClient } from "@prisma/client";
+
+const prisma = new PrismaClient();
 
 const app: Application = express();
 const server = http.createServer(app);
@@ -15,41 +18,62 @@ const io = new Server(server, {
 
 app.use(cors());
 
-const users: Record<string, string> = {};
+async function main() {
+  io.on("connection", (socket) => {
+    console.log(`User connected: ${socket.id}`);
 
-io.on("connection", (socket) => {
-  console.log(`User connected: ${socket.id}`);
+    socket.on("join-room", async (userId: string, roomId: string) => {
+      socket.join(roomId);
+      await prisma.userRoomMapping.create({
+        data: {
+          userId,
+          roomId,
+        },
+      });
+      console.log(`${userId} joined room: ${roomId}`);
 
-  socket.on("join-room", (userId: string, roomId: string) => {
-    users[socket.id] = roomId;
-    socket.join(roomId);
-    console.log(`${userId} joined room: ${roomId}`);
+      socket.broadcast.to(roomId).emit("user-connected", userId);
 
-    socket.broadcast.to(roomId).emit("user-connected", userId);
+      socket.on("disconnect", async () => {
+        console.log(`User disconnected: ${socket.id}`);
+        await prisma.userRoomMapping.deleteMany({
+          where: {
+            userId,
+            roomId,
+          },
+        });
 
-    socket.on("disconnect", () => {
-      console.log(`User disconnected: ${socket.id}`);
-      delete users[socket.id];
-      socket.broadcast.to(roomId).emit("user-disconnected", userId);
+        socket.broadcast.to(roomId).emit("user-disconnected", userId);
+      });
+    });
+
+    socket.on("send-message", (message: string, roomId: string) => {
+      io.to(roomId).emit("receive-message", message);
     });
   });
 
-  socket.on("send-message", (message: string, roomId: string) => {
-    io.to(roomId).emit("receive-message", message);
+  const PORT = process.env.PORT || 5000;
+  server.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
   });
-});
 
-const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
+  const peerServer = PeerServer({ port: 9000, path: "/peerjs" });
 
-const peerServer = PeerServer({ port: 9000, path: "/peerjs" });
+  peerServer.on("connection", (client) => {
+    console.log(`Peer connected: ${client.getId()}`);
+  });
 
-peerServer.on("connection", (client) => {
-  console.log(`Peer connected: ${client.getId()}`);
-});
+  peerServer.on("disconnect", (client) => {
+    console.log(`Peer disconnected: ${client.getId()}`);
+  });
+}
 
-peerServer.on("disconnect", (client) => {
-  console.log(`Peer disconnected: ${client.getId()}`);
-});
+main()
+  .then(async () => {
+    await prisma.$disconnect();
+  })
+  .catch(async (e) => {
+    console.error(e);
+    await prisma.$disconnect();
+    process.exit(1);
+  });
