@@ -20,6 +20,12 @@ COPY requirements.txt requirements.txt
 
 RUN pip install -r requirements.txt
 
+RUN mkdir ./temp
+RUN useradd -m appuser
+RUN chmod a-w /
+RUN chmod a+w ./temp
+USER appuser
+
 COPY . .
 
 CMD ["python", "-m", "rabbitmq"]
