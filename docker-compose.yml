@@ -29,6 +29,9 @@ services:
   
   code-execution-worker:
     build: ./backend/code-execution-service/worker
+    pids_limit: 60
+    cpus: 1
+    mem_limit: 150M
     depends_on:
       - code-execution-rabbitmq
       - code-execution-redis
