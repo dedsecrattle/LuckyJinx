@@ -27,7 +27,7 @@ const Footer = (): ReactElement => {
             <GitHubIcon />
           </IconButton>
         </a>
-        <Typography className="Footer-trademark">Lucky Jinx 2024 All Rights Reserved</Typography>
+        <Typography className="Footer-trademark">LuckyJinx 2024 All Rights Reserved</Typography>
         <Button className="Footer-terms" onClick={openTermsOfService}>
           Terms of Service
         </Button>
