@@ -4,6 +4,9 @@ import http from "http";
 import cors from "cors";
 import { PeerServer } from "peer";
 import { PrismaClient } from "@prisma/client";
+import { configDotenv } from "dotenv";
+
+configDotenv();
 
 const prisma = new PrismaClient();
 
@@ -16,11 +19,28 @@ const io = new Server(server, {
   },
 });
 
+const PORT = process.env.PORT || 3004;
+
 app.use(cors());
 
 async function main() {
   io.on("connection", (socket) => {
     console.log(`User connected: ${socket.id}`);
+
+    socket.on("rejoin-room", async (userId: string) => {
+      const userRecord = await prisma.userRoomMapping.findFirst({
+        where: {
+          userId,
+        },
+      });
+      console.log("Reconnecting user:", userId);
+      if (userRecord) {
+        const roomId = userRecord.roomId;
+        socket.join(roomId);
+        console.log(`${userId} re-joined room: ${roomId}`);
+        socket.broadcast.to(roomId).emit("user-connected", userId);
+      }
+    });
 
     socket.on("join-room", async (userId: string, roomId: string) => {
       socket.join(roomId);
@@ -36,13 +56,12 @@ async function main() {
 
       socket.on("disconnect", async () => {
         console.log(`User disconnected: ${socket.id}`);
-        await prisma.userRoomMapping.deleteMany({
-          where: {
-            userId,
-            roomId,
-          },
-        });
-
+        // await prisma.userRoomMapping.deleteMany({
+        //   where: {
+        //     userId,
+        //     roomId,
+        //   },
+        // });
         socket.broadcast.to(roomId).emit("user-disconnected", userId);
       });
     });
@@ -52,7 +71,6 @@ async function main() {
     });
   });
 
-  const PORT = process.env.PORT || 5000;
   server.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
   });

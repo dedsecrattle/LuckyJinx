@@ -1,7 +1,8 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import { io, Socket } from "socket.io-client";
 import Peer, { MediaConnection } from "peerjs";
 import "./Communication.scss";
+import { UserContext } from "../../contexts/UserContext";
 
 interface Message {
   text: string;
@@ -15,6 +16,7 @@ interface PeerVideoConnection {
 }
 
 const VideoChat: React.FC = () => {
+  const { user } = useContext(UserContext);
   const [myId, setMyId] = useState<string>("");
   const [users, setUsers] = useState<string[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -29,15 +31,20 @@ const VideoChat: React.FC = () => {
   const myStreamRef = useRef<MediaStream | null>(null);
 
   useEffect(() => {
-    socketRef.current = io("http://localhost:5000");
-    peerRef.current = new Peer({
+    if (!user) return;
+    socketRef.current = io("http://localhost:3004");
+    peerRef.current = new Peer(user?.username as string, {
       host: "localhost",
       port: 9000,
       path: "/peerjs",
     });
 
-    peerRef.current.on("open", (id: string) => {
-      setMyId(id);
+    peerRef.current.on("open", () => {
+      setMyId(user?.username as string);
+    });
+
+    socketRef.current.on("reconnect", () => {
+      socketRef.current?.emit("rejoin-room", myId);
     });
 
     const setupMyVideo = async () => {
@@ -90,7 +97,7 @@ const VideoChat: React.FC = () => {
       peerRef.current?.destroy();
       myStreamRef.current?.getTracks().forEach((track) => track.stop());
     };
-  }, []);
+  }, [user]);
 
   const connectToNewUser = (userId: string, stream: MediaStream) => {
     const call = peerRef.current!.call(userId, stream);
