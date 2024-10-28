@@ -1,5 +1,5 @@
 import { User } from "../models/user.model";
-import { UserProfile } from "../types/user.profile";
+import { UserProfile } from "../models/user.model";
 
 export const isAdmin = (user: UserProfile | null): boolean => {
   return user?.role === "admin";

@@ -19,7 +19,9 @@ const MainDialog = (): ReactElement => {
 
       <DialogContent>
         <DialogContentText>
-          <Typography className="MainDialog-content">{content}</Typography>
+          <Typography className="MainDialog-content" component="pre">
+            {content}
+          </Typography>
         </DialogContentText>
       </DialogContent>
 
