@@ -28,6 +28,9 @@ async def execute_code(
     if body.lang not in languages:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid language")
+    if body.timeout < 1 or body.timeout > 10:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid timeout, must be between 1 and 10")
     id = register_task()
     send_message(json.dumps({
         "id": id,
