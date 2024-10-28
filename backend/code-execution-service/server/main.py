@@ -1,16 +1,19 @@
-from fastapi import FastAPI, status, HTTPException
+from fastapi import FastAPI, status, HTTPException, Depends
 from models import CodeExecutionRequest
 import json
+from typing import Annotated
 from dotenv import load_dotenv
 
 load_dotenv()
 
 from rabbitmq import send_message
 from redis_model import register_task, get_task
+from user import UserAuthentication
 
 
 app = FastAPI()
 languages = ["python", "javascript", "typescript", "java", "c", "c++"]
+authentication = UserAuthentication()
 
 
 @app.get("/languages")
@@ -18,7 +21,10 @@ async def get_supported_languages():
     return {"languages": languages}
 
 @app.post("/")
-async def execute_code(body: CodeExecutionRequest):
+async def execute_code(
+    current_user: Annotated[dict, Depends(authentication)],
+    body: CodeExecutionRequest,
+):
     if body.lang not in languages:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid language")
