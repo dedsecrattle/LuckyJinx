@@ -7,6 +7,10 @@ interface IQuestion extends Document {
   categories: string[];
   complexity: "Easy" | "Medium" | "Hard";
   link: string;
+  testCases: {
+    input: string;
+    output: string;
+  }[];
 }
 
 const questionSchema = new Schema<IQuestion>({
@@ -20,6 +24,15 @@ const questionSchema = new Schema<IQuestion>({
     required: true,
   },
   link: { type: String, required: true },
+  testCases: {
+    type: [
+      {
+        input: { type: String, required: true },
+        output: { type: String, required: true },
+      },
+    ],
+    required: true,
+  }
 });
 
 const Question = model<IQuestion>("Question", questionSchema);
