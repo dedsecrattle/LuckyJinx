@@ -20,7 +20,7 @@ export class Test {
   }
 }
 
-class TestCase {
+export class TestCase {
   @IsString()
   input: string;
 
