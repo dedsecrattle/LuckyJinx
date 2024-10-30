@@ -100,7 +100,9 @@ router.post("/test/:id", async (req: Request, res: Response) => {
   try {
     const id = Number(req.params.id);
     if (isNaN(id)) return res.status(400).json({ error: "Invalid Question ID" });
-    const test = plainToInstance(Test, req.body);
+    const tests = plainToInstance(Test, [req.body]);
+    console.assert(tests.length === 1, "tests must be an array of exactly 1 element");
+    const test = tests[0];
     const errors = await validate(test);
     if (errors.length > 0) {
       return res.status(400).json(errors);
@@ -108,9 +110,15 @@ router.post("/test/:id", async (req: Request, res: Response) => {
 
     const question = await Question.findOne({ questionId: id });
     if (!question) return res.status(404).json({ error: "Question not found" });
-    
+
+    const url = process.env.CODE_EXECUTION_SERVICE_URL;
+    if (!url) {
+      throw new Error("CODE_EXECUTION_SERVICE_URL is not defined in env");
+    }
+
     return res.status(200).json({ message: "ok" });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ message: "Server Error : Something went wrong" });
   }
 });

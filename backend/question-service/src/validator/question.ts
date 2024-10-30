@@ -1,4 +1,4 @@
-import { IsArray, IsString, ValidateNested } from "class-validator";
+import { IsArray, IsOptional, IsString, ValidateNested } from "class-validator";
 import { plainToInstance, Type } from "class-transformer";
 
 export class Test {
@@ -23,10 +23,12 @@ export class Test {
 class TestCase {
   @IsString()
   input: string;
-  @IsString()
-  output: string;
 
-  constructor(input: string, output: string) {
+  @IsOptional()
+  @IsString()
+  output?: string;
+
+  constructor(input: string, output?: string) {
     this.input = input;
     this.output = output;
   }
