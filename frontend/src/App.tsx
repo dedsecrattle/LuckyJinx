@@ -13,6 +13,7 @@ import { UserContext } from "./contexts/UserContext";
 import Questions from "./pages/Questions/Questions";
 import Interview from "./pages/Interview/Interview";
 import { SessionContextProvider } from "./contexts/SessionContext";
+import CodeEditorPage from "./pages/CodeEditor/CodeEditor";
 
 const theme = createTheme({
   typography: {
@@ -78,6 +79,7 @@ const App = (): ReactElement => {
               <Route path="/settings" element={user ? <AccountSettings /> : <Navigate to={"/login"} />} />
               <Route path="/questions" element={<Questions />} />
               <Route path="/interview" element={user ? <Interview /> : <Navigate to={"/"} />} />
+              <Route path="/codeeditor" element={<CodeEditorPage />} />
             </Routes>
           </SessionContextProvider>
         </ConfirmationDialogContextProvider>
