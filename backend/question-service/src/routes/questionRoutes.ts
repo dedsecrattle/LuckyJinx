@@ -1,5 +1,9 @@
 import { Router, Request, Response } from "express";
 import Question from "../models/question";
+import "dotenv/config";
+import { validate } from "class-validator";
+import { Test } from "../validator/question";
+import { plainToInstance } from "class-transformer";
 
 const router: Router = Router();
 
@@ -89,6 +93,25 @@ router.delete("/:id", async (req: Request, res: Response) => {
     res
       .status(500)
       .json({ message: "Server Error : Unable to delete Question" });
+  }
+});
+
+router.post("/test/:id", async (req: Request, res: Response) => {
+  try {
+    const id = Number(req.params.id);
+    if (isNaN(id)) return res.status(400).json({ error: "Invalid Question ID" });
+    const test = plainToInstance(Test, req.body);
+    const errors = await validate(test);
+    if (errors.length > 0) {
+      return res.status(400).json(errors);
+    }
+
+    const question = await Question.findOne({ questionId: id });
+    if (!question) return res.status(404).json({ error: "Question not found" });
+    
+    return res.status(200).json({ message: "ok" });
+  } catch (err) {
+    res.status(500).json({ message: "Server Error : Something went wrong" });
   }
 });
 
