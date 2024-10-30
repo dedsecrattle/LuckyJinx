@@ -42,7 +42,10 @@ async def execute_code(
     return {"id": id}
 
 @app.get("/")
-async def check_status(id: str):
+async def check_status(
+    current_user: Annotated[dict, Depends(authentication)],
+    id: str,
+):
     task = get_task(id)
     if not task:
         raise HTTPException(
