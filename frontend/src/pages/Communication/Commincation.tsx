@@ -18,7 +18,6 @@ interface PeerVideoConnection {
 const VideoChat: React.FC = () => {
   const { user } = useContext(UserContext);
   const [myId, setMyId] = useState<string>("");
-  const [users, setUsers] = useState<string[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [roomId, setRoomId] = useState<string>("");
   const [peerConnections, setPeerConnections] = useState<PeerVideoConnection[]>([]);
@@ -42,7 +41,7 @@ const VideoChat: React.FC = () => {
       setMyId(user?.username as string);
     });
 
-    socketRef.current.on("reconnect", () => {
+    socketRef.current.on("connect", () => {
       socketRef.current?.emit("rejoin-room", myId);
     });
 
@@ -62,7 +61,13 @@ const VideoChat: React.FC = () => {
 
     socketRef.current.on("user-connected", (userId: string) => {
       console.log("User connected:", userId);
-      setUsers((prevUsers) => [...prevUsers, userId]);
+      if (myStreamRef.current) {
+        connectToNewUser(userId, myStreamRef.current);
+      }
+    });
+
+    socketRef.current.on("user-reconnected", (userId: string) => {
+      console.log("User reconnected:", userId);
       if (myStreamRef.current) {
         connectToNewUser(userId, myStreamRef.current);
       }
@@ -70,8 +75,11 @@ const VideoChat: React.FC = () => {
 
     socketRef.current.on("user-disconnected", (userId: string) => {
       console.log("User disconnected:", userId);
-      setUsers((prevUsers) => prevUsers.filter((id) => id !== userId));
       setPeerConnections((prevConnections) => prevConnections.filter((connection) => connection.peerId !== userId));
+    });
+
+    socketRef.current.on("rejoin-room", (roomId: string) => {
+      setRoomId(roomId);
     });
 
     socketRef.current.on("receive-message", (message: Message) => {
@@ -82,7 +90,6 @@ const VideoChat: React.FC = () => {
       call.answer(myStreamRef.current!);
       call.on("stream", (userVideoStream: MediaStream) => {
         setPeerConnections((prevConnections) => {
-          // Check if the connection already exists
           if (!prevConnections.some((conn) => conn.peerId === call.peer)) {
             return [...prevConnections, { peerId: call.peer, call, stream: userVideoStream }];
           }
@@ -100,6 +107,8 @@ const VideoChat: React.FC = () => {
 
   const connectToNewUser = (userId: string, stream: MediaStream) => {
     const call = peerRef.current!.call(userId, stream);
+    console.log("Calling user:", userId);
+    if (!call) return;
     call.on("stream", (userVideoStream: MediaStream) => {
       setPeerConnections((prevConnections) => {
         if (!prevConnections.some((conn) => conn.peerId === userId)) {
@@ -135,8 +144,8 @@ const VideoChat: React.FC = () => {
         <h2>Your ID: {myId}</h2>
         <h3>Users in room:</h3>
         <ul>
-          {users.map((user) => (
-            <li key={user}>{user}</li>
+          {peerConnections.map((peer) => (
+            <li key={peer.peerId}>{peer.peerId}</li>
           ))}
         </ul>
       </div>

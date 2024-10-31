@@ -20,6 +20,11 @@ services:
       timeout: 5s
       retries: 5
 
+  communication:
+    build: ./backend/communication-service
+    ports:
+      - "3004:3004"
+      
   matching:
     build: ./backend/matching-service
     depends_on:
