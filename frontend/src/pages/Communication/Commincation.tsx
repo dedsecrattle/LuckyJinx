@@ -20,7 +20,6 @@ const VideoChat: React.FC = () => {
   const [myId, setMyId] = useState<string>("");
   const [users, setUsers] = useState<string[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
-  // const [message, setMessage] = useState<string>("");
   const [roomId, setRoomId] = useState<string>("");
   const [peerConnections, setPeerConnections] = useState<PeerVideoConnection[]>([]);
 

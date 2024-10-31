@@ -1,4 +1,4 @@
-import express, { Application, Request, Response } from "express";
+import express, { Application } from "express";
 import { Server } from "socket.io";
 import http from "http";
 import cors from "cors";
@@ -25,9 +25,11 @@ app.use(cors());
 
 async function main() {
   io.on("connection", (socket) => {
+    let userId: string | undefined;
+    let roomId: string | undefined;
     console.log(`User connected: ${socket.id}`);
-
-    socket.on("rejoin-room", async (userId: string) => {
+    socket.on("rejoin-room", async (uid: string) => {
+      userId = uid;
       const userRecord = await prisma.userRoomMapping.findFirst({
         where: {
           userId,
@@ -35,14 +37,22 @@ async function main() {
       });
       console.log("Reconnecting user:", userId);
       if (userRecord) {
-        const roomId = userRecord.roomId;
-        socket.join(roomId);
+        roomId = userRecord.roomId;
         console.log(`${userId} re-joined room: ${roomId}`);
-        socket.broadcast.to(roomId).emit("user-connected", userId);
+        socket.join(roomId);
+        socket.broadcast.to(roomId).emit("user-reconnected", userId);
+        socket.emit("rejoin-room", roomId);
       }
     });
 
-    socket.on("join-room", async (userId: string, roomId: string) => {
+    socket.on("join-room", async (uid: string, rid: string) => {
+      userId = uid;
+      roomId = rid;
+      await prisma.userRoomMapping.deleteMany({
+        where: {
+          userId,
+        },
+      });
       socket.join(roomId);
       await prisma.userRoomMapping.create({
         data: {
@@ -51,23 +61,18 @@ async function main() {
         },
       });
       console.log(`${userId} joined room: ${roomId}`);
-
       socket.broadcast.to(roomId).emit("user-connected", userId);
-
-      socket.on("disconnect", async () => {
-        console.log(`User disconnected: ${socket.id}`);
-        // await prisma.userRoomMapping.deleteMany({
-        //   where: {
-        //     userId,
-        //     roomId,
-        //   },
-        // });
-        socket.broadcast.to(roomId).emit("user-disconnected", userId);
-      });
     });
 
-    socket.on("send-message", (message: string, roomId: string) => {
-      io.to(roomId).emit("receive-message", message);
+    socket.on("disconnect", async () => {
+      console.log(`User disconnected: ${socket.id}`);
+      if (roomId && userId) {
+        socket.broadcast.to(roomId).emit("user-disconnected", userId);
+      }
+    });
+
+    socket.on("send-message", (message: string, rid: string) => {
+      io.to(rid).emit("receive-message", message);
     });
   });
 
