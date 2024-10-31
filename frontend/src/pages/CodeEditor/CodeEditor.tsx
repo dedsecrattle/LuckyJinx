@@ -1,7 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import MDEditor from "@uiw/react-md-editor";
-import { Editor } from "@monaco-editor/react";
 import { Button, Chip, Typography } from "@mui/material";
+import CodeMirror from '@uiw/react-codemirror';
+import { okaidia } from '@uiw/codemirror-theme-okaidia';
+import { python } from "@codemirror/lang-python";
+import { javascript } from "@codemirror/lang-javascript";
 import Navbar from "../../components/Navbar/Navbar";
 import Footer from "../../components/Footer/Footer";
 import Chatbox from "../../components/Chatbox/Chatbox";
@@ -29,11 +32,19 @@ interface TestCase {
 }
 
 const App: React.FC = () => {
+  const [roomNumber, setRoomNumber] = useState<string | null>(null);
   const [code, setCode] = useState<string>("# Write your solution here\ndef twoSums(nums, target):\n");
   const [language, setLanguage] = useState<string>("python");
   const [isVideoHovered, setIsVideoHovered] = useState(false);
   const [isChatboxExpanded, setIsChatboxExpanded] = useState(false);
   const [isVideoCallExpanded, setIsVideoCallExpanded] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/room-number")
+      .then((response) => response.json())
+      .then((data) => setRoomNumber(data.roomNumber))
+      .catch((error) => console.error("Error fetching room number:", error));
+  }, []);
 
   const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setLanguage(e.target.value);
@@ -48,7 +59,6 @@ const App: React.FC = () => {
       "### Given an array of integers `nums` and an integer `target`, return indices of the two numbers such that they add up to `target`.",
   };
 
-  // Default test cases
   const defaultTestCases: TestCase[] = [
     {
       number: 1,
@@ -72,7 +82,6 @@ const App: React.FC = () => {
 
   const [userTestCases, setUserTestCases] = useState<TestCase[]>([]);
 
-  // Function to add a new test case
   const addTestCase = () => {
     if (userTestCases.length >= 5) {
       alert("You can only add up to 5 test cases.");
@@ -115,6 +124,11 @@ const App: React.FC = () => {
     setUserTestCases(updatedTestCases);
   };
 
+  const languageExtensions = {
+    python: python(),
+    javascript: javascript(),
+  };
+
   return (
     <div className="app-container">
       <Navbar />
@@ -122,7 +136,7 @@ const App: React.FC = () => {
       <div className="container">
         <div className="top-section">
           <Typography variant="h3" className="question-title">
-            {questionData.title}
+            {questionData.title} @ {roomNumber}
           </Typography>
 
           <div className="details">
@@ -138,38 +152,33 @@ const App: React.FC = () => {
           </div>
         </div>
 
-        {/* Editors section */}
         <div className="editors">
-          {/* Left Side: Markdown Editor */}
           <div className="left-side">
             <MDEditor.Markdown source={questionData.description} className="md-editor" />
           </div>
 
-          {/* Right Side: Code Editor */}
           <div className="right-side">
             <div className="header">
-              <select className="language-select" onChange={handleLanguageChange}>
+              <select className="language-select" onChange={handleLanguageChange} value={language}>
                 <option value="python">Python</option>
-                <option value="java">Java</option>
-                {/* <option value="cpp">C++</option> */}
+                <option value="javascript">JavaScript</option>
               </select>
               <Button variant="contained" size="small" className="submit-button">
                 Run code
               </Button>
             </div>
 
-            <Editor
-              height="500px"
-              language={language}
+            <CodeMirror
               value={code}
-              onChange={(value) => setCode(value || "")}
-              theme="vs-dark"
+              height="500px"
+              extensions={[languageExtensions[language as "python" | "javascript"]]}
+              onChange={(value) => setCode(value)}
               className="code-editor"
+              theme={okaidia}
             />
           </div>
         </div>
 
-        {/* Test Cases Box */}
         <TestCases
           defaultTestCases={defaultTestCases}
           userTestCases={userTestCases}
@@ -180,24 +189,20 @@ const App: React.FC = () => {
         />
       </div>
 
-      {/* Chatbox Icon */}
       {!isChatboxExpanded && (
         <div className="chatbox-icon" onClick={() => setIsChatboxExpanded(true)}>
           <ChatIcon style={{ fontSize: "2rem", color: "#fff" }} />
         </div>
       )}
 
-      {/* Expanded Chatbox */}
       {isChatboxExpanded && <Chatbox onClose={() => setIsChatboxExpanded(false)} />}
 
-      {/* Video Call Icon */}
       {!isVideoCallExpanded && (
         <div className="video-call-icon" onClick={() => setIsVideoCallExpanded(true)}>
           <VideoCallIcon style={{ fontSize: "2rem", color: "#fff" }} />
         </div>
       )}
 
-      {/* Expanded Video Call */}
       {isVideoCallExpanded && <VideoCall onClose={() => setIsVideoCallExpanded(false)} />}
 
       <Footer />
