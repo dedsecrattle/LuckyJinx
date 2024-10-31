@@ -14,6 +14,7 @@ import Questions from "./pages/Questions/Questions";
 import Interview from "./pages/Interview/Interview";
 import { SessionContextProvider } from "./contexts/SessionContext";
 import VideoChat from "./pages/Communication/Commincation";
+import CodeEditor from "./pages/CodeEditor/CodeEditor";
 
 const theme = createTheme({
   typography: {
@@ -81,6 +82,7 @@ const App = (): ReactElement => {
               <Route path="/questions" element={<Questions />} />
               <Route path="/interview" element={user ? <Interview /> : <Navigate to={"/"} />} />
               <Route path="/video" element={<VideoChat />} />
+              <Route path="/code" element={<CodeEditor />} />
             </Routes>
           </SessionContextProvider>
         </ConfirmationDialogContextProvider>
