@@ -20,7 +20,7 @@
     "@uiw/react-md-editor": "^4.0.4",
     "antd": "^5.21.4",
     "axios": "^1.7.7",
-    "monaco-editor": "^0.52.0",
+    "peerjs": "^1.5.4",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.26.2",

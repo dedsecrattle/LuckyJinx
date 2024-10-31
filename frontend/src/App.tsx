@@ -13,7 +13,7 @@ import { UserContext } from "./contexts/UserContext";
 import Questions from "./pages/Questions/Questions";
 import Interview from "./pages/Interview/Interview";
 import { SessionContextProvider } from "./contexts/SessionContext";
-import CodeEditorPage from "./pages/CodeEditor/CodeEditor";
+import VideoChat from "./pages/Communication/Commincation";
 
 const theme = createTheme({
   typography: {
@@ -67,6 +67,7 @@ const theme = createTheme({
 
 const App = (): ReactElement => {
   const { user } = useContext(UserContext);
+
   return (
     <ThemeProvider theme={theme}>
       <MainDialogContextProvider>
@@ -79,7 +80,7 @@ const App = (): ReactElement => {
               <Route path="/settings" element={user ? <AccountSettings /> : <Navigate to={"/login"} />} />
               <Route path="/questions" element={<Questions />} />
               <Route path="/interview" element={user ? <Interview /> : <Navigate to={"/"} />} />
-              <Route path="/codeeditor" element={<CodeEditorPage />} />
+              <Route path="/video" element={<VideoChat />} />
             </Routes>
           </SessionContextProvider>
         </ConfirmationDialogContextProvider>
