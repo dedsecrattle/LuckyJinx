@@ -1,5 +1,9 @@
 import { Router, Request, Response } from "express";
 import Question from "../models/question";
+import { validate } from "class-validator";
+import { Test, TestCase } from "../validator/question";
+import { plainToInstance } from "class-transformer";
+import { InvalidInputError, testCode } from "../util/test";
 
 const router: Router = Router();
 
@@ -89,6 +93,44 @@ router.delete("/:id", async (req: Request, res: Response) => {
     res
       .status(500)
       .json({ message: "Server Error : Unable to delete Question" });
+  }
+});
+
+router.post("/test/:id", async (req: Request, res: Response) => {
+  try {
+    const id = Number(req.params.id);
+    if (isNaN(id)) return res.status(400).json({ error: "Invalid Question ID" });
+
+    const authorizationHeader = req.headers.authorization;
+    if (!authorizationHeader) return res.status(401).json({ error: "Unauthorized" });
+    const authtoken = authorizationHeader.split(" ")[1];
+
+    const tests = plainToInstance(Test, [req.body]);
+    console.assert(tests.length === 1, "tests must be an array of exactly 1 element");
+    const test = tests[0];
+    const errors = await validate(test);
+    if (errors.length > 0) {
+      return res.status(400).json(errors);
+    }
+
+    const question = await Question.findOne({ questionId: id });
+    if (!question) return res.status(404).json({ error: "Question not found" });
+
+    const testCases: TestCase[] = [...question.testCases, ...test.customTests];
+    const outputPromises = testCases.map((testCase) => testCode(test.code, test.lang, testCase, authtoken));
+    try {
+      const outputs = await Promise.all(outputPromises);
+      return res.status(200).json({ outputs });
+    } catch (err) {
+      if (err instanceof InvalidInputError) {
+        return res.status(400).json(err.errorObject);
+      } else {
+        throw err;
+      }
+    }
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server Error : Something went wrong" });
   }
 });
 
