@@ -19,19 +19,25 @@ unauthenticated_sids = set()
 @sio.event
 async def connect(sid, environ):
     logging.info(f'connect {sid=}')
+    token = None
     for header in environ['asgi.scope']['headers']:
         if header[0].lower() == b'authorization':
-            token = header[1].decode()
+            token = header[1].decode() # Extract token
             logging.debug(f"connect {token=}")
-            username = authenticate(token)
-            if username:
-                User(username, sid)
-            else:
-                unauthenticated_sids.add(sid)
-                await sio.disconnect(sid)
-            return
-    unauthenticated_sids.add(sid)
-    await sio.disconnect(sid)
+            break
+    if token:
+        username = authenticate(token)
+        if username:
+            User(username, sid)
+            logging.info(f"User {username} authenticated and connected with sid {sid}")
+        else:
+            unauthenticated_sids.add(sid)
+            await sio.disconnect(sid)
+            logging.warning(f"Authentication failed for token: {token}")
+    else:
+        unauthenticated_sids.add(sid)
+        await sio.disconnect(sid)
+        logging.warning(f"No authorization header provided, disconnecting sid {sid}")
 
 
 @sio.on(Events.JOIN_REQUEST)
