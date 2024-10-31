@@ -1,10 +1,14 @@
 import socketio
 import logging
+import os
+import dotenv
+
+dotenv.load_dotenv()
 
 from events import Events
 from models import Room, User
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=int(os.environ.get('LOG_LEVEL', logging.INFO)))
 
 sio = socketio.AsyncServer(cors_allowed_origins='*', async_mode='asgi')
 app = socketio.ASGIApp(sio)
@@ -49,6 +53,5 @@ async def disconnect(sid):
     user: User = User.users[sid]
     room: Room = user.room
     room_still_exists = room.remove_user(user)
-    logging.debug(room.details())
     if room_still_exists:
         await sio.emit(Events.USER_LEFT, user.details(), room=room.id)

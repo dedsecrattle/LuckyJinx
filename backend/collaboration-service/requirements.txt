@@ -2,6 +2,7 @@ bidict==0.23.1
 click==8.1.7
 colorama==0.4.6
 h11==0.14.0
+python-dotenv==1.0.1
 python-engineio==4.10.1
 python-socketio==5.11.4
 simple-websocket==1.1.0
