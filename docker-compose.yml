@@ -69,6 +69,11 @@ services:
       DATABASE_URL: "file:./dev.db"
       RABBITMQ_URL: "amqp://rabbitmq:5672"
 
+  collaboration:
+    build: ./backend/collaboration-service
+    ports:
+      - "3005:3005"
+
   frontend:
     build: ./frontend
     env_file:
