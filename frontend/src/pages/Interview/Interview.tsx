@@ -1,5 +1,6 @@
-import { ReactElement, useContext } from "react";
+import { ReactElement, useContext, useState, useEffect } from "react";
 import "./Interview.scss";
+import { useNavigate } from "react-router-dom";
 import { Box, Typography } from "@mui/material";
 import Navbar from "../../components/Navbar/Navbar";
 import Footer from "../../components/Footer/Footer";
@@ -14,6 +15,7 @@ import { useMainDialog } from "../../contexts/MainDialogContext";
 const WEBSOCKET_URL = process.env.REACT_APP_MATCHING_SERVICE_URL as string;
 
 const Interview = (): ReactElement => {
+  const navigate = useNavigate();
   const { user } = useContext(UserContext);
   const {
     sessionState,
@@ -35,10 +37,15 @@ const Interview = (): ReactElement => {
   const { setMainDialogTitle, setMainDialogContent, openMainDialog } = useMainDialog();
 
   const socket = io(WEBSOCKET_URL, { autoConnect: false });
+  const [selectedTopic, setSelectedTopic] = useState<Categories | null>(null);
+  const [selectedDifficulty, setSelectedDifficulty] = useState<QuestionComplexity | null>(null);
+  const [roomNumber, setRoomNumber] = useState<string | null>(null);
 
   socket.on("matched", (data: any) => {
     console.log("Matched with: ", data.matchedWith);
+    console.log("Received roomNumber: ", data.roomNumber);
     setOtherUserId(data.matchedWith);
+    setRoomNumber(data.roomNumber); // Use server-assigned room number
     accumulateMatchingTime();
     setSessionState(SessionState.PENDING);
   });
@@ -71,7 +78,6 @@ const Interview = (): ReactElement => {
 
   socket.on("matching_success", () => {
     console.log("Matching succeeded");
-    // if user did not accept, it means event not sent and should automatically accept
     if (!userAccepted) {
       setUserAccepted(true);
     }
@@ -80,8 +86,9 @@ const Interview = (): ReactElement => {
     }
     setTimeout(() => {
       setSessionState(SessionState.SUCCESS);
-    }, 1000); // smoother transition
-  });
+      console.log('Navigating to roomNumber: ', roomNumber);
+    }, 1000);
+  });  
 
   socket.on("matching_fail", () => {
     console.log("Matching failed");
@@ -118,6 +125,18 @@ const Interview = (): ReactElement => {
     setMainDialogContent("Failed to connect to the matching service, please try again.");
     openMainDialog();
   });
+
+  useEffect(() => {
+    if (sessionState === SessionState.SUCCESS && roomNumber) {
+      console.log('Navigating to roomNumber: ', roomNumber);
+      navigate(`/code-editor/${roomNumber}`, {
+        state: { topic: selectedTopic, difficulty: selectedDifficulty },
+      });
+    } else if (sessionState === SessionState.FAIL || sessionState === SessionState.TIMEOUT) {
+      clearSession();
+    }
+  }, [sessionState, roomNumber, navigate, selectedTopic, selectedDifficulty]);
+
 
   const startMatching = (topic: Categories, difficulty: QuestionComplexity) => {
     // restart
