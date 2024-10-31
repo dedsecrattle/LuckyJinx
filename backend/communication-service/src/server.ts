@@ -80,7 +80,12 @@ async function main() {
     console.log(`Server is running on port ${PORT}`);
   });
 
-  const peerServer = PeerServer({ port: 9000, path: "/peerjs" });
+  const PEERJS_PORT = Number(process.env.PEERJS_PORT) || 9000;
+
+  const peerServer = PeerServer({
+    port: PEERJS_PORT,
+    path: "/peerjs",
+  });
 
   peerServer.on("connection", (client) => {
     console.log(`Peer connected: ${client.getId()}`);
