@@ -10,7 +10,11 @@ import { createTheme, ThemeProvider } from "@mui/material";
 import { MainDialogContextProvider } from "./contexts/MainDialogContext";
 import { ConfirmationDialogContextProvider } from "./contexts/ConfirmationDialogContext";
 import { UserContext } from "./contexts/UserContext";
-import CodeEditorPage from "./pages/CodeEditor/CodeEditor";
+import Questions from "./pages/Questions/Questions";
+import Interview from "./pages/Interview/Interview";
+import { SessionContextProvider } from "./contexts/SessionContext";
+import VideoChat from "./pages/Communication/Commincation";
+import CodeEditor from "./pages/CodeEditor/CodeEditor";
 
 const theme = createTheme({
   typography: {
@@ -64,17 +68,23 @@ const theme = createTheme({
 
 const App = (): ReactElement => {
   const { user } = useContext(UserContext);
+
   return (
     <ThemeProvider theme={theme}>
       <MainDialogContextProvider>
         <ConfirmationDialogContextProvider>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/signup" element={user ? <Navigate to={"/"} /> : <SignUp />} />
-            <Route path="/login" element={user ? <Navigate to={"/"} /> : <Login />} />
-            <Route path="/settings" element={user ? <AccountSettings /> : <Navigate to={"/login"} />} />
-            <Route path="/codeeditor" element={<CodeEditorPage />} />
-          </Routes>
+          <SessionContextProvider>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/signup" element={user ? <Navigate to={"/"} /> : <SignUp />} />
+              <Route path="/login" element={user ? <Navigate to={"/"} /> : <Login />} />
+              <Route path="/settings" element={user ? <AccountSettings /> : <Navigate to={"/login"} />} />
+              <Route path="/questions" element={<Questions />} />
+              <Route path="/interview" element={user ? <Interview /> : <Navigate to={"/"} />} />
+              <Route path="/video" element={<VideoChat />} />
+              <Route path="/code" element={<CodeEditor />} />
+            </Routes>
+          </SessionContextProvider>
         </ConfirmationDialogContextProvider>
       </MainDialogContextProvider>
     </ThemeProvider>

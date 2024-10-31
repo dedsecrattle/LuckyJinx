@@ -13,9 +13,11 @@ const PORT = process.env.PORT || 3002;
 
 // Middleware
 app.use(bodyParser.json());
-app.use(cors({
-  origin: process.env.FRONTEND_URL as string,
-}));
+app.use(
+  cors({
+    origin: "*",
+  })
+);
 
 // Routes
 app.use("/", questionRoutes);
