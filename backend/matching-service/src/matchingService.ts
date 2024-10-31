@@ -1,6 +1,7 @@
 import { sendToQueue, sendDelayedMessage } from "./rabbitmq";
 import { io } from "./server";
 import { PrismaClient } from "@prisma/client";
+import { v4 as uuidv4 } from "uuid"; 
 
 const prisma = new PrismaClient();
 
@@ -39,7 +40,7 @@ function sendConfirmDelayedTimeoutMessage(recordId: string) {
 export async function handleUserRequest(userRequest: any) {
   const { userId, topic, difficulty, socketId } = userRequest;
 
-  // check userId present in prisma
+  // Check if user already has a match record
   const user = await prisma.matchRecord.findFirst({
     where: { userId, isPending: false, isArchived: false },
   });
@@ -53,7 +54,7 @@ export async function handleUserRequest(userRequest: any) {
         "New connection detected for the same user. Please close the current page"
       );
 
-      // update socket id upon potential reconnection
+      // Update socket ID upon potential reconnection
       await prisma.matchRecord.update({
         where: { recordId: user.recordId },
         data: { socketId },
@@ -63,7 +64,7 @@ export async function handleUserRequest(userRequest: any) {
     return;
   }
 
-  // check if there is a match
+  // Check if there is an existing match
   const existingMatch = await prisma.matchRecord.findFirst({
     where: {
       topic,
@@ -75,6 +76,8 @@ export async function handleUserRequest(userRequest: any) {
   });
 
   if (existingMatch !== null) {
+    const roomNumber = uuidv4();
+    console.log(`Match found for ${userId} with ${existingMatch.userId} on topic ${topic}, difficulty ${difficulty}, roomNumber ${roomNumber}`);
     // Match found, update both records to mark as isPending
     await prisma.matchRecord.update({
       where: { recordId: existingMatch.recordId },
@@ -89,19 +92,21 @@ export async function handleUserRequest(userRequest: any) {
         matched: true,
         matchedUserId: existingMatch.userId,
         isPending: true,
+        roomNumber,
       },
     });
 
     console.log(`Matched ${userId} with ${existingMatch.userId} on topic ${topic}, difficulty ${difficulty}`);
 
-    // update both clients about the successful match
-    io.to(socketId).emit("matched", { matchedWith: existingMatch.userId });
-    io.to(existingMatch.socketId).emit("matched", { matchedWith: userId });
+    // Update both clients about the successful match
+    io.to(socketId).emit("matched", { matchedWith: existingMatch.userId, roomNumber });
+    io.to(existingMatch.socketId).emit("matched", { matchedWith: userId, roomNumber });
 
-    // add confirm timeout messages
+    // Add confirm timeout messages
     sendConfirmDelayedTimeoutMessage(current.recordId.toString());
     sendConfirmDelayedTimeoutMessage(existingMatch.recordId.toString());
   } else {
+    const roomNumber = uuidv4();
     await prisma.matchRecord.create({
       data: {
         userId,
@@ -109,6 +114,7 @@ export async function handleUserRequest(userRequest: any) {
         difficulty,
         socketId,
         matched: false,
+        roomNumber,
       },
     });
 
