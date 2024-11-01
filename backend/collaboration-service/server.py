@@ -62,10 +62,17 @@ async def code_updated(sid, data):
 @sio.on(Events.CURSOR_UPDATED)
 async def cursor_updated(sid, data):
     logging.debug(f'cursor_updated {sid=} {data=}')
-    cursor_position = data['cursor_position']
-    user: User = User.users[sid]
+    cursor_position = data.get('cursor_position')
+    if cursor_position is None:
+        logging.error(f"cursor_position missing in data from sid {sid}")
+        return
+    user: User = User.users.get(sid)
+    if user is None:
+        logging.error(f"User not found for sid {sid}")
+        return
     user.update_cursor_position(cursor_position)
-    await sio.emit(Events.CURSOR_UPDATED, user.details(), room=user.room.id, skip_sid=sid)
+    await sio.emit(Events.CURSOR_UPDATED, {'sid': sid, 'cursor_position': cursor_position}, room=user.room.id, skip_sid=sid)
+
 
 @sio.on(Events.LANGUAGE_CHANGE)
 async def language_change(sid, data):
