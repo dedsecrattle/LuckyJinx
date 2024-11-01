@@ -55,7 +55,7 @@ const App: React.FC = () => {
     editorRef.current = editor;
 
     return () => {
-      editor.destroy(); // Clean up editor instance on unmount
+      editor.destroy();
     };
   }, []);
 
@@ -91,9 +91,9 @@ const App: React.FC = () => {
     });
 
     // Handle cursor updates
-    // socket.on("cursor_updated", (data: any) => {
-    //   // Implement cursor position indicator for other users here
-    // });
+    socket.on("cursor_updated", (data: any) => {
+      // Implement cursor position indicator for other users here
+    });
 
     // Cleanup on component unmount
     return () => {
@@ -112,7 +112,7 @@ const App: React.FC = () => {
 
   const handleCursorChange = (viewUpdate: any) => {
     const cursorPosition = viewUpdate.state.selection.main.head;
-    // socketRef.current?.emit("cursor_updated", { cursor_position: cursorPosition });
+    socketRef.current?.emit("cursor_updated", { cursor_position: cursorPosition });
   };
 
   const questionData: QuestionData = {
@@ -192,10 +192,10 @@ const App: React.FC = () => {
                 Run code
               </Button>
             </div>
-
             <CodeMirror
               value={code}
               height="500px"
+              style={{ fontSize: "1rem" }}
               extensions={[languageExtensions[language as "python" | "javascript"]]}
               onChange={handleCodeChange}
               onUpdate={(viewUpdate) => handleCursorChange(viewUpdate)}
@@ -204,7 +204,6 @@ const App: React.FC = () => {
             />
           </div>
         </div>
-
         {/* <TestCases defaultTestCases={defaultTestCases} userTestCases={userTestCases} addTestCase={addTestCase} /> */}
       </div>
 
