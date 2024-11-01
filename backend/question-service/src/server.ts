@@ -1,4 +1,4 @@
-import 'reflect-metadata';
+import "reflect-metadata";
 import express, { Application } from "express";
 import bodyParser from "body-parser";
 import cors from "cors";
@@ -17,7 +17,7 @@ app.use(bodyParser.json());
 app.use(
   cors({
     origin: "*",
-  })
+  }),
 );
 
 // Routes

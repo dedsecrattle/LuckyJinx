@@ -34,8 +34,14 @@ function compareOutput(actual?: string, expected?: string): boolean | null {
     return false;
   }
 
-  const actualLines = actual.trim().split("\n").map((line) => line.trim());
-  const expectedLines = expected.trim().split("\n").map((line) => line.trim());
+  const actualLines = actual
+    .trim()
+    .split("\n")
+    .map((line) => line.trim());
+  const expectedLines = expected
+    .trim()
+    .split("\n")
+    .map((line) => line.trim());
   if (actualLines.length !== expectedLines.length) {
     return false;
   }
@@ -56,7 +62,7 @@ export async function testCode(
   const response = await fetch(url, {
     method: "POST",
     headers: {
-      "Authorization": `Bearer ${authtoken}`,
+      Authorization: `Bearer ${authtoken}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({ code, lang, input: testCase.input, timeout: 5 }),
@@ -70,7 +76,7 @@ export async function testCode(
     await sleep(500);
     const resultResponse = await fetch(`${url}/?id=${id}`, {
       headers: {
-        "Authorization": `Bearer ${authtoken}`,
+        Authorization: `Bearer ${authtoken}`,
       },
     });
     if (resultResponse.status >= 400 && resultResponse.status < 500) {
@@ -86,7 +92,7 @@ export async function testCode(
       output: result.output,
       error: result.error,
       isCorrect: compareOutput(result.output, testCase.output),
-    }
+    };
   }
 
   throw new Error("Timeout");
