@@ -30,6 +30,22 @@ router.post("/", async (req: Request, res: Response) => {
   }
 });
 
+router.post("/random", async (req: Request, res: Response) => {
+  const { complexity, categories } = req.body;
+  const question = await Question.find({
+    complexity,
+    categories: { $all: categories },
+  });
+
+  if (!question) {
+    return res.status(404).json({ message: "Question not found" });
+  } else {
+    const randomQuestion =
+      question[Math.floor(Math.random() * question.length)];
+    res.status(200).json(randomQuestion);
+  }
+});
+
 // Get all questions (GET)
 router.get("/", async (req: Request, res: Response) => {
   try {
@@ -99,14 +115,19 @@ router.delete("/:id", async (req: Request, res: Response) => {
 router.post("/test/:id", async (req: Request, res: Response) => {
   try {
     const id = Number(req.params.id);
-    if (isNaN(id)) return res.status(400).json({ error: "Invalid Question ID" });
+    if (isNaN(id))
+      return res.status(400).json({ error: "Invalid Question ID" });
 
     const authorizationHeader = req.headers.authorization;
-    if (!authorizationHeader) return res.status(401).json({ error: "Unauthorized" });
+    if (!authorizationHeader)
+      return res.status(401).json({ error: "Unauthorized" });
     const authtoken = authorizationHeader.split(" ")[1];
 
     const tests = plainToInstance(Test, [req.body]);
-    console.assert(tests.length === 1, "tests must be an array of exactly 1 element");
+    console.assert(
+      tests.length === 1,
+      "tests must be an array of exactly 1 element"
+    );
     const test = tests[0];
     const errors = await validate(test);
     if (errors.length > 0) {
@@ -117,7 +138,9 @@ router.post("/test/:id", async (req: Request, res: Response) => {
     if (!question) return res.status(404).json({ error: "Question not found" });
 
     const testCases: TestCase[] = [...question.testCases, ...test.customTests];
-    const outputPromises = testCases.map((testCase) => testCode(test.code, test.lang, testCase, authtoken));
+    const outputPromises = testCases.map((testCase) =>
+      testCode(test.code, test.lang, testCase, authtoken)
+    );
     try {
       const outputs = await Promise.all(outputPromises);
       return res.status(200).json({ outputs });
