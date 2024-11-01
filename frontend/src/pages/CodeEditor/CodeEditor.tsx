@@ -23,13 +23,10 @@ import { Decoration, EditorView, WidgetType } from "@codemirror/view";
 import { RangeSetBuilder, Extension } from "@codemirror/state";
 import QuestionService from "../../services/question.service";
 
-const WEBSOCKET_URL = "http://localhost:3005" as string;
-console.log("URL: ", WEBSOCKET_URL);
+const WEBSOCKET_URL = process.env.REACT_APP_COLLABORATION_SERVICE_URL || "http://localhost:3005";
 
-// Define Language Type
-type Language = "python" | "cpp" | "javascript" | "java";
+type Language = "python" | "cpp" | "java";
 
-// CursorWidget
 class CursorWidget extends WidgetType {
   color: string;
 
@@ -60,7 +57,6 @@ const createCursorDecorations = (otherCursors: {
     for (const [sid, cursor] of Object.entries(otherCursors)) {
       const { cursor_position, color } = cursor;
       if (typeof cursor_position === "number") {
-        // Ensure cursor_position is a number
         const decoration = Decoration.widget({
           widget: new CursorWidget(color),
           side: 0,
@@ -112,21 +108,20 @@ const CodeEditor: React.FC = () => {
   const languageExtensions: { [key in Language]: Extension[] } = {
     python: [python(), autocompletion()],
     cpp: [cpp(), autocompletion()],
-    javascript: [javascript(), autocompletion()],
     java: [java(), autocompletion()],
   };
 
   const userColors = [
-    "#FF5733", // Red
-    "#33FF57", // Green
-    "#3357FF", // Blue
-    "#F333FF", // Pink
-    "#FF33F3", // Magenta
-    "#33FFF3", // Cyan
-    "#FFA533", // Orange
-    "#A533FF", // Purple
-    "#33A5FF", // Light Blue
-    "#33FF99", // Light Green
+    "#FF5733",
+    "#33FF57",
+    "#3357FF",
+    "#F333FF",
+    "#FF33F3",
+    "#33FFF3",
+    "#FFA533",
+    "#A533FF",
+    "#33A5FF",
+    "#33FF99",
   ];
 
   const getColorForUser = (sid: string): string => {
@@ -150,6 +145,7 @@ const CodeEditor: React.FC = () => {
 
     fetchQuestionData();
   }, []);
+
   useEffect(() => {
     if (!roomNumber) {
       console.error("No roomNumber provided.");
@@ -190,17 +186,14 @@ const CodeEditor: React.FC = () => {
       }
     });
 
-    // Handle real-time code updates
     socket.on("code_updated", (newCode: string) => {
       console.log("Received code_updated:", newCode);
       setCode(newCode);
     });
 
-    // Handle cursor updates
     socket.on("cursor_updated", (userDetails: any) => {
-      console.log("Received cursor_updated:", userDetails);
       const { sid, cursor_position } = userDetails;
-      if (sid === socket.id) return; // Ignore own cursor
+      if (sid === socket.id) return;
 
       if (typeof cursor_position !== "number") {
         console.error(`Invalid cursor_position from sid ${sid}:`, cursor_position);
@@ -216,7 +209,6 @@ const CodeEditor: React.FC = () => {
       }));
     });
 
-    // user disconnection to remove cursor
     socket.on("user_disconnected", (sid: string) => {
       console.log(`User disconnected: ${sid}`);
       setOtherCursors((prev) => {
@@ -226,12 +218,10 @@ const CodeEditor: React.FC = () => {
       });
     });
 
-    // handle error
     socket.on("error", (error: any) => {
       console.error("Socket error:", error);
     });
 
-    // clean up
     return () => {
       if (socket) {
         socket.disconnect();
@@ -242,7 +232,7 @@ const CodeEditor: React.FC = () => {
 
   const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newLanguage = e.target.value as Language;
-    if (["python", "cpp", "javascript", "java"].includes(newLanguage)) {
+    if (["python", "cpp", "java"].includes(newLanguage)) {
       setLanguage(newLanguage);
       socketRef.current?.emit("language_change", { language: newLanguage, room_id: roomNumber });
     } else {
@@ -263,15 +253,6 @@ const CodeEditor: React.FC = () => {
   const cursorDecorationsExtension = useMemo(() => {
     return createCursorDecorations(otherCursors);
   }, [otherCursors]);
-
-  // const questionData: QuestionData = {
-  //   title: "Two Sum",
-  //   difficulty: "Easy",
-  //   topic: "Array",
-  //   url: "https://leetcode.com/problems/two-sum/description/",
-  //   description:
-  //     "### Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target.",
-  // };
 
   const defaultTestCases: TestCase[] = [
     { number: 1, input: "nums = [2,7,11,15], target = 9", expectedOutput: "[0,1]", actualOutput: "[0,1]" },
@@ -301,7 +282,6 @@ const CodeEditor: React.FC = () => {
   return (
     <div className="app-container">
       <Navbar />
-
       <div className="container">
         <div className="top-section">
           <Typography variant="h3" className="question-title">
@@ -357,15 +337,12 @@ const CodeEditor: React.FC = () => {
           <ChatIcon style={{ fontSize: "2rem", color: "#fff" }} />
         </div>
       )}
-
       {isChatboxExpanded && <Chatbox onClose={() => setIsChatboxExpanded(false)} />}
-
       {!isVideoCallExpanded && (
         <div className="video-call-icon" onClick={() => setIsVideoCallExpanded(true)}>
           <VideoCallIcon style={{ fontSize: "2rem", color: "#fff" }} />
         </div>
       )}
-
       {isVideoCallExpanded && <VideoCall onClose={() => setIsVideoCallExpanded(false)} />}
 
       <Footer />
