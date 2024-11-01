@@ -72,7 +72,7 @@ const CodeEditor: React.FC = () => {
   useEffect(() => {
     if (!roomNumber) return;
     const token = localStorage.getItem("jwt-token");
-    const socket = io("http://localhost:3005", {
+    const socket = io(process.env.REACT_APP_COLLABORATION_SERVICE_URL, {
       extraHeaders: {
         Authorization: `${token}`,
       },

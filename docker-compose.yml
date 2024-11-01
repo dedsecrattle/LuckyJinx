@@ -84,4 +84,6 @@ services:
       - user
       - matching
       - question
+      - collaboration
+      - communication
       - rabbitmq
