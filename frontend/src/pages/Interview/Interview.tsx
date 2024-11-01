@@ -86,9 +86,9 @@ const Interview = (): ReactElement => {
     }
     setTimeout(() => {
       setSessionState(SessionState.SUCCESS);
-      console.log('Navigating to roomNumber: ', roomNumber);
+      console.log("Navigating to roomNumber: ", roomNumber);
     }, 1000);
-  });  
+  });
 
   socket.on("matching_fail", () => {
     console.log("Matching failed");
@@ -128,7 +128,7 @@ const Interview = (): ReactElement => {
 
   useEffect(() => {
     if (sessionState === SessionState.SUCCESS && roomNumber) {
-      console.log('Navigating to roomNumber: ', roomNumber);
+      console.log("Navigating to roomNumber: ", roomNumber);
       navigate(`/code-editor/${roomNumber}`, {
         state: { topic: selectedTopic, difficulty: selectedDifficulty },
       });
@@ -136,7 +136,6 @@ const Interview = (): ReactElement => {
       clearSession();
     }
   }, [sessionState, roomNumber, navigate, selectedTopic, selectedDifficulty]);
-
 
   const startMatching = (topic: Categories, difficulty: QuestionComplexity) => {
     // restart

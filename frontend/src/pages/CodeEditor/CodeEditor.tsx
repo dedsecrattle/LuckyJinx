@@ -4,6 +4,8 @@ import { Button, Chip, Typography } from "@mui/material";
 import CodeMirror, { EditorView } from "@uiw/react-codemirror";
 import { okaidia } from "@uiw/codemirror-theme-okaidia";
 import { python } from "@codemirror/lang-python";
+import { cpp } from "@codemirror/lang-cpp";
+import { java } from "@codemirror/lang-java";
 import { javascript } from "@codemirror/lang-javascript";
 import Navbar from "../../components/Navbar/Navbar";
 import Footer from "../../components/Footer/Footer";
@@ -12,6 +14,7 @@ import VideoCall from "../../components/VideoCall/VideoCall";
 import TestCases from "../../components/TestCases/TestCases";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import VideoCallIcon from "@mui/icons-material/VideoCall";
+import { autocompletion } from "@codemirror/autocomplete";
 import ChatIcon from "@mui/icons-material/Chat";
 import io, { Socket } from "socket.io-client";
 import "./CodeEditor.scss";
@@ -33,7 +36,7 @@ interface TestCase {
   isSubmitted?: boolean;
 }
 
-const App: React.FC = () => {
+const CodeEditor: React.FC = () => {
   const [code, setCode] = useState<string>("# Write your solution here\ndef twoSums(nums, target):\n");
   const [language, setLanguage] = useState<string>("python");
   const [isVideoHovered, setIsVideoHovered] = useState(false);
@@ -43,12 +46,19 @@ const App: React.FC = () => {
   const editorRef: React.MutableRefObject<EditorView | null> = useRef(null);
   const { roomNumber } = useParams();
 
+  const languageExtensions = {
+    python: [python(), autocompletion()],
+    cpp: [cpp(), autocompletion()],
+    javascript: [javascript(), autocompletion()],
+    java: [java(), autocompletion()],
+  };
+
   useEffect(() => {
     if (editorRef.current) return; // Prevent re-assignment if already set
 
     const editor = new EditorView({
       doc: code,
-      extensions: [languageExtensions[language as "python" | "javascript"]],
+      extensions: [languageExtensions[language as "python" | "java" | "cpp"]],
       parent: document.querySelector(".code-editor")!,
     });
 
@@ -79,6 +89,10 @@ const App: React.FC = () => {
       }
     });
 
+    socket.on("language_change", (newLanguage: string) => {
+      setLanguage(newLanguage);
+    });
+
     // Handle real-time code updates
     socket.on("code_updated", (newCode: string) => {
       setCode(newCode);
@@ -102,7 +116,9 @@ const App: React.FC = () => {
   }, [roomNumber]);
 
   const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setLanguage(e.target.value);
+    const newLanguage = e.target.value;
+    setLanguage(newLanguage);
+    socketRef.current?.emit("language_change", { language: newLanguage, room_id: roomNumber });
   };
 
   const handleCodeChange = (value: string) => {
@@ -149,11 +165,6 @@ const App: React.FC = () => {
     ]);
   };
 
-  const languageExtensions = {
-    python: python(),
-    javascript: javascript(),
-  };
-
   return (
     <div className="app-container">
       <Navbar />
@@ -186,7 +197,9 @@ const App: React.FC = () => {
             <div className="header">
               <select className="language-select" onChange={handleLanguageChange} value={language}>
                 <option value="python">Python</option>
+                <option value="cpp">C++</option>
                 <option value="javascript">JavaScript</option>
+                <option value="java">Java</option>
               </select>
               <Button variant="contained" size="small" className="submit-button">
                 Run code
@@ -196,7 +209,7 @@ const App: React.FC = () => {
               value={code}
               height="500px"
               style={{ fontSize: "1rem" }}
-              extensions={[languageExtensions[language as "python" | "javascript"]]}
+              extensions={[languageExtensions[language as "python" | "java" | "cpp"]]}
               onChange={handleCodeChange}
               onUpdate={(viewUpdate) => handleCursorChange(viewUpdate)}
               className="code-editor"
@@ -228,4 +241,4 @@ const App: React.FC = () => {
   );
 };
 
-export default App;
+export default CodeEditor;

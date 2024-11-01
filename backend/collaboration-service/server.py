@@ -67,6 +67,12 @@ async def cursor_updated(sid, data):
     user.update_cursor_position(cursor_position)
     await sio.emit(Events.CURSOR_UPDATED, user.details(), room=user.room.id, skip_sid=sid)
 
+@sio.on(Events.LANGUAGE_CHANGE)
+async def language_change(sid, data):
+    logging.debug(f'language_change {sid=} {data=}')
+    language = data['language']
+    room = data['room_id']
+    await sio.emit(Events.LANGUAGE_CHANGE, language, room=room, skip_sid=sid)
 
 @sio.event
 async def disconnect(sid):
