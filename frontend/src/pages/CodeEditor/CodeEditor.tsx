@@ -20,6 +20,9 @@ import io, { Socket } from "socket.io-client";
 import "./CodeEditor.scss";
 import { useParams } from "react-router-dom";
 
+const WEBSOCKET_URL = process.env.REACT_APP_COLLABORATION_SERVICE_URL as string;
+console.log(WEBSOCKET_URL);
+
 interface QuestionData {
   title: string;
   difficulty: string;
@@ -72,7 +75,7 @@ const CodeEditor: React.FC = () => {
   useEffect(() => {
     if (!roomNumber) return;
     const token = localStorage.getItem("jwt-token");
-    const socket = io(process.env.REACT_APP_COLLABORATION_SERVICE_URL, {
+    const socket = io(WEBSOCKET_URL, {
       extraHeaders: {
         Authorization: `${token}`,
       },
@@ -128,7 +131,7 @@ const CodeEditor: React.FC = () => {
 
   const handleCursorChange = (viewUpdate: any) => {
     const cursorPosition = viewUpdate.state.selection.main.head;
-    socketRef.current?.emit("cursor_updated", { cursor_position: cursorPosition });
+    // socketRef.current?.emit("cursor_updated", { cursor_position: cursorPosition });
   };
 
   const questionData: QuestionData = {
