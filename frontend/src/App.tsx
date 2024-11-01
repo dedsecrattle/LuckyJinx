@@ -82,7 +82,8 @@ const App = (): ReactElement => {
               <Route path="/questions" element={<Questions />} />
               <Route path="/interview" element={user ? <Interview /> : <Navigate to={"/"} />} />
               <Route path="/video" element={<VideoChat />} />
-              <Route path="/code" element={<CodeEditor />} />
+              {/* <Route path="/code" element={<CodeEditor />} /> */}
+              <Route path="/code-editor/:roomNumber" element={<CodeEditor />} />
             </Routes>
           </SessionContextProvider>
         </ConfirmationDialogContextProvider>

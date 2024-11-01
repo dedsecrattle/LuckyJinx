@@ -1,7 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import MDEditor from "@uiw/react-md-editor";
-import { Editor } from "@monaco-editor/react";
 import { Button, Chip, Typography } from "@mui/material";
+import CodeMirror, { EditorView } from "@uiw/react-codemirror";
+import { okaidia } from "@uiw/codemirror-theme-okaidia";
+import { python } from "@codemirror/lang-python";
+import { cpp } from "@codemirror/lang-cpp";
+import { java } from "@codemirror/lang-java";
+import { javascript } from "@codemirror/lang-javascript";
 import Navbar from "../../components/Navbar/Navbar";
 import Footer from "../../components/Footer/Footer";
 import Chatbox from "../../components/Chatbox/Chatbox";
@@ -9,8 +14,14 @@ import VideoCall from "../../components/VideoCall/VideoCall";
 import TestCases from "../../components/TestCases/TestCases";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import VideoCallIcon from "@mui/icons-material/VideoCall";
+import { autocompletion } from "@codemirror/autocomplete";
 import ChatIcon from "@mui/icons-material/Chat";
+import io, { Socket } from "socket.io-client";
 import "./CodeEditor.scss";
+import { useParams } from "react-router-dom";
+
+const WEBSOCKET_URL = process.env.REACT_APP_COLLABORATION_SERVICE_URL as string;
+console.log(WEBSOCKET_URL);
 
 interface QuestionData {
   title: string;
@@ -28,15 +39,99 @@ interface TestCase {
   isSubmitted?: boolean;
 }
 
-const App: React.FC = () => {
+const CodeEditor: React.FC = () => {
   const [code, setCode] = useState<string>("# Write your solution here\ndef twoSums(nums, target):\n");
   const [language, setLanguage] = useState<string>("python");
   const [isVideoHovered, setIsVideoHovered] = useState(false);
   const [isChatboxExpanded, setIsChatboxExpanded] = useState(false);
   const [isVideoCallExpanded, setIsVideoCallExpanded] = useState(false);
+  const socketRef = useRef<Socket | null>(null);
+  const editorRef: React.MutableRefObject<EditorView | null> = useRef(null);
+  const { roomNumber } = useParams();
+
+  const languageExtensions = {
+    python: [python(), autocompletion()],
+    cpp: [cpp(), autocompletion()],
+    javascript: [javascript(), autocompletion()],
+    java: [java(), autocompletion()],
+  };
+
+  useEffect(() => {
+    if (editorRef.current) return; // Prevent re-assignment if already set
+
+    const editor = new EditorView({
+      doc: code,
+      extensions: [languageExtensions[language as "python" | "java" | "cpp"]],
+      parent: document.querySelector(".code-editor")!,
+    });
+
+    editorRef.current = editor;
+
+    return () => {
+      editor.destroy();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!roomNumber) return;
+    const token = localStorage.getItem("jwt-token");
+    const socket = io(WEBSOCKET_URL, {
+      extraHeaders: {
+        Authorization: `${token}`,
+      },
+    });
+    socketRef.current = socket;
+
+    socket.on("connect", () => {
+      socket.emit("join_request", { room_id: roomNumber });
+    });
+
+    socket.on("join_request", (data: any) => {
+      if (data.code) {
+        setCode(data.code);
+      }
+    });
+
+    socket.on("language_change", (newLanguage: string) => {
+      setLanguage(newLanguage);
+    });
+
+    // Handle real-time code updates
+    socket.on("code_updated", (newCode: string) => {
+      setCode(newCode);
+      if (editorRef.current) {
+        const editor = editorRef.current;
+        editor.dispatch({
+          changes: { from: 0, to: editor.state.doc.length, insert: newCode },
+        });
+      }
+    });
+
+    // Handle cursor updates
+    socket.on("cursor_updated", (data: any) => {
+      // Implement cursor position indicator for other users here
+    });
+
+    // Cleanup on component unmount
+    return () => {
+      socket.disconnect();
+    };
+  }, [roomNumber]);
 
   const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setLanguage(e.target.value);
+    const newLanguage = e.target.value;
+    setLanguage(newLanguage);
+    socketRef.current?.emit("language_change", { language: newLanguage, room_id: roomNumber });
+  };
+
+  const handleCodeChange = (value: string) => {
+    setCode(value);
+    socketRef.current?.emit("code_updated", { code: value });
+  };
+
+  const handleCursorChange = (viewUpdate: any) => {
+    const cursorPosition = viewUpdate.state.selection.main.head;
+    // socketRef.current?.emit("cursor_updated", { cursor_position: cursorPosition });
   };
 
   const questionData: QuestionData = {
@@ -48,31 +143,14 @@ const App: React.FC = () => {
       "### Given an array of integers `nums` and an integer `target`, return indices of the two numbers such that they add up to `target`.",
   };
 
-  // Default test cases
   const defaultTestCases: TestCase[] = [
-    {
-      number: 1,
-      input: "nums = [2,7,11,15], target = 9",
-      expectedOutput: "[0,1]",
-      actualOutput: "[0,1]",
-    },
-    {
-      number: 2,
-      input: "nums = [3,2,4], target = 6",
-      expectedOutput: "[1,2]",
-      actualOutput: "[1,2]",
-    },
-    {
-      number: 3,
-      input: "nums = [3,3], target = 6",
-      expectedOutput: "[0,1]",
-      actualOutput: "[0,1]",
-    },
+    { number: 1, input: "nums = [2,7,11,15], target = 9", expectedOutput: "[0,1]", actualOutput: "[0,1]" },
+    { number: 2, input: "nums = [3,2,4], target = 6", expectedOutput: "[1,2]", actualOutput: "[1,2]" },
+    { number: 3, input: "nums = [3,3], target = 6", expectedOutput: "[0,1]", actualOutput: "[0,1]" },
   ];
 
   const [userTestCases, setUserTestCases] = useState<TestCase[]>([]);
 
-  // Function to add a new test case
   const addTestCase = () => {
     if (userTestCases.length >= 5) {
       alert("You can only add up to 5 test cases.");
@@ -90,31 +168,6 @@ const App: React.FC = () => {
     ]);
   };
 
-  const updateTestCase = (index: number, field: "input" | "expectedOutput", value: string) => {
-    const updatedTestCases = [...userTestCases];
-    updatedTestCases[index][field] = value;
-    setUserTestCases(updatedTestCases);
-  };
-
-  const submitTestCase = (index: number) => {
-    const updatedTestCases = [...userTestCases];
-    if (updatedTestCases[index].input.trim() === "" || updatedTestCases[index].expectedOutput.trim() === "") {
-      alert("Please fill in both input and expected output.");
-      return;
-    }
-    updatedTestCases[index].isSubmitted = true;
-    setUserTestCases(updatedTestCases);
-  };
-
-  const deleteTestCase = (index: number) => {
-    const updatedTestCases = [...userTestCases];
-    updatedTestCases.splice(index, 1);
-    updatedTestCases.forEach((testCase, idx) => {
-      testCase.number = defaultTestCases.length + idx + 1;
-    });
-    setUserTestCases(updatedTestCases);
-  };
-
   return (
     <div className="app-container">
       <Navbar />
@@ -122,7 +175,7 @@ const App: React.FC = () => {
       <div className="container">
         <div className="top-section">
           <Typography variant="h3" className="question-title">
-            {questionData.title}
+            {questionData.title} @ {roomNumber}
           </Typography>
 
           <div className="details">
@@ -138,66 +191,52 @@ const App: React.FC = () => {
           </div>
         </div>
 
-        {/* Editors section */}
         <div className="editors">
-          {/* Left Side: Markdown Editor */}
           <div className="left-side">
             <MDEditor.Markdown source={questionData.description} className="md-editor" />
           </div>
 
-          {/* Right Side: Code Editor */}
           <div className="right-side">
             <div className="header">
-              <select className="language-select" onChange={handleLanguageChange}>
+              <select className="language-select" onChange={handleLanguageChange} value={language}>
                 <option value="python">Python</option>
+                <option value="cpp">C++</option>
+                <option value="javascript">JavaScript</option>
                 <option value="java">Java</option>
-                {/* <option value="cpp">C++</option> */}
               </select>
               <Button variant="contained" size="small" className="submit-button">
                 Run code
               </Button>
             </div>
-
-            <Editor
-              height="500px"
-              language={language}
+            <CodeMirror
               value={code}
-              onChange={(value) => setCode(value || "")}
-              theme="vs-dark"
+              height="500px"
+              style={{ fontSize: "1rem" }}
+              extensions={[languageExtensions[language as "python" | "java" | "cpp"]]}
+              onChange={handleCodeChange}
+              onUpdate={(viewUpdate) => handleCursorChange(viewUpdate)}
               className="code-editor"
+              theme={okaidia}
             />
           </div>
         </div>
-
-        {/* Test Cases Box */}
-        <TestCases
-          defaultTestCases={defaultTestCases}
-          userTestCases={userTestCases}
-          addTestCase={addTestCase}
-          updateTestCase={updateTestCase}
-          submitTestCase={submitTestCase}
-          deleteTestCase={deleteTestCase}
-        />
+        {/* <TestCases defaultTestCases={defaultTestCases} userTestCases={userTestCases} addTestCase={addTestCase} /> */}
       </div>
 
-      {/* Chatbox Icon */}
       {!isChatboxExpanded && (
         <div className="chatbox-icon" onClick={() => setIsChatboxExpanded(true)}>
           <ChatIcon style={{ fontSize: "2rem", color: "#fff" }} />
         </div>
       )}
 
-      {/* Expanded Chatbox */}
       {isChatboxExpanded && <Chatbox onClose={() => setIsChatboxExpanded(false)} />}
 
-      {/* Video Call Icon */}
       {!isVideoCallExpanded && (
         <div className="video-call-icon" onClick={() => setIsVideoCallExpanded(true)}>
           <VideoCallIcon style={{ fontSize: "2rem", color: "#fff" }} />
         </div>
       )}
 
-      {/* Expanded Video Call */}
       {isVideoCallExpanded && <VideoCall onClose={() => setIsVideoCallExpanded(false)} />}
 
       <Footer />
@@ -205,4 +244,4 @@ const App: React.FC = () => {
   );
 };
 
-export default App;
+export default CodeEditor;

@@ -19,4 +19,5 @@ model MatchRecord {
   isConfirmed  Boolean @default(false) // Whether a match is confirmed by the user
   isArchived   Boolean @default(false) // Whether a match record has been archived
   createdAt    DateTime @default(now()) // Timestamp for the match attempt
+  roomNumber   String   // Matched room number
 }
