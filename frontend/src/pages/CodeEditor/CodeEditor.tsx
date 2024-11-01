@@ -211,11 +211,10 @@ const CodeEditor: React.FC = () => {
             <CodeMirror
               value={code}
               height="500px"
-              style={{ fontSize: "1rem" }}
+              style={{ fontSize: "18px" }}
               extensions={[languageExtensions[language as "python" | "java" | "cpp"]]}
               onChange={handleCodeChange}
               onUpdate={(viewUpdate) => handleCursorChange(viewUpdate)}
-              className="code-editor"
               theme={okaidia}
             />
           </div>
