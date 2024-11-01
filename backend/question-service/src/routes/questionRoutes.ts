@@ -32,8 +32,6 @@ router.post("/", async (req: Request, res: Response) => {
 
 router.post("/random", async (req: Request, res: Response) => {
   const { complexity, categories } = req.body;
-
-  console.log(complexity, categories);
   const question = await Question.find({
     complexity,
     categories: { $all: categories },
