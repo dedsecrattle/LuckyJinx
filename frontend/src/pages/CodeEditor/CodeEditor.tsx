@@ -18,9 +18,10 @@ import { autocompletion } from "@codemirror/autocomplete";
 import ChatIcon from "@mui/icons-material/Chat";
 import io, { Socket } from "socket.io-client";
 import "./CodeEditor.scss";
-import { useParams } from "react-router-dom";
+import { useLocation, useParams } from "react-router-dom";
 import { Decoration, EditorView, WidgetType } from "@codemirror/view";
 import { RangeSetBuilder, Extension } from "@codemirror/state";
+import QuestionService from "../../services/question.service";
 
 const WEBSOCKET_URL = "http://localhost:3005" as string;
 console.log("URL: ", WEBSOCKET_URL);
@@ -74,11 +75,16 @@ const createCursorDecorations = (otherCursors: {
 };
 
 interface QuestionData {
+  questionId: Number;
   title: string;
-  difficulty: string;
-  topic: string;
-  url: string;
   description: string;
+  categories: string[];
+  complexity: "Easy" | "Medium" | "Hard";
+  link: string;
+  testCases: {
+    input: string;
+    output: string;
+  }[];
 }
 
 interface TestCase {
@@ -90,6 +96,8 @@ interface TestCase {
 }
 
 const CodeEditor: React.FC = () => {
+  const location = useLocation();
+  const { questionId } = location.state as { questionId: number };
   const [code, setCode] = useState<string>("# Write your solution here\ndef twoSums(nums, target):\n");
   const [language, setLanguage] = useState<Language>("python");
   const [isVideoHovered, setIsVideoHovered] = useState(false);
@@ -97,6 +105,7 @@ const CodeEditor: React.FC = () => {
   const [isVideoCallExpanded, setIsVideoCallExpanded] = useState(false);
   const socketRef = useRef<Socket | null>(null);
   const { roomNumber } = useParams();
+  const [questionData, setQuestionData] = useState<QuestionData | null>(null);
 
   const [otherCursors, setOtherCursors] = useState<{ [sid: string]: { cursor_position: number; color: string } }>({});
 
@@ -129,6 +138,18 @@ const CodeEditor: React.FC = () => {
     return userColors[index];
   };
 
+  useEffect(() => {
+    const fetchQuestionData = async () => {
+      try {
+        const response = await QuestionService.getQuestion(questionId);
+        setQuestionData(response);
+      } catch (error) {
+        console.error("Failed to fetch question data:", error);
+      }
+    };
+
+    fetchQuestionData();
+  }, []);
   useEffect(() => {
     if (!roomNumber) {
       console.error("No roomNumber provided.");
@@ -243,14 +264,14 @@ const CodeEditor: React.FC = () => {
     return createCursorDecorations(otherCursors);
   }, [otherCursors]);
 
-  const questionData: QuestionData = {
-    title: "Two Sum",
-    difficulty: "Easy",
-    topic: "Array",
-    url: "https://leetcode.com/problems/two-sum/description/",
-    description:
-      "### Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target.",
-  };
+  // const questionData: QuestionData = {
+  //   title: "Two Sum",
+  //   difficulty: "Easy",
+  //   topic: "Array",
+  //   url: "https://leetcode.com/problems/two-sum/description/",
+  //   description:
+  //     "### Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target.",
+  // };
 
   const defaultTestCases: TestCase[] = [
     { number: 1, input: "nums = [2,7,11,15], target = 9", expectedOutput: "[0,1]", actualOutput: "[0,1]" },
@@ -284,17 +305,17 @@ const CodeEditor: React.FC = () => {
       <div className="container">
         <div className="top-section">
           <Typography variant="h3" className="question-title">
-            {questionData.title} @ {roomNumber}
+            {questionData?.title} @ {roomNumber}
           </Typography>
 
           <div className="details">
-            <Chip label={`Difficulty: ${questionData.difficulty}`} className="detail-chip light-grey-chip" />
-            <Chip label={`Topic: ${questionData.topic}`} className="detail-chip light-grey-chip" />
+            <Chip label={`Difficulty: ${questionData?.complexity}`} className="detail-chip light-grey-chip" />
+            <Chip label={`Topic: ${questionData?.categories}`} className="detail-chip light-grey-chip" />
             <Chip
-              label={`URL: ${questionData.url}`}
+              label={`URL: ${questionData?.link}`}
               className="detail-chip light-grey-chip"
               clickable
-              onClick={() => window.open(questionData.url, "_blank")}
+              onClick={() => window.open(questionData?.link, "_blank")}
               icon={<OpenInNewIcon style={{ color: "#caff33" }} />}
             />
           </div>
@@ -302,7 +323,7 @@ const CodeEditor: React.FC = () => {
 
         <div className="editors">
           <div className="left-side">
-            <MDEditor.Markdown source={questionData.description} className="md-editor" />
+            <MDEditor.Markdown source={questionData?.description} className="md-editor" />
           </div>
 
           <div className="right-side">

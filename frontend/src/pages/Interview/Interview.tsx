@@ -40,13 +40,16 @@ const Interview = (): ReactElement => {
   const [selectedTopic, setSelectedTopic] = useState<Categories | null>(null);
   const [selectedDifficulty, setSelectedDifficulty] = useState<QuestionComplexity | null>(null);
   const [roomNumber, setRoomNumber] = useState<string | null>(null);
+  const [questionId, setQuestionId] = useState<string | null>(null);
 
   socket.on("matched", (data: any) => {
     console.log("Matched with: ", data.matchedWith);
     console.log("Received roomNumber: ", data.roomNumber);
     setOtherUserId(data.matchedWith);
     setRoomNumber(data.roomNumber); // Use server-assigned room number
+    setQuestionId(data.questionId);
     accumulateMatchingTime();
+    console.log("QuestionId", data.questionId);
     setSessionState(SessionState.PENDING);
   });
 
@@ -130,7 +133,7 @@ const Interview = (): ReactElement => {
     if (sessionState === SessionState.SUCCESS && roomNumber) {
       console.log("Navigating to roomNumber: ", roomNumber);
       navigate(`/code-editor/${roomNumber}`, {
-        state: { topic: selectedTopic, difficulty: selectedDifficulty },
+        state: { questionId: questionId },
       });
     } else if (sessionState === SessionState.FAIL || sessionState === SessionState.TIMEOUT) {
       clearSession();

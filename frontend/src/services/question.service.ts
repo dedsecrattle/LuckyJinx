@@ -29,6 +29,11 @@ export default class QuestionService {
     return response.data;
   }
 
+  static async getQuestion(id: number): Promise<Question> {
+    const response = await QuestionService.client.get(`/${id}`);
+    return response.data;
+  }
+
   static async editQuestion(
     id: number,
     title: string,
