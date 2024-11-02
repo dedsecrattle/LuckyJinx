@@ -53,10 +53,10 @@ services:
       timeout: 5s
       retries: 5
 
-  communication:
-    build: ./backend/communication-service
-    ports:
-      - "3004:3004"
+  # communication:
+  #   build: ./backend/communication-service
+  #   ports:
+  #     - "3004:3004"
 
   matching:
     build: ./backend/matching-service
@@ -85,5 +85,4 @@ services:
       - matching
       - question
       - collaboration
-      - communication
       - rabbitmq
