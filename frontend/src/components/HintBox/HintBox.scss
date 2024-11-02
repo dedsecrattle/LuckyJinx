@@ -1,0 +1,47 @@
+.hintbox-expanded {
+    position: fixed;
+    top: 10px; 
+    left: 10px; 
+    width: 400px;
+    max-height: 80vh;
+    background-color: #2e2e2e; 
+    border-radius: 10px;
+    border: 1px solid #3c3c3c; 
+    display: flex;
+    flex-direction: column;
+    z-index: 1000;
+    overflow: hidden;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+  }
+  
+  .hintbox-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    background-color: #373737; 
+    border-bottom: 1px solid #3c3c3c; 
+    color: #fff; 
+  }
+  
+  .hintbox-close-button {
+    background-color: transparent;
+    color: #fff;
+    min-width: unset;
+  }
+  
+  .hintbox-container {
+    flex-grow: 1;
+    padding: 10px;
+    overflow-y: auto;
+    color: #fff; 
+    background-color: #2e2e2e; 
+  }
+  
+  .hintbox-loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+  }
+  

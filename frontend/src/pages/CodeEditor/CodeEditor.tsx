@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import MDEditor from "@uiw/react-md-editor";
 import { Button, Chip, Typography } from "@mui/material";
 import CodeMirror from "@uiw/react-codemirror";
@@ -6,14 +6,14 @@ import { okaidia } from "@uiw/codemirror-theme-okaidia";
 import { python } from "@codemirror/lang-python";
 import { cpp } from "@codemirror/lang-cpp";
 import { java } from "@codemirror/lang-java";
-import { javascript } from "@codemirror/lang-javascript";
 import Navbar from "../../components/Navbar/Navbar";
 import Footer from "../../components/Footer/Footer";
 import Chatbox from "../../components/Chatbox/Chatbox";
 import VideoCall from "../../components/VideoCall/VideoCall";
-import TestCases from "../../components/TestCases/TestCases";
+import HintBox from "../../components/HintBox/HintBox"; 
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import VideoCallIcon from "@mui/icons-material/VideoCall";
+import LightbulbIcon from "@mui/icons-material/Lightbulb"; 
 import { autocompletion } from "@codemirror/autocomplete";
 import ChatIcon from "@mui/icons-material/Chat";
 import io, { Socket } from "socket.io-client";
@@ -102,9 +102,9 @@ const CodeEditor: React.FC = () => {
   const { questionId } = location.state as { questionId: number };
   const [code, setCode] = useState<string>("# Write your solution here\n");
   const [language, setLanguage] = useState<Language>("python");
-  const [isVideoHovered, setIsVideoHovered] = useState(false);
   const [isChatboxExpanded, setIsChatboxExpanded] = useState(false);
   const [isVideoCallExpanded, setIsVideoCallExpanded] = useState(false);
+  const [isHintBoxExpanded, setIsHintBoxExpanded] = useState(false); // New state
   const [joinedRoom, setJoinedRoom] = useState(false); // New state
   const socketRef = useRef<Socket | null>(null);
   const lastCursorPosition = useRef<number | null>(null);
@@ -152,7 +152,7 @@ const CodeEditor: React.FC = () => {
     };
 
     fetchQuestionData();
-  }, []);
+  }, [questionId]);
 
   useEffect(() => {
     if (!roomNumber) {
@@ -216,7 +216,7 @@ const CodeEditor: React.FC = () => {
       if (sid === socket.id) return; // Ignore own cursor
 
       if (typeof cursor_position !== "number") {
-        console.error(`Invalid cursor_position from sid ${sid}:`, cursor_position);
+        console.error(`Invalid cursor_position for sid ${sid}:`, cursor_position);
         return;
       }
 
@@ -374,6 +374,7 @@ const CodeEditor: React.FC = () => {
         {/* <TestCases defaultTestCases={defaultTestCases} userTestCases={userTestCases} addTestCase={addTestCase} /> */}
       </div>
 
+      {/* Floating Chatbox Icon */}
       {!isChatboxExpanded && (
         <div className="chatbox-icon" onClick={() => setIsChatboxExpanded(true)}>
           <ChatIcon style={{ fontSize: "2rem", color: "#fff" }} />
@@ -382,6 +383,7 @@ const CodeEditor: React.FC = () => {
 
       {isChatboxExpanded && <Chatbox onClose={() => setIsChatboxExpanded(false)} />}
 
+      {/* Floating Video Call Icon */}
       {!isVideoCallExpanded && (
         <div className="video-call-icon" onClick={() => setIsVideoCallExpanded(true)}>
           <VideoCallIcon style={{ fontSize: "2rem", color: "#fff" }} />
@@ -389,6 +391,24 @@ const CodeEditor: React.FC = () => {
       )}
 
       {isVideoCallExpanded && <VideoCall onClose={() => setIsVideoCallExpanded(false)} />}
+
+      {/* Floating AI Hint Button */}
+      {!isHintBoxExpanded && (
+        <div className="ai-hint-button" onClick={() => setIsHintBoxExpanded(true)}>
+          <LightbulbIcon style={{ marginRight: "8px", color: "#FFD700" }} />
+          <Typography variant="body1" style={{ color: "#fff" }}>
+            AI Hint
+          </Typography>
+        </div>
+      )}
+
+      {/* HintBox Component */}
+      {isHintBoxExpanded && questionData && (
+        <HintBox
+          questionId={questionId}
+          onClose={() => setIsHintBoxExpanded(false)}
+        />
+      )}
 
       <Footer />
     </div>
