@@ -10,10 +10,10 @@ import Navbar from "../../components/Navbar/Navbar";
 import Footer from "../../components/Footer/Footer";
 import Chatbox from "../../components/Chatbox/Chatbox";
 import VideoCall from "../../components/VideoCall/VideoCall";
-import HintBox from "../../components/HintBox/HintBox"; 
+import HintBox from "../../components/HintBox/HintBox";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import VideoCallIcon from "@mui/icons-material/VideoCall";
-import LightbulbIcon from "@mui/icons-material/Lightbulb"; 
+import LightbulbIcon from "@mui/icons-material/Lightbulb";
 import { autocompletion } from "@codemirror/autocomplete";
 import ChatIcon from "@mui/icons-material/Chat";
 import io, { Socket } from "socket.io-client";
@@ -404,10 +404,7 @@ const CodeEditor: React.FC = () => {
 
       {/* HintBox Component */}
       {isHintBoxExpanded && questionData && (
-        <HintBox
-          questionId={questionId}
-          onClose={() => setIsHintBoxExpanded(false)}
-        />
+        <HintBox questionId={questionId} onClose={() => setIsHintBoxExpanded(false)} />
       )}
 
       <Footer />

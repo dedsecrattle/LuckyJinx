@@ -11,7 +11,7 @@ const CONFIRM_DELAY_TIME = 10000;
 
 export async function handleMatchingRequest(
   userRequest: any,
-  socketId: string
+  socketId: string,
 ) {
   userRequest.socketId = socketId;
 
@@ -36,11 +36,11 @@ function sendConfirmDelayedTimeoutMessage(recordId: string) {
       recordId: recordId,
       type: "confirm_timeout",
     },
-    CONFIRM_DELAY_TIME
+    CONFIRM_DELAY_TIME,
   );
   console.log(
     "Sent delayed message for confirm timeout for recordId: ",
-    recordId
+    recordId,
   );
 }
 
@@ -58,7 +58,7 @@ export async function handleUserRequest(userRequest: any) {
       console.log("Duplicate socket detected. New socket will be used.");
       io.to(pastSocketId).emit(
         "duplicate socket",
-        "New connection detected for the same user. Please close the current page"
+        "New connection detected for the same user. Please close the current page",
       );
 
       // Update socket ID upon potential reconnection
@@ -86,7 +86,7 @@ export async function handleUserRequest(userRequest: any) {
     const roomNumber = uuidv4();
     const question = await fetchRandomQuestion(difficulty, topic);
     console.log(
-      `Match found for ${userId} with ${existingMatch.userId} on topic ${topic}, difficulty ${difficulty}, roomNumber ${roomNumber}`
+      `Match found for ${userId} with ${existingMatch.userId} on topic ${topic}, difficulty ${difficulty}, roomNumber ${roomNumber}`,
     );
     // Match found, update both records to mark as isPending
     await prisma.matchRecord.update({
@@ -108,7 +108,7 @@ export async function handleUserRequest(userRequest: any) {
     });
 
     console.log(
-      `Matched ${userId} with ${existingMatch.userId} on topic ${topic}, difficulty ${difficulty}`
+      `Matched ${userId} with ${existingMatch.userId} on topic ${topic}, difficulty ${difficulty}`,
     );
 
     console.log("Question matched with", question.questionId);
@@ -164,7 +164,7 @@ export async function handleMatchingConfirm(userRequest: any) {
       });
       io.to(matchedRecord.socketId).emit(
         "other_declined",
-        "Match not confirmed. Please try again."
+        "Match not confirmed. Please try again.",
       );
     }
     if (userRecord !== null) {
@@ -174,7 +174,7 @@ export async function handleMatchingConfirm(userRequest: any) {
       });
       io.to(userRecord.socketId).emit(
         "other_declined",
-        "Match not confirmed. Please try again."
+        "Match not confirmed. Please try again.",
       );
     }
     return;
@@ -206,20 +206,20 @@ export async function handleMatchingConfirm(userRequest: any) {
 
     io.to(userRecord.socketId).emit(
       "matching_success",
-      "Match confirmed. Proceeding to collaboration service."
+      "Match confirmed. Proceeding to collaboration service.",
     );
     io.to(matchedRecord.socketId).emit(
       "matching_success",
-      "Match confirmed. Proceeding to collaboration service."
+      "Match confirmed. Proceeding to collaboration service.",
     );
     // TODO: add further logic here to proceed to collaboration service
   } else {
     console.log(
-      `User ${userId} confirmed match, waiting for other user to confirm`
+      `User ${userId} confirmed match, waiting for other user to confirm`,
     );
     io.to(matchedRecord.socketId).emit(
       "other_accepted",
-      "Other user confirmed match. Please confirm."
+      "Other user confirmed match. Please confirm.",
     );
   }
 }
@@ -243,11 +243,11 @@ export async function handleMatchingDecline(userRequest: any) {
       });
       io.to(matchedRecord.socketId).emit(
         "other_declined",
-        "Match not confirmed. Please try again."
+        "Match not confirmed. Please try again.",
       );
       io.to(matchedRecord.socketId).emit(
         "matching_fail",
-        "Match not confirmed. Please try again."
+        "Match not confirmed. Please try again.",
       );
     }
     if (userRecord !== null) {
@@ -257,11 +257,11 @@ export async function handleMatchingDecline(userRequest: any) {
       });
       io.to(userRecord.socketId).emit(
         "other_declined",
-        "Match not confirmed. Please try again."
+        "Match not confirmed. Please try again.",
       );
       io.to(userRecord.socketId).emit(
         "matching_fail",
-        "Match not confirmed. Please try again."
+        "Match not confirmed. Please try again.",
       );
     }
 
@@ -277,7 +277,7 @@ export async function handleMatchingDecline(userRequest: any) {
   console.log(`User ${userId} declined match`);
   io.to(matchedRecord.socketId).emit(
     "other_declined",
-    "Match not confirmed. Please try again."
+    "Match not confirmed. Please try again.",
   );
   await prisma.matchRecord.update({
     where: { recordId: matchedRecord.recordId },
@@ -286,11 +286,11 @@ export async function handleMatchingDecline(userRequest: any) {
 
   io.to(userRecord.socketId).emit(
     "matching_fail",
-    "Match not confirmed. Please try again."
+    "Match not confirmed. Please try again.",
   );
   io.to(matchedRecord.socketId).emit(
     "matching_fail",
-    "Match not confirmed. Please try again."
+    "Match not confirmed. Please try again.",
   );
 }
 
@@ -323,16 +323,16 @@ export async function handleConfirmTimeout(recordId: string) {
   if (result !== null) {
     if (result.isConfirmed === false) {
       console.log(
-        `Timeout: Match not confirmed for recordId ${recordId} with userId ${result.userId}`
+        `Timeout: Match not confirmed for recordId ${recordId} with userId ${result.userId}`,
       );
     } else {
       console.log(
-        `Timeout: Match confirmed for recordId ${recordId} with userId ${result.userId} but other user did not confirm`
+        `Timeout: Match confirmed for recordId ${recordId} with userId ${result.userId} but other user did not confirm`,
       );
     }
     io.to(result.socketId).emit(
       "matching_fail",
-      "Match not confirmed. Please try again."
+      "Match not confirmed. Please try again.",
     );
     await prisma.matchRecord.update({
       where: { recordId: recordIdInt },
