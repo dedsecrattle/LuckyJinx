@@ -1,44 +1,29 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useContext } from "react";
 import { Typography, Button } from "@mui/material";
 import "./Chatbox.scss";
-
-interface ChatMessage {
-  sender: string;
-  message: string;
-  timestamp: Date;
-}
+import { UserContext } from "../../contexts/UserContext";
+import { Socket } from "socket.io-client";
+import { ChatMessage } from "../../models/communication.model";
 
 interface ChatboxProps {
   onClose: () => void;
+  roomNumber: string | undefined;
+  communicationSocket: Socket | null;
+  appendToChatHistory: (message: ChatMessage) => void;
+  chatHistory: ChatMessage[];
 }
 
-const Chatbox: React.FC<ChatboxProps> = ({ onClose }) => {
-  const [chatHistory, setChatHistory] = useState<ChatMessage[]>([
-    {
-      sender: "Alice",
-      message: "Hi Bob, did you understand the question?",
-      timestamp: new Date("2023-10-15T10:00:00"),
-    },
-    {
-      sender: "Bob",
-      message: "Yes, I think so. We need to find two numbers that add up to the target.",
-      timestamp: new Date("2023-10-15T10:01:00"),
-    },
-    {
-      sender: "Alice",
-      message: "Exactly! Do you have any idea how to approach it?",
-      timestamp: new Date("2023-10-15T10:02:00"),
-    },
-    {
-      sender: "Bob",
-      message: "Maybe we can use a hash map to store the numbers.",
-      timestamp: new Date("2023-10-15T10:03:00"),
-    },
-  ]);
+const Chatbox: React.FC<ChatboxProps> = ({
+  onClose,
+  roomNumber,
+  communicationSocket,
+  appendToChatHistory,
+  chatHistory,
+}) => {
+  const { user } = useContext(UserContext);
 
   const [messageInput, setMessageInput] = useState<string>("");
   const chatEndRef = useRef<HTMLDivElement>(null);
-  const currentUser = "Bob";
 
   useEffect(() => {
     // Scroll down
@@ -50,12 +35,17 @@ const Chatbox: React.FC<ChatboxProps> = ({ onClose }) => {
   const sendMessage = () => {
     if (messageInput.trim() === "") return;
 
+    if (!roomNumber || !user) return;
+
+    communicationSocket?.emit("send-message", messageInput, user.id, user.username, roomNumber);
+
     const newMessage: ChatMessage = {
-      sender: currentUser,
+      senderName: user.username as string,
+      senderId: user.id as string,
       message: messageInput,
       timestamp: new Date(),
     };
-    setChatHistory([...chatHistory, newMessage]);
+    appendToChatHistory(newMessage);
     setMessageInput("");
   };
 
@@ -70,10 +60,10 @@ const Chatbox: React.FC<ChatboxProps> = ({ onClose }) => {
       <div className="chatbox-container">
         <div className="chat-messages">
           {chatHistory.map((chat, index) => {
-            const isOutgoing = chat.sender === currentUser;
+            const isOutgoing = chat.senderId === user?.id;
             return (
               <div key={index} className={`chat-message ${isOutgoing ? "chat-message-right" : "chat-message-left"}`}>
-                <div className="message-sender">{chat.sender}</div>
+                <div className="message-sender">{chat.senderName}</div>
                 <div className="message-content">{chat.message}</div>
                 <div className="message-timestamp">{chat.timestamp.toLocaleTimeString()}</div>
               </div>

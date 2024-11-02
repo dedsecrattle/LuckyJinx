@@ -71,8 +71,9 @@ async function main() {
       }
     });
 
-    socket.on("send-message", (message: string, rid: string) => {
-      io.to(rid).emit("receive-message", message);
+    socket.on("send-message", (message: string, senderId: string, senderName: string, rid: string) => {
+      console.log(senderId);
+      io.to(rid).emit("receive-message", message, senderId, senderName, Date.now());
     });
   });
 

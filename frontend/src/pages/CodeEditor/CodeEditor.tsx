@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useRef, useMemo, useContext } from "react";
 import MDEditor from "@uiw/react-md-editor";
 import { Button, Chip, Typography } from "@mui/material";
 import CodeMirror from "@uiw/react-codemirror";
@@ -6,12 +6,10 @@ import { okaidia } from "@uiw/codemirror-theme-okaidia";
 import { python } from "@codemirror/lang-python";
 import { cpp } from "@codemirror/lang-cpp";
 import { java } from "@codemirror/lang-java";
-import { javascript } from "@codemirror/lang-javascript";
 import Navbar from "../../components/Navbar/Navbar";
 import Footer from "../../components/Footer/Footer";
 import Chatbox from "../../components/Chatbox/Chatbox";
 import VideoCall from "../../components/VideoCall/VideoCall";
-import TestCases from "../../components/TestCases/TestCases";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import VideoCallIcon from "@mui/icons-material/VideoCall";
 import { autocompletion } from "@codemirror/autocomplete";
@@ -21,11 +19,12 @@ import "./CodeEditor.scss";
 import { useLocation, useParams } from "react-router-dom";
 import { Decoration, EditorView, WidgetType } from "@codemirror/view";
 import { RangeSetBuilder, Extension } from "@codemirror/state";
-import { throttle } from "lodash";
 import QuestionService from "../../services/question.service";
+import { UserContext } from "../../contexts/UserContext";
+import { ChatMessage } from "../../models/communication.model";
 
-const WEBSOCKET_URL = "http://localhost:3005" as string;
-console.log("URL: ", WEBSOCKET_URL);
+const COMMUNICATION_WEBSOCKET_URL = process.env.REACT_APP_COMMUNICATION_SERVICE_URL as string;
+const COLLABORATION_WEBSOCKET_URL = process.env.REACT_APP_COLLABORATION_SERVICE_URL as string;
 
 // Define Language Type
 type Language = "python" | "cpp" | "java";
@@ -98,19 +97,27 @@ interface TestCase {
 }
 
 const CodeEditor: React.FC = () => {
+  const { user } = useContext(UserContext);
   const location = useLocation();
+
   const { questionId } = location.state as { questionId: number };
+  const [questionData, setQuestionData] = useState<QuestionData | null>(null);
+
   const [code, setCode] = useState<string>("# Write your solution here\n");
   const [language, setLanguage] = useState<Language>("python");
+
+  const { roomNumber } = useParams();
+  const [joinedRoom, setJoinedRoom] = useState(false); // New state
   const [isVideoHovered, setIsVideoHovered] = useState(false);
   const [isChatboxExpanded, setIsChatboxExpanded] = useState(false);
   const [isVideoCallExpanded, setIsVideoCallExpanded] = useState(false);
-  const [joinedRoom, setJoinedRoom] = useState(false); // New state
-  const socketRef = useRef<Socket | null>(null);
-  const lastCursorPosition = useRef<number | null>(null);
-  const { roomNumber } = useParams();
-  const [questionData, setQuestionData] = useState<QuestionData | null>(null);
+  const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
+  const chatHistoryRef = useRef<ChatMessage[]>([]); // For updating state of chatHistory
 
+  const collaborationSocketRef = useRef<Socket | null>(null);
+  const [communicationSocket, setCommunicationSocket] = useState<Socket | null>(null);
+
+  const lastCursorPosition = useRef<number | null>(null);
   const [otherCursors, setOtherCursors] = useState<{ [sid: string]: { cursor_position: number; color: string } }>({});
 
   const languageExtensions: { [key in Language]: Extension[] } = {
@@ -154,7 +161,16 @@ const CodeEditor: React.FC = () => {
     fetchQuestionData();
   }, []);
 
+  const appendToChatHistory = (newMessage: ChatMessage) => {
+    setChatHistory([...chatHistoryRef.current, newMessage]);
+  };
+
   useEffect(() => {
+    chatHistoryRef.current = chatHistory;
+  }, [chatHistory]);
+
+  useEffect(() => {
+    // set up websockets
     if (!roomNumber) {
       console.error("No roomNumber provided.");
       return;
@@ -166,12 +182,13 @@ const CodeEditor: React.FC = () => {
       return;
     }
 
-    const socket = io(WEBSOCKET_URL, {
+    // Collaboration socket for code editing
+    const socket = io(COLLABORATION_WEBSOCKET_URL, {
       extraHeaders: {
         Authorization: `${token}`,
       },
     });
-    socketRef.current = socket;
+    collaborationSocketRef.current = socket;
 
     socket.on("connect", () => {
       console.log("Connected to socket.io server.");
@@ -244,11 +261,39 @@ const CodeEditor: React.FC = () => {
       console.error("Socket error:", error);
     });
 
+    // Communication socket for chat
+    if (!user) {
+      console.error("No user found.");
+      return;
+    }
+
+    const chatSocket = io(COMMUNICATION_WEBSOCKET_URL);
+    setCommunicationSocket(chatSocket);
+
+    chatSocket.on("connect", () => {
+      chatSocket.emit("join-room", user?.id as string, roomNumber);
+    });
+
+    chatSocket.on("receive-message", (message: string, senderId: string, senderName: string, timeStamp: number) => {
+      if (senderId === user.id) return;
+      const newMessage: ChatMessage = {
+        senderId: senderId,
+        senderName: senderName,
+        message: message,
+        timestamp: new Date(timeStamp),
+      };
+      appendToChatHistory(newMessage);
+    });
+
     // Cleanup on component unmount
     return () => {
       if (socket) {
         socket.disconnect();
-        console.log("Disconnected from socket.io server.");
+        console.log("Disconnected from collaboration websocket server.");
+      }
+      if (chatSocket) {
+        chatSocket.disconnect();
+        console.log("Disconnected from communication websocket server.");
       }
     };
   }, [roomNumber]);
@@ -269,7 +314,7 @@ const CodeEditor: React.FC = () => {
         setCode("# Write your solution here\n");
       }
       if (joinedRoom) {
-        socketRef.current?.emit("language_change", { language: newLanguage, room_id: roomNumber });
+        collaborationSocketRef.current?.emit("language_change", { language: newLanguage, room_id: roomNumber });
       }
     } else {
       console.warn(`Attempted to set unsupported language: ${newLanguage}`);
@@ -280,7 +325,7 @@ const CodeEditor: React.FC = () => {
     setCode(value);
     if (joinedRoom) {
       // Emit only if joined
-      socketRef.current?.emit("code_updated", { code: value });
+      collaborationSocketRef.current?.emit("code_updated", { code: value });
     }
   };
 
@@ -288,7 +333,7 @@ const CodeEditor: React.FC = () => {
     const cursorPosition = viewUpdate.state.selection.main.head;
     if (cursorPosition !== lastCursorPosition.current) {
       lastCursorPosition.current = cursorPosition;
-      socketRef.current?.emit("cursor_updated", { cursor_position: cursorPosition });
+      collaborationSocketRef.current?.emit("cursor_updated", { cursor_position: cursorPosition });
     }
   };
 
@@ -380,7 +425,15 @@ const CodeEditor: React.FC = () => {
         </div>
       )}
 
-      {isChatboxExpanded && <Chatbox onClose={() => setIsChatboxExpanded(false)} />}
+      {isChatboxExpanded && (
+        <Chatbox
+          onClose={() => setIsChatboxExpanded(false)}
+          roomNumber={roomNumber}
+          communicationSocket={communicationSocket}
+          appendToChatHistory={appendToChatHistory}
+          chatHistory={chatHistory}
+        />
+      )}
 
       {!isVideoCallExpanded && (
         <div className="video-call-icon" onClick={() => setIsVideoCallExpanded(true)}>
