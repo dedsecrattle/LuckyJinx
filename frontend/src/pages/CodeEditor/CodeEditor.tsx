@@ -189,6 +189,17 @@ const CodeEditor: React.FC = () => {
     socket.on("language_change", (newLanguage: string) => {
       if (["python", "cpp", "javascript", "java"].includes(newLanguage)) {
         setLanguage(newLanguage as Language);
+        if (newLanguage === "cpp") {
+          setCode(
+            "#include <iostream>\nusing namespace std;\n\nint main() {\n\t// Write your solution here\n\treturn 0;\n}",
+          );
+        } else if (newLanguage === "java") {
+          setCode(
+            "public class Main {\n\tpublic static void main(String[] args) {\n\t\t// Write your solution here\n\t}\n}",
+          );
+        } else {
+          setCode("# Write your solution here\n");
+        }
       } else {
         console.warn(`Unsupported language received: ${newLanguage}`);
       }
@@ -246,8 +257,18 @@ const CodeEditor: React.FC = () => {
     const newLanguage = e.target.value as Language;
     if (["python", "cpp", "javascript", "java"].includes(newLanguage)) {
       setLanguage(newLanguage);
+      if (newLanguage === "cpp") {
+        setCode(
+          "#include <iostream>\nusing namespace std;\n\nint main() {\n\t// Write your solution here\n\treturn 0;\n}",
+        );
+      } else if (newLanguage === "java") {
+        setCode(
+          "public class Main {\n\tpublic static void main(String[] args) {\n\t\t// Write your solution here\n\t}\n}",
+        );
+      } else {
+        setCode("# Write your solution here\n");
+      }
       if (joinedRoom) {
-        // Emit only if joined
         socketRef.current?.emit("language_change", { language: newLanguage, room_id: roomNumber });
       }
     } else {
@@ -333,7 +354,6 @@ const CodeEditor: React.FC = () => {
               <select className="language-select" onChange={handleLanguageChange} value={language}>
                 <option value="python">Python</option>
                 <option value="cpp">C++</option>
-                <option value="javascript">JavaScript</option>
                 <option value="java">Java</option>
               </select>
               <Button variant="contained" size="small" className="submit-button">
