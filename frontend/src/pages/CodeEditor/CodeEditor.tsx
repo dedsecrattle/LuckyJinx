@@ -100,13 +100,14 @@ interface TestCase {
 const CodeEditor: React.FC = () => {
   const location = useLocation();
   const { questionId } = location.state as { questionId: number };
-  const [code, setCode] = useState<string>("# Write your solution here\ndef twoSums(nums, target):\n");
+  const [code, setCode] = useState<string>("# Write your solution here\n");
   const [language, setLanguage] = useState<Language>("python");
   const [isVideoHovered, setIsVideoHovered] = useState(false);
   const [isChatboxExpanded, setIsChatboxExpanded] = useState(false);
   const [isVideoCallExpanded, setIsVideoCallExpanded] = useState(false);
   const [joinedRoom, setJoinedRoom] = useState(false); // New state
   const socketRef = useRef<Socket | null>(null);
+  const lastCursorPosition = useRef<number | null>(null);
   const { roomNumber } = useParams();
   const [questionData, setQuestionData] = useState<QuestionData | null>(null);
 
@@ -186,7 +187,6 @@ const CodeEditor: React.FC = () => {
     });
 
     socket.on("language_change", (newLanguage: string) => {
-      console.log("Received language_change:", newLanguage);
       if (["python", "cpp", "javascript", "java"].includes(newLanguage)) {
         setLanguage(newLanguage as Language);
       } else {
@@ -196,13 +196,11 @@ const CodeEditor: React.FC = () => {
 
     // Handle real-time code updates
     socket.on("code_updated", (newCode: string) => {
-      console.log("Received code_updated:", newCode);
       setCode(newCode);
     });
 
     // Handle cursor updates
     socket.on("cursor_updated", (userDetails: any) => {
-      console.log("Received cursor_updated:", userDetails);
       const { sid, cursor_position } = userDetails;
       if (sid === socket.id) return; // Ignore own cursor
 
@@ -265,18 +263,12 @@ const CodeEditor: React.FC = () => {
     }
   };
 
-  const throttledEmitCursor = useMemo(() => {
-    return throttle((position: number) => {
-      if (joinedRoom) {
-        // Ensure joined before emitting
-        socketRef.current?.emit("cursor_updated", { cursor_position: position });
-      }
-    }, 100); // Throttle to emit every 100ms
-  }, [joinedRoom]);
-
   const handleCursorChange = (viewUpdate: any) => {
     const cursorPosition = viewUpdate.state.selection.main.head;
-    throttledEmitCursor(cursorPosition);
+    if (cursorPosition !== lastCursorPosition.current) {
+      lastCursorPosition.current = cursorPosition;
+      socketRef.current?.emit("cursor_updated", { cursor_position: cursorPosition });
+    }
   };
 
   const cursorDecorationsExtension = useMemo(() => {
