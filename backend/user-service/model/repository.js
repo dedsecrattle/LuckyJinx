@@ -43,7 +43,7 @@ export async function updateUserById(
   email,
   password,
   avatar,
-  programmingLanguagePreference
+  programmingLanguagePreference,
 ) {
   return UserModel.findByIdAndUpdate(
     userId,
@@ -56,7 +56,7 @@ export async function updateUserById(
         programmingLanguagePreference,
       },
     },
-    { new: true } // return the updated user
+    { new: true }, // return the updated user
   );
 }
 
@@ -68,7 +68,7 @@ export async function updateUserPrivilegeById(userId, isAdmin) {
         isAdmin,
       },
     },
-    { new: true } // return the updated user
+    { new: true }, // return the updated user
   );
 }
 

@@ -8,17 +8,17 @@ services:
     build: ./backend/user-service
     ports:
       - "3001:3001"
-  
+
   code-execution-rabbitmq:
     image: rabbitmq:4.0-management
     ports:
       - "7000:5672"
-  
+
   code-execution-redis:
     image: redis:alpine
     ports:
       - "7001:6379"
-  
+
   code-execution-server:
     build: ./backend/code-execution-service/server
     ports:
@@ -26,7 +26,7 @@ services:
     depends_on:
       - code-execution-rabbitmq
       - code-execution-redis
-  
+
   code-execution-worker:
     build: ./backend/code-execution-service/worker
     pids_limit: 60
@@ -41,7 +41,7 @@ services:
         condition: any
         delay: 3s
         window: 5s
-  
+
   rabbitmq:
     image: dedsecrattle/rabbitmq-delayed-exchange
     ports:
@@ -57,7 +57,7 @@ services:
     build: ./backend/communication-service
     ports:
       - "3004:3004"
-      
+
   matching:
     build: ./backend/matching-service
     depends_on:
@@ -85,5 +85,4 @@ services:
       - matching
       - question
       - collaboration
-      - communication
       - rabbitmq

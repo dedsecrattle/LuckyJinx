@@ -11,7 +11,7 @@ app.use(express.json());
 app.use(
   cors({
     origin: "*",
-  })
+  }),
 );
 app.options("*", cors());
 
@@ -21,7 +21,7 @@ app.use((req, res, next) => {
 
   res.header(
     "Access-Control-Allow-Headers",
-    "Origin, X-Requested-With, Content-Type, Accept, Authorization"
+    "Origin, X-Requested-With, Content-Type, Accept, Authorization",
   );
 
   // Browsers usually send this before PUT or POST Requests

@@ -18,4 +18,8 @@ export interface Question {
   categories: Categories[];
   complexity: QuestionComplexity;
   link: string;
+  testCases: {
+    input: string;
+    output: string;
+  }[];
 }

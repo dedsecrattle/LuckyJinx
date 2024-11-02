@@ -32,7 +32,7 @@ const questionSchema = new Schema<IQuestion>({
       },
     ],
     required: true,
-  }
+  },
 });
 
 const Question = model<IQuestion>("Question", questionSchema);

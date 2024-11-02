@@ -24,9 +24,14 @@ export async function handleLogin(req, res) {
         process.env.JWT_SECRET,
         {
           expiresIn: "1d",
-        }
+        },
       );
-      return res.status(200).json({ message: "User logged in", data: { accessToken, ...formatUserResponse(user) } });
+      return res
+        .status(200)
+        .json({
+          message: "User logged in",
+          data: { accessToken, ...formatUserResponse(user) },
+        });
     } catch (err) {
       return res.status(500).json({ message: err.message });
     }
@@ -38,7 +43,9 @@ export async function handleLogin(req, res) {
 export async function handleVerifyToken(req, res) {
   try {
     const verifiedUser = req.user;
-    return res.status(200).json({ message: "Token verified", data: verifiedUser });
+    return res
+      .status(200)
+      .json({ message: "Token verified", data: verifiedUser });
   } catch (err) {
     return res.status(500).json({ message: err.message });
   }

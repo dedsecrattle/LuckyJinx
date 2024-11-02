@@ -7,13 +7,17 @@ export class Test {
 
   @IsString()
   lang: string;
-  
+
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => TestCase)
   customTests: TestCase[];
 
-  constructor(code: string, lang: string, customTests: { input: string, output: string }[]) {
+  constructor(
+    code: string,
+    lang: string,
+    customTests: { input: string; output: string }[],
+  ) {
     this.code = code;
     this.lang = lang;
     this.customTests = plainToInstance(TestCase, customTests);

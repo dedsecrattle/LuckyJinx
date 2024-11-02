@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import MDEditor from "@uiw/react-md-editor";
 import { Button, Chip, Typography } from "@mui/material";
-import CodeMirror, { EditorView } from "@uiw/react-codemirror";
+import CodeMirror from "@uiw/react-codemirror";
 import { okaidia } from "@uiw/codemirror-theme-okaidia";
 import { python } from "@codemirror/lang-python";
 import { cpp } from "@codemirror/lang-cpp";
@@ -18,17 +18,75 @@ import { autocompletion } from "@codemirror/autocomplete";
 import ChatIcon from "@mui/icons-material/Chat";
 import io, { Socket } from "socket.io-client";
 import "./CodeEditor.scss";
-import { useParams } from "react-router-dom";
+import { useLocation, useParams } from "react-router-dom";
+import { Decoration, EditorView, WidgetType } from "@codemirror/view";
+import { RangeSetBuilder, Extension } from "@codemirror/state";
+import { throttle } from "lodash";
+import QuestionService from "../../services/question.service";
 
-const WEBSOCKET_URL = process.env.REACT_APP_COLLABORATION_SERVICE_URL as string;
-console.log(WEBSOCKET_URL);
+const WEBSOCKET_URL = "http://localhost:3005" as string;
+console.log("URL: ", WEBSOCKET_URL);
+
+// Define Language Type
+type Language = "python" | "cpp" | "java";
+
+// Define the CursorWidget
+class CursorWidget extends WidgetType {
+  color: string;
+
+  constructor(color: string) {
+    super();
+    this.color = color;
+  }
+
+  toDOM() {
+    const cursor = document.createElement("span");
+    cursor.style.borderLeft = `2px solid ${this.color}`;
+    cursor.style.marginLeft = "-1px";
+    cursor.style.height = "1em";
+    cursor.className = "remote-cursor";
+    return cursor;
+  }
+
+  ignoreEvent() {
+    return true;
+  }
+}
+
+// Function to create decorations
+const createCursorDecorations = (otherCursors: {
+  [sid: string]: { cursor_position: number; color: string };
+}): Extension => {
+  return EditorView.decorations.of((view) => {
+    const builder = new RangeSetBuilder<Decoration>();
+    for (const [sid, cursor] of Object.entries(otherCursors)) {
+      const { cursor_position, color } = cursor;
+      if (typeof cursor_position === "number") {
+        // Ensure cursor_position is a number
+        const decoration = Decoration.widget({
+          widget: new CursorWidget(color),
+          side: 0,
+        });
+        builder.add(cursor_position, cursor_position, decoration);
+      } else {
+        console.warn(`Invalid cursor_position for sid ${sid}:`, cursor_position);
+      }
+    }
+    return builder.finish();
+  });
+};
 
 interface QuestionData {
+  questionId: Number;
   title: string;
-  difficulty: string;
-  topic: string;
-  url: string;
   description: string;
+  categories: string[];
+  complexity: "Easy" | "Medium" | "Hard";
+  link: string;
+  testCases: {
+    input: string;
+    output: string;
+  }[];
 }
 
 interface TestCase {
@@ -40,41 +98,74 @@ interface TestCase {
 }
 
 const CodeEditor: React.FC = () => {
-  const [code, setCode] = useState<string>("# Write your solution here\ndef twoSums(nums, target):\n");
-  const [language, setLanguage] = useState<string>("python");
+  const location = useLocation();
+  const { questionId } = location.state as { questionId: number };
+  const [code, setCode] = useState<string>("# Write your solution here\n");
+  const [language, setLanguage] = useState<Language>("python");
   const [isVideoHovered, setIsVideoHovered] = useState(false);
   const [isChatboxExpanded, setIsChatboxExpanded] = useState(false);
   const [isVideoCallExpanded, setIsVideoCallExpanded] = useState(false);
+  const [joinedRoom, setJoinedRoom] = useState(false); // New state
   const socketRef = useRef<Socket | null>(null);
-  const editorRef: React.MutableRefObject<EditorView | null> = useRef(null);
+  const lastCursorPosition = useRef<number | null>(null);
   const { roomNumber } = useParams();
+  const [questionData, setQuestionData] = useState<QuestionData | null>(null);
 
-  const languageExtensions = {
+  const [otherCursors, setOtherCursors] = useState<{ [sid: string]: { cursor_position: number; color: string } }>({});
+
+  const languageExtensions: { [key in Language]: Extension[] } = {
     python: [python(), autocompletion()],
     cpp: [cpp(), autocompletion()],
-    javascript: [javascript(), autocompletion()],
     java: [java(), autocompletion()],
   };
 
+  const userColors = [
+    "#FF5733", // Red
+    "#33FF57", // Green
+    "#3357FF", // Blue
+    "#F333FF", // Pink
+    "#FF33F3", // Magenta
+    "#33FFF3", // Cyan
+    "#FFA533", // Orange
+    "#A533FF", // Purple
+    "#33A5FF", // Light Blue
+    "#33FF99", // Light Green
+  ];
+
+  const getColorForUser = (sid: string): string => {
+    let hash = 0;
+    for (let i = 0; i < sid.length; i++) {
+      hash = sid.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const index = Math.abs(hash) % userColors.length;
+    return userColors[index];
+  };
+
   useEffect(() => {
-    if (editorRef.current) return; // Prevent re-assignment if already set
-
-    const editor = new EditorView({
-      doc: code,
-      extensions: [languageExtensions[language as "python" | "java" | "cpp"]],
-      parent: document.querySelector(".code-editor")!,
-    });
-
-    editorRef.current = editor;
-
-    return () => {
-      editor.destroy();
+    const fetchQuestionData = async () => {
+      try {
+        const response = await QuestionService.getQuestion(questionId);
+        setQuestionData(response);
+      } catch (error) {
+        console.error("Failed to fetch question data:", error);
+      }
     };
+
+    fetchQuestionData();
   }, []);
 
   useEffect(() => {
-    if (!roomNumber) return;
+    if (!roomNumber) {
+      console.error("No roomNumber provided.");
+      return;
+    }
+
     const token = localStorage.getItem("jwt-token");
+    if (!token) {
+      console.error("No JWT token found in localStorage.");
+      return;
+    }
+
     const socket = io(WEBSOCKET_URL, {
       extraHeaders: {
         Authorization: `${token}`,
@@ -83,65 +174,127 @@ const CodeEditor: React.FC = () => {
     socketRef.current = socket;
 
     socket.on("connect", () => {
+      console.log("Connected to socket.io server.");
       socket.emit("join_request", { room_id: roomNumber });
     });
 
     socket.on("join_request", (data: any) => {
+      console.log("Received join_request data:", data);
       if (data.code) {
         setCode(data.code);
       }
+      setJoinedRoom(true); // User has successfully joined a room
     });
 
     socket.on("language_change", (newLanguage: string) => {
-      setLanguage(newLanguage);
+      if (["python", "cpp", "javascript", "java"].includes(newLanguage)) {
+        setLanguage(newLanguage as Language);
+        if (newLanguage === "cpp") {
+          setCode(
+            "#include <iostream>\nusing namespace std;\n\nint main() {\n\t// Write your solution here\n\treturn 0;\n}",
+          );
+        } else if (newLanguage === "java") {
+          setCode(
+            "public class Main {\n\tpublic static void main(String[] args) {\n\t\t// Write your solution here\n\t}\n}",
+          );
+        } else {
+          setCode("# Write your solution here\n");
+        }
+      } else {
+        console.warn(`Unsupported language received: ${newLanguage}`);
+      }
     });
 
     // Handle real-time code updates
     socket.on("code_updated", (newCode: string) => {
       setCode(newCode);
-      if (editorRef.current) {
-        const editor = editorRef.current;
-        editor.dispatch({
-          changes: { from: 0, to: editor.state.doc.length, insert: newCode },
-        });
-      }
     });
 
     // Handle cursor updates
-    socket.on("cursor_updated", (data: any) => {
-      // Implement cursor position indicator for other users here
+    socket.on("cursor_updated", (userDetails: any) => {
+      const { sid, cursor_position } = userDetails;
+      if (sid === socket.id) return; // Ignore own cursor
+
+      if (typeof cursor_position !== "number") {
+        console.error(`Invalid cursor_position from sid ${sid}:`, cursor_position);
+        return;
+      }
+
+      setOtherCursors((prev) => ({
+        ...prev,
+        [sid]: {
+          cursor_position,
+          color: getColorForUser(sid),
+        },
+      }));
+    });
+
+    // Handle user disconnection to remove their cursor
+    socket.on("user_disconnected", (sid: string) => {
+      console.log(`User disconnected: ${sid}`);
+      setOtherCursors((prev) => {
+        const newCursors = { ...prev };
+        delete newCursors[sid];
+        return newCursors;
+      });
+    });
+
+    // Handle socket errors
+    socket.on("error", (error: any) => {
+      console.error("Socket error:", error);
     });
 
     // Cleanup on component unmount
     return () => {
-      socket.disconnect();
+      if (socket) {
+        socket.disconnect();
+        console.log("Disconnected from socket.io server.");
+      }
     };
   }, [roomNumber]);
 
   const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newLanguage = e.target.value;
-    setLanguage(newLanguage);
-    socketRef.current?.emit("language_change", { language: newLanguage, room_id: roomNumber });
+    const newLanguage = e.target.value as Language;
+    if (["python", "cpp", "javascript", "java"].includes(newLanguage)) {
+      setLanguage(newLanguage);
+      if (newLanguage === "cpp") {
+        setCode(
+          "#include <iostream>\nusing namespace std;\n\nint main() {\n\t// Write your solution here\n\treturn 0;\n}",
+        );
+      } else if (newLanguage === "java") {
+        setCode(
+          "public class Main {\n\tpublic static void main(String[] args) {\n\t\t// Write your solution here\n\t}\n}",
+        );
+      } else {
+        setCode("# Write your solution here\n");
+      }
+      if (joinedRoom) {
+        socketRef.current?.emit("language_change", { language: newLanguage, room_id: roomNumber });
+      }
+    } else {
+      console.warn(`Attempted to set unsupported language: ${newLanguage}`);
+    }
   };
 
   const handleCodeChange = (value: string) => {
     setCode(value);
-    socketRef.current?.emit("code_updated", { code: value });
+    if (joinedRoom) {
+      // Emit only if joined
+      socketRef.current?.emit("code_updated", { code: value });
+    }
   };
 
   const handleCursorChange = (viewUpdate: any) => {
     const cursorPosition = viewUpdate.state.selection.main.head;
-    // socketRef.current?.emit("cursor_updated", { cursor_position: cursorPosition });
+    if (cursorPosition !== lastCursorPosition.current) {
+      lastCursorPosition.current = cursorPosition;
+      socketRef.current?.emit("cursor_updated", { cursor_position: cursorPosition });
+    }
   };
 
-  const questionData: QuestionData = {
-    title: "Two Sum",
-    difficulty: "Easy",
-    topic: "Array",
-    url: "https://leetcode.com/problems/two-sum/description/",
-    description:
-      "### Given an array of integers `nums` and an integer `target`, return indices of the two numbers such that they add up to `target`.",
-  };
+  const cursorDecorationsExtension = useMemo(() => {
+    return createCursorDecorations(otherCursors);
+  }, [otherCursors]);
 
   const defaultTestCases: TestCase[] = [
     { number: 1, input: "nums = [2,7,11,15], target = 9", expectedOutput: "[0,1]", actualOutput: "[0,1]" },
@@ -175,17 +328,17 @@ const CodeEditor: React.FC = () => {
       <div className="container">
         <div className="top-section">
           <Typography variant="h3" className="question-title">
-            {questionData.title} @ {roomNumber}
+            {questionData?.title} @ {roomNumber}
           </Typography>
 
           <div className="details">
-            <Chip label={`Difficulty: ${questionData.difficulty}`} className="detail-chip light-grey-chip" />
-            <Chip label={`Topic: ${questionData.topic}`} className="detail-chip light-grey-chip" />
+            <Chip label={`Difficulty: ${questionData?.complexity}`} className="detail-chip light-grey-chip" />
+            <Chip label={`Topic: ${questionData?.categories}`} className="detail-chip light-grey-chip" />
             <Chip
-              label={`URL: ${questionData.url}`}
+              label={`URL: ${questionData?.link}`}
               className="detail-chip light-grey-chip"
               clickable
-              onClick={() => window.open(questionData.url, "_blank")}
+              onClick={() => window.open(questionData?.link, "_blank")}
               icon={<OpenInNewIcon style={{ color: "#caff33" }} />}
             />
           </div>
@@ -193,7 +346,7 @@ const CodeEditor: React.FC = () => {
 
         <div className="editors">
           <div className="left-side">
-            <MDEditor.Markdown source={questionData.description} className="md-editor" />
+            <MDEditor.Markdown source={questionData?.description} className="md-editor" />
           </div>
 
           <div className="right-side">
@@ -201,7 +354,6 @@ const CodeEditor: React.FC = () => {
               <select className="language-select" onChange={handleLanguageChange} value={language}>
                 <option value="python">Python</option>
                 <option value="cpp">C++</option>
-                <option value="javascript">JavaScript</option>
                 <option value="java">Java</option>
               </select>
               <Button variant="contained" size="small" className="submit-button">
@@ -211,11 +363,10 @@ const CodeEditor: React.FC = () => {
             <CodeMirror
               value={code}
               height="500px"
-              style={{ fontSize: "1rem" }}
-              extensions={[languageExtensions[language as "python" | "java" | "cpp"]]}
+              style={{ fontSize: "18px" }}
+              extensions={[...(languageExtensions[language] || []), cursorDecorationsExtension]}
               onChange={handleCodeChange}
               onUpdate={(viewUpdate) => handleCursorChange(viewUpdate)}
-              className="code-editor"
               theme={okaidia}
             />
           </div>
