@@ -29,6 +29,10 @@ interface SessionContextType {
   otherUserAccepted: boolean;
   otherUserDeclined: boolean;
 
+  // after start of coding session
+  roomNumber: string;
+  questionId: number;
+
   setSocket: (socket: Socket) => void;
   setSessionState: (state: SessionState) => void;
   setTopic: (topic: Categories) => void;
@@ -42,6 +46,9 @@ interface SessionContextType {
   setUserDeclined: (declined: boolean) => void;
   setOtherUserAccepted: (accepted: boolean) => void;
   setOtherUserDeclined: (declined: boolean) => void;
+
+  setRoomNumber: (roomNumber: string) => void;
+  setQuestionId: (questionId: number) => void;
 
   clearSession: () => void;
 }
@@ -60,6 +67,8 @@ export const SessionContext = createContext<SessionContextType>({
   userDeclined: false,
   otherUserAccepted: false,
   otherUserDeclined: false,
+  roomNumber: "",
+  questionId: 0,
   setSocket: () => {},
   setSessionState: () => {},
   setTopic: () => {},
@@ -74,6 +83,8 @@ export const SessionContext = createContext<SessionContextType>({
   setUserDeclined: () => {},
   setOtherUserAccepted: () => {},
   setOtherUserDeclined: () => {},
+  setRoomNumber: () => {},
+  setQuestionId: () => {},
 });
 
 export const SessionContextProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -90,6 +101,8 @@ export const SessionContextProvider: React.FC<{ children: React.ReactNode }> = (
   const [userDeclined, setUserDeclined] = useState<boolean>(false);
   const [otherUserAccepted, setOtherUserAccepted] = useState<boolean>(false);
   const [otherUserDeclined, setOtherUserDeclined] = useState<boolean>(false);
+  const [roomNumber, setRoomNumber] = useState<string>("");
+  const [questionId, setQuestionId] = useState<number>(0);
 
   // const clearMatchCount = () => {
   //   setMatchCount(0);
@@ -133,6 +146,8 @@ export const SessionContextProvider: React.FC<{ children: React.ReactNode }> = (
     setUserDeclined(false);
     setOtherUserAccepted(false);
     setOtherUserDeclined(false);
+    setRoomNumber("");
+    setQuestionId(0);
   };
 
   useEffect(() => {
@@ -161,6 +176,8 @@ export const SessionContextProvider: React.FC<{ children: React.ReactNode }> = (
     userDeclined,
     otherUserAccepted,
     otherUserDeclined,
+    roomNumber,
+    questionId,
     setSocket,
     setSessionState,
     setTopic,
@@ -175,6 +192,8 @@ export const SessionContextProvider: React.FC<{ children: React.ReactNode }> = (
     setOtherUserAccepted,
     setOtherUserDeclined,
     clearSession,
+    setRoomNumber,
+    setQuestionId,
   };
 
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;

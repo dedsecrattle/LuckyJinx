@@ -93,9 +93,6 @@ const MatchingResult = (props: { startMatchingCallBack: any }): ReactElement => 
   return sessionState === SessionState.SUCCESS ? (
     <Typography variant="h5" textAlign="center">
       Successfully matched {user?.username} with {otherUserProfile?.username}.
-      <br />
-      <br />
-      Collaboration service is under construction. Check back in a future milestone!
     </Typography>
   ) : (
     <Box>
