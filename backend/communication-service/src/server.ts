@@ -71,9 +71,18 @@ async function main() {
       }
     });
 
-    socket.on("send-message", (message: string, senderId: string, senderName: string, rid: string) => {
-      io.to(rid).emit("receive-message", message, senderId, senderName, Date.now());
-    });
+    socket.on(
+      "send-message",
+      (message: string, senderId: string, senderName: string, rid: string) => {
+        io.to(rid).emit(
+          "receive-message",
+          message,
+          senderId,
+          senderName,
+          Date.now(),
+        );
+      },
+    );
   });
 
   server.listen(PORT, () => {
