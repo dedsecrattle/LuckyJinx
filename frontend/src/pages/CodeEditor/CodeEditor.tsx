@@ -16,13 +16,14 @@ import { autocompletion } from "@codemirror/autocomplete";
 import ChatIcon from "@mui/icons-material/Chat";
 import io, { Socket } from "socket.io-client";
 import "./CodeEditor.scss";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { Decoration, EditorView, WidgetType } from "@codemirror/view";
 import { RangeSetBuilder, Extension } from "@codemirror/state";
 import QuestionService from "../../services/question.service";
 import { UserContext } from "../../contexts/UserContext";
 import { ChatMessage } from "../../models/communication.model";
-import { SessionContext } from "../../contexts/SessionContext";
+import { SessionContext, SessionState } from "../../contexts/SessionContext";
+import { useConfirmationDialog } from "../../contexts/ConfirmationDialogContext";
 
 const COMMUNICATION_WEBSOCKET_URL = process.env.REACT_APP_COMMUNICATION_SERVICE_URL as string;
 const COLLABORATION_WEBSOCKET_URL = process.env.REACT_APP_COLLABORATION_SERVICE_URL as string;
@@ -99,7 +100,10 @@ interface TestCase {
 
 const CodeEditor: React.FC = () => {
   const { user } = useContext(UserContext);
-  const { questionId } = useContext(SessionContext);
+  const { sessionState, questionId, clearSession } = useContext(SessionContext);
+  const { setConfirmationDialogTitle, setConfirmationDialogContent, setConfirmationCallBack, openConfirmationDialog } =
+    useConfirmationDialog();
+  const navigate = useNavigate();
 
   const [questionData, setQuestionData] = useState<QuestionData | null>(null);
 
@@ -115,7 +119,7 @@ const CodeEditor: React.FC = () => {
   const chatHistoryRef = useRef<ChatMessage[]>([]); // For updating state of chatHistory
 
   const collaborationSocketRef = useRef<Socket | null>(null);
-  const [communicationSocket, setCommunicationSocket] = useState<Socket | null>(null);
+  const communicationSocketRef = useRef<Socket | null>(null);
 
   const lastCursorPosition = useRef<number | null>(null);
   const [otherCursors, setOtherCursors] = useState<{ [sid: string]: { cursor_position: number; color: string } }>({});
@@ -149,6 +153,11 @@ const CodeEditor: React.FC = () => {
   };
 
   useEffect(() => {
+    if (sessionState !== SessionState.SUCCESS) {
+      navigate("/");
+      clearSession();
+      return;
+    }
     const fetchQuestionData = async () => {
       try {
         const response = await QuestionService.getQuestion(questionId);
@@ -168,6 +177,28 @@ const CodeEditor: React.FC = () => {
   useEffect(() => {
     chatHistoryRef.current = chatHistory;
   }, [chatHistory]);
+
+  const clearSockets = () => {
+    if (collaborationSocketRef.current) {
+      collaborationSocketRef.current.disconnect();
+      console.log("Disconnected from collaboration websocket server.");
+    }
+    if (communicationSocketRef.current) {
+      communicationSocketRef.current.disconnect();
+      console.log("Disconnected from communication websocket server.");
+    }
+  };
+
+  const chooseLeaveSession = () => {
+    setConfirmationDialogTitle("Leave Session");
+    setConfirmationDialogContent("Are you sure you want to leave the session?");
+    setConfirmationCallBack(() => () => {
+      clearSockets();
+      clearSession();
+      navigate("/");
+    });
+    openConfirmationDialog();
+  };
 
   useEffect(() => {
     // set up websockets
@@ -261,6 +292,21 @@ const CodeEditor: React.FC = () => {
       console.error("Socket error:", error);
     });
 
+    socket.on("user_left", (uid: string) => {
+      if (user && uid !== user.id) {
+        setConfirmationDialogTitle("Partner Disconnected");
+        setConfirmationDialogContent(
+          "Your partner has left the coding session. Would you like to end the session and return to home page?",
+        );
+        setConfirmationCallBack(() => () => {
+          clearSockets();
+          clearSession();
+          navigate("/");
+        });
+        openConfirmationDialog();
+      }
+    });
+
     // Communication socket for chat
     if (!user) {
       console.error("No user found.");
@@ -268,7 +314,7 @@ const CodeEditor: React.FC = () => {
     }
 
     const chatSocket = io(COMMUNICATION_WEBSOCKET_URL);
-    setCommunicationSocket(chatSocket);
+    communicationSocketRef.current = chatSocket;
 
     chatSocket.on("connect", () => {
       chatSocket.emit("join-room", user?.id as string, roomNumber);
@@ -287,14 +333,7 @@ const CodeEditor: React.FC = () => {
 
     // Cleanup on component unmount
     return () => {
-      if (socket) {
-        socket.disconnect();
-        console.log("Disconnected from collaboration websocket server.");
-      }
-      if (chatSocket) {
-        chatSocket.disconnect();
-        console.log("Disconnected from communication websocket server.");
-      }
+      clearSockets();
     };
   }, [roomNumber]);
 
@@ -417,6 +456,11 @@ const CodeEditor: React.FC = () => {
           </div>
         </div>
         {/* <TestCases defaultTestCases={defaultTestCases} userTestCases={userTestCases} addTestCase={addTestCase} /> */}
+        <div className="buttons">
+          <Button variant="contained" color="error" className="buttons-leave" onClick={chooseLeaveSession}>
+            Leave Session
+          </Button>
+        </div>
       </div>
 
       {!isChatboxExpanded && (
@@ -429,7 +473,7 @@ const CodeEditor: React.FC = () => {
         <Chatbox
           onClose={() => setIsChatboxExpanded(false)}
           roomNumber={roomNumber}
-          communicationSocket={communicationSocket}
+          communicationSocketRef={communicationSocketRef}
           appendToChatHistory={appendToChatHistory}
           chatHistory={chatHistory}
         />

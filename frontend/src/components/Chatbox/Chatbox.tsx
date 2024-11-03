@@ -8,7 +8,7 @@ import { ChatMessage } from "../../models/communication.model";
 interface ChatboxProps {
   onClose: () => void;
   roomNumber: string | undefined;
-  communicationSocket: Socket | null;
+  communicationSocketRef: React.MutableRefObject<Socket | null>;
   appendToChatHistory: (message: ChatMessage) => void;
   chatHistory: ChatMessage[];
 }
@@ -16,7 +16,7 @@ interface ChatboxProps {
 const Chatbox: React.FC<ChatboxProps> = ({
   onClose,
   roomNumber,
-  communicationSocket,
+  communicationSocketRef,
   appendToChatHistory,
   chatHistory,
 }) => {
@@ -37,7 +37,7 @@ const Chatbox: React.FC<ChatboxProps> = ({
 
     if (!roomNumber || !user) return;
 
-    communicationSocket?.emit("send-message", messageInput, user.id, user.username, roomNumber);
+    communicationSocketRef.current?.emit("send-message", messageInput, user.id, user.username, roomNumber);
 
     const newMessage: ChatMessage = {
       senderName: user.username as string,
