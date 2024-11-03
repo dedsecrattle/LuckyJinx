@@ -485,7 +485,13 @@ const CodeEditor: React.FC = () => {
         </div>
       )}
 
-      {isVideoCallExpanded && <VideoCall onClose={() => setIsVideoCallExpanded(false)} />}
+      {isVideoCallExpanded && (
+        <VideoCall
+          onClose={() => setIsVideoCallExpanded(false)}
+          roomId={roomNumber}
+          communicationSocketRef={communicationSocketRef}
+        />
+      )}
 
       <Footer />
     </div>

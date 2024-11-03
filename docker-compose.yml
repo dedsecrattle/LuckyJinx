@@ -57,6 +57,7 @@ services:
     build: ./backend/communication-service
     ports:
       - "3004:3004"
+      - "9000:9000"
 
   matching:
     build: ./backend/matching-service
