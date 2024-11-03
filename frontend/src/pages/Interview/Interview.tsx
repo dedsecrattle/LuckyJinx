@@ -21,6 +21,7 @@ const Interview = (): ReactElement => {
     sessionState,
     userAccepted,
     otherUserAccepted,
+    roomNumber,
     setSocket,
     setSessionState,
     setTopic,
@@ -33,14 +34,12 @@ const Interview = (): ReactElement => {
     setUserDeclined,
     setOtherUserAccepted,
     setOtherUserDeclined,
+    setRoomNumber,
+    setQuestionId,
   } = useContext(SessionContext);
   const { setMainDialogTitle, setMainDialogContent, openMainDialog } = useMainDialog();
 
   const socket = io(WEBSOCKET_URL, { autoConnect: false });
-  const [selectedTopic, setSelectedTopic] = useState<Categories | null>(null);
-  const [selectedDifficulty, setSelectedDifficulty] = useState<QuestionComplexity | null>(null);
-  const [roomNumber, setRoomNumber] = useState<string | null>(null);
-  const [questionId, setQuestionId] = useState<string | null>(null);
 
   socket.on("matched", (data: any) => {
     console.log("Matched with: ", data.matchedWith);
@@ -89,7 +88,6 @@ const Interview = (): ReactElement => {
     }
     setTimeout(() => {
       setSessionState(SessionState.SUCCESS);
-      console.log("Navigating to roomNumber: ", roomNumber);
     }, 1000);
   });
 
@@ -132,13 +130,9 @@ const Interview = (): ReactElement => {
   useEffect(() => {
     if (sessionState === SessionState.SUCCESS && roomNumber) {
       console.log("Navigating to roomNumber: ", roomNumber);
-      navigate(`/code-editor/${roomNumber}`, {
-        state: { questionId: questionId },
-      });
-    } else if (sessionState === SessionState.FAIL || sessionState === SessionState.TIMEOUT) {
-      clearSession();
+      navigate(`/code-editor/${roomNumber}`);
     }
-  }, [sessionState, roomNumber, navigate, selectedTopic, selectedDifficulty]);
+  }, [sessionState]);
 
   const startMatching = (topic: Categories, difficulty: QuestionComplexity) => {
     // restart

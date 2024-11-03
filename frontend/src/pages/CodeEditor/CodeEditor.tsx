@@ -16,12 +16,13 @@ import { autocompletion } from "@codemirror/autocomplete";
 import ChatIcon from "@mui/icons-material/Chat";
 import io, { Socket } from "socket.io-client";
 import "./CodeEditor.scss";
-import { useLocation, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { Decoration, EditorView, WidgetType } from "@codemirror/view";
 import { RangeSetBuilder, Extension } from "@codemirror/state";
 import QuestionService from "../../services/question.service";
 import { UserContext } from "../../contexts/UserContext";
 import { ChatMessage } from "../../models/communication.model";
+import { SessionContext } from "../../contexts/SessionContext";
 
 const COMMUNICATION_WEBSOCKET_URL = process.env.REACT_APP_COMMUNICATION_SERVICE_URL as string;
 const COLLABORATION_WEBSOCKET_URL = process.env.REACT_APP_COLLABORATION_SERVICE_URL as string;
@@ -98,9 +99,8 @@ interface TestCase {
 
 const CodeEditor: React.FC = () => {
   const { user } = useContext(UserContext);
-  const location = useLocation();
+  const { questionId } = useContext(SessionContext);
 
-  const { questionId } = location.state as { questionId: number };
   const [questionData, setQuestionData] = useState<QuestionData | null>(null);
 
   const [code, setCode] = useState<string>("# Write your solution here\n");
@@ -373,7 +373,7 @@ const CodeEditor: React.FC = () => {
       <div className="container">
         <div className="top-section">
           <Typography variant="h3" className="question-title">
-            {questionData?.title} @ {roomNumber}
+            {questionData?.title}
           </Typography>
 
           <div className="details">
