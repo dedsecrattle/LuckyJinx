@@ -85,9 +85,19 @@ export async function handleUserRequest(userRequest: any) {
   if (existingMatch !== null) {
     const roomNumber = uuidv4();
     const question = await fetchRandomQuestion(difficulty, topic);
-    console.log(
-      `Match found for ${userId} with ${existingMatch.userId} on topic ${topic}, difficulty ${difficulty}, roomNumber ${roomNumber}`
-    );
+
+    if (!question) {
+      io.to(socketId).emit("question_error", {
+        message: "No Question found for the selected topic and difficulty",
+      });
+      io.to(existingMatch.socketId).emit("question_error", {
+        message: "No Question found for the selected topic and difficulty",
+      });
+      await prisma.matchRecord.delete({
+        where: { recordId: existingMatch.recordId },
+      });
+      return;
+    }
     // Match found, update both records to mark as isPending
     await prisma.matchRecord.update({
       where: { recordId: existingMatch.recordId },
@@ -103,26 +113,20 @@ export async function handleUserRequest(userRequest: any) {
         matchedUserId: existingMatch.userId,
         isPending: true,
         roomNumber,
-        questionId: question.questionId,
+        questionId: question?.questionId as number,
       },
     });
-
-    console.log(
-      `Matched ${userId} with ${existingMatch.userId} on topic ${topic}, difficulty ${difficulty}`
-    );
-
-    console.log("Question matched with", question.questionId);
 
     // Update both clients about the successful match
     io.to(socketId).emit("matched", {
       matchedWith: existingMatch.userId,
       roomNumber,
-      questionId: question.questionId,
+      questionId: question?.questionId,
     });
     io.to(existingMatch.socketId).emit("matched", {
       matchedWith: userId,
       roomNumber,
-      questionId: question.questionId,
+      questionId: question?.questionId,
     });
 
     // Add confirm timeout messages

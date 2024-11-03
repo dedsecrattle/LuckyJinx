@@ -12,7 +12,7 @@ services:
   code-execution-rabbitmq:
     image: rabbitmq:4.0-management
     ports:
-      - "7000:5672"
+      - "7004:5672"
 
   code-execution-redis:
     image: redis:alpine
