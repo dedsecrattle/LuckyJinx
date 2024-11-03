@@ -379,6 +379,10 @@ const CodeEditor: React.FC = () => {
     }
   };
 
+  const handleHangUp = () => {
+    setIsVideoCallExpanded(false);
+  };
+
   const cursorDecorationsExtension = useMemo(() => {
     return createCursorDecorations(otherCursors);
   }, [otherCursors]);
@@ -490,7 +494,13 @@ const CodeEditor: React.FC = () => {
         </div>
       )}
 
-      {isVideoCallExpanded && <VideoCall onClose={() => setIsVideoCallExpanded(false)} />}
+      {isVideoCallExpanded && (
+        <VideoCall
+          onClose={handleHangUp}
+          communicationSocketRef={communicationSocketRef}
+          roomNumber={roomNumber || ""}
+        />
+      )}
 
       {/* Floating AI Hint Button */}
       {!isHintBoxExpanded && (
