@@ -71,13 +71,6 @@ async function main() {
       }
     });
 
-    socket.on("open-peer", async (uid: string) => {
-      console.log(`User ${uid} opened peer connection`);
-      if (roomId) {
-        socket.broadcast.to(roomId).emit("user-peer-opened", uid);
-      }
-    });
-
     socket.on("send-message", (message: string, senderId: string, senderName: string, rid: string) => {
       io.to(rid).emit("receive-message", message, senderId, senderName, Date.now());
     });

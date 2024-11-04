@@ -102,7 +102,7 @@ interface TestCase {
 
 const CodeEditor: React.FC = () => {
   const { user } = useContext(UserContext);
-  const { sessionState, questionId, clearSession, otherUserId } = useContext(SessionContext);
+  const { sessionState, questionId, clearSession, otherUserId, otherUserProfile } = useContext(SessionContext);
   const { setConfirmationDialogTitle, setConfirmationDialogContent, setConfirmationCallBack, openConfirmationDialog } =
     useConfirmationDialog();
   const navigate = useNavigate();
@@ -114,20 +114,27 @@ const CodeEditor: React.FC = () => {
 
   const { roomNumber } = useParams();
   const [joinedRoom, setJoinedRoom] = useState(false); // New state
-  const [isVideoHovered, setIsVideoHovered] = useState(false);
   const [isChatboxExpanded, setIsChatboxExpanded] = useState(false);
   const [isVideoCallExpanded, setIsVideoCallExpanded] = useState(false);
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
   const chatHistoryRef = useRef<ChatMessage[]>([]); // For updating state of chatHistory
 
-  const myVideo = useRef<HTMLVideoElement>(null);
-  const remoteVideo = useRef<HTMLVideoElement>(null);
   const myStream = useRef<MediaStream | null>(null);
+
+  const remoteVideoRef = useRef<HTMLVideoElement>(null);
+  // To keep the video playing in the collapsed video call window, necessary to create a duplicate ref
+  // Cannot use the same ref for both elements, because ref is recreated in the DOM
+  const collapsedRemoteVideoRef = useRef<HTMLVideoElement>(null);
+
+  const myVideoRef = useRef<HTMLVideoElement>(null);
 
   const collaborationSocketRef = useRef<Socket | null>(null);
   const communicationSocketRef = useRef<Socket | null>(null);
   const peerInstanceRef = useRef<Peer>();
   const mediaConnectionRef = useRef<MediaConnection>();
+  const [isOtherUserStreaming, setIsOtherUserStreaming] = useState(false);
+  const [isVideoEnabled, setIsVideoEnabled] = useState(true);
+  const [isAudioEnabled, setIsAudioEnabled] = useState(true);
 
   const lastCursorPosition = useRef<number | null>(null);
   const [otherCursors, setOtherCursors] = useState<{ [sid: string]: { cursor_position: number; color: string } }>({});
@@ -341,7 +348,6 @@ const CodeEditor: React.FC = () => {
       if (newUserId === user.id) return;
       if (mediaConnectionRef.current) {
         mediaConnectionRef.current.close();
-        // TODO: remove display of remote video
       }
     });
   };
@@ -369,19 +375,23 @@ const CodeEditor: React.FC = () => {
     peer.on("call", (call) => {
       console.log("Received call from other user.");
       call.answer(myStream.current!);
+      mediaConnectionRef.current?.close();
       mediaConnectionRef.current = call;
 
       call.on("stream", (remoteStream) => {
         console.log("Streaming video from caller.");
-        if (remoteVideo.current) {
-          remoteVideo.current.srcObject = remoteStream;
-          // TODO: display remote video
+        if (remoteVideoRef.current) {
+          remoteVideoRef.current.srcObject = remoteStream;
         }
+        if (collapsedRemoteVideoRef.current) {
+          collapsedRemoteVideoRef.current.srcObject = remoteStream;
+        }
+        setIsOtherUserStreaming(true);
       });
 
       call.on("close", () => {
         console.log("Call is hung up.");
-        // TODO: remove display of remote video
+        setIsOtherUserStreaming(false);
       });
     });
   };
@@ -414,10 +424,17 @@ const CodeEditor: React.FC = () => {
         video: true,
         audio: true,
       });
+
+      stream.getVideoTracks().forEach((track) => {
+        track.enabled = isVideoEnabled;
+      });
+      stream.getAudioTracks().forEach((track) => {
+        track.enabled = isAudioEnabled;
+      });
       myStream.current = stream;
 
-      if (myVideo.current) {
-        myVideo.current.srcObject = stream;
+      if (myVideoRef.current) {
+        myVideoRef.current.srcObject = stream;
       }
     } catch (err) {
       console.error("Failed to initialize call:", err);
@@ -431,6 +448,7 @@ const CodeEditor: React.FC = () => {
       return;
     }
     console.log(`User ${user?.username} calling the other user with peer ID ${otherUserId}`);
+    mediaConnectionRef.current?.close();
     const call = peerInstanceRef.current!.call(otherUserId, myStream.current!);
     mediaConnectionRef.current = call;
 
@@ -440,25 +458,42 @@ const CodeEditor: React.FC = () => {
         call.close();
       }
       console.log("Streaming video from callee.");
-      if (remoteVideo.current) {
-        remoteVideo.current.srcObject = remoteStream;
-        // TODO: display remote video
+      if (remoteVideoRef.current) {
+        remoteVideoRef.current.srcObject = remoteStream;
       }
+      if (collapsedRemoteVideoRef.current) {
+        collapsedRemoteVideoRef.current.srcObject = remoteStream;
+      }
+      setIsOtherUserStreaming(true);
     });
 
     call.on("close", () => {
       console.log("Call is hung up.");
-      // TODO: remove display of remote video
+      setIsOtherUserStreaming(false);
     });
   };
 
   const openVideoCall = async () => {
     setIsVideoCallExpanded(true);
-    await getUserMediaStream();
+    if (!myStream.current) {
+      await getUserMediaStream();
+    }
     if (myStream.current) {
       callOtherUserPeer();
     }
   };
+
+  useEffect(() => {
+    myStream.current?.getVideoTracks().forEach((track) => {
+      track.enabled = isVideoEnabled;
+    });
+  }, [isVideoEnabled]);
+
+  useEffect(() => {
+    myStream.current?.getAudioTracks().forEach((track) => {
+      track.enabled = isAudioEnabled;
+    });
+  }, [isAudioEnabled]);
 
   const hangUpVideoCall = () => {
     myStream.current?.getTracks().forEach((track) => track.stop());
@@ -609,22 +644,40 @@ const CodeEditor: React.FC = () => {
         />
       )}
 
-      {!isVideoCallExpanded && (
+      {!isVideoCallExpanded && !myStream.current && (
         <div className="video-call-icon" onClick={openVideoCall}>
           <VideoCallIcon style={{ fontSize: "2rem", color: "#fff" }} />
         </div>
       )}
 
-      {isVideoCallExpanded && (
+      <div
+        className="video-call-collapsed"
+        onClick={openVideoCall}
+        style={{ display: !isVideoCallExpanded && myStream.current ? "block" : "none" }}
+      >
+        <div className="video-box">
+          <video ref={collapsedRemoteVideoRef} autoPlay playsInline className="video-stream" />
+          <Typography variant="subtitle2" className="video-label">
+            {isOtherUserStreaming ? otherUserProfile?.username : "Waiting for the other user..."}
+          </Typography>
+        </div>
+      </div>
+
+      <div style={{ display: isVideoCallExpanded ? "block" : "none" }}>
         <VideoCall
           onClose={hangUpVideoCall}
+          setIsVideoCallExpanded={setIsVideoCallExpanded}
+          setIsVideoEnabled={setIsVideoEnabled}
+          setIsAudioEnabled={setIsAudioEnabled}
           peerInstanceRef={peerInstanceRef}
           mediaConnectionRef={mediaConnectionRef}
-          myVideoRef={myVideo}
-          remoteVideoRef={remoteVideo}
-          myStreamRef={myStream}
+          myVideoRef={myVideoRef}
+          remoteVideoRef={remoteVideoRef}
+          isOtherUserStreaming={isOtherUserStreaming}
+          isVideoEnabled={isVideoEnabled}
+          isAudioEnabled={isAudioEnabled}
         />
-      )}
+      </div>
 
       <Footer />
     </div>

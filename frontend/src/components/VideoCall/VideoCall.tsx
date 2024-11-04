@@ -1,47 +1,45 @@
-import React, { useContext, useState } from "react";
+import React, { useContext } from "react";
 import { Button, Typography } from "@mui/material";
 import Peer, { MediaConnection } from "peerjs";
 import "./VideoCall.scss";
 import { UserContext } from "../../contexts/UserContext";
+import { SessionContext } from "../../contexts/SessionContext";
 
 interface VideoCallProps {
   onClose: () => void;
+  setIsVideoCallExpanded: React.Dispatch<React.SetStateAction<boolean>>;
+  setIsVideoEnabled: React.Dispatch<React.SetStateAction<boolean>>;
+  setIsAudioEnabled: React.Dispatch<React.SetStateAction<boolean>>;
   peerInstanceRef: React.MutableRefObject<Peer | undefined>;
   mediaConnectionRef: React.MutableRefObject<MediaConnection | undefined>;
   myVideoRef: React.MutableRefObject<HTMLVideoElement | null>;
   remoteVideoRef: React.MutableRefObject<HTMLVideoElement | null>;
-  myStreamRef: React.MutableRefObject<MediaStream | null>;
+  isOtherUserStreaming: boolean;
+  isVideoEnabled: boolean;
+  isAudioEnabled: boolean;
 }
 
 const VideoCall: React.FC<VideoCallProps> = ({
   onClose,
+  setIsVideoCallExpanded,
+  setIsVideoEnabled,
+  setIsAudioEnabled,
   mediaConnectionRef,
   myVideoRef,
   remoteVideoRef,
-  myStreamRef,
+  isOtherUserStreaming,
+  isVideoEnabled,
+  isAudioEnabled,
 }) => {
-  const [isVideoEnabled, setIsVideoEnabled] = useState(true);
-  const [isAudioEnabled, setIsAudioEnabled] = useState(true);
-  const [otherUser, setOtherUser] = useState<string | null>("Waiting for connection...");
-
   const { user } = useContext(UserContext);
+  const { otherUserProfile } = useContext(SessionContext);
 
   const toggleVideo = () => {
-    if (myStreamRef.current) {
-      myStreamRef.current.getVideoTracks().forEach((track) => {
-        track.enabled = !isVideoEnabled;
-      });
-      setIsVideoEnabled(!isVideoEnabled);
-    }
+    setIsVideoEnabled(!isVideoEnabled);
   };
 
   const toggleAudio = () => {
-    if (myStreamRef.current) {
-      myStreamRef.current.getAudioTracks().forEach((track) => {
-        track.enabled = !isAudioEnabled;
-      });
-      setIsAudioEnabled(!isAudioEnabled);
-    }
+    setIsAudioEnabled(!isAudioEnabled);
   };
 
   const handleEndCall = () => {
@@ -53,8 +51,8 @@ const VideoCall: React.FC<VideoCallProps> = ({
     <div className="video-call-expanded">
       <div className="video-call-header">
         <Typography variant="h6">Video Call</Typography>
-        <Button onClick={handleEndCall} className="video-call-close-button">
-          End Call
+        <Button onClick={() => setIsVideoCallExpanded(false)} className="video-call-close-button">
+          Collapse
         </Button>
       </div>
 
@@ -69,7 +67,7 @@ const VideoCall: React.FC<VideoCallProps> = ({
           <div className="video-box">
             <video ref={remoteVideoRef} autoPlay playsInline className="video-stream" />
             <Typography variant="subtitle2" className="video-label">
-              {otherUser}
+              {isOtherUserStreaming ? otherUserProfile?.username : "Waiting for the other user..."}
             </Typography>
           </div>
         </div>

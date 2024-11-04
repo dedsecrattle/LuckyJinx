@@ -152,6 +152,7 @@
 }
 
 .chatbox-icon {
+  z-index: 100;
   position: fixed;
   bottom: 10px;
   left: 10px;
@@ -173,24 +174,50 @@
   }
 }
 
-.video-call-icon {
-  position: fixed;
-  bottom: 10px;
-  right: 10px;
-  cursor: pointer;
-  width: 60px;
-  height: 60px;
-  background-color: #2e2e2e;
-  border-radius: 25px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  transition:
-    transform 0.2s ease,
-    background-color 0.2s ease;
+.video-call {
+  &-icon {
+    z-index: 100;
+    position: fixed;
+    bottom: 10px;
+    right: 10px;
+    cursor: pointer;
+    width: 60px;
+    height: 60px;
+    background-color: #2e2e2e;
+    border-radius: 25px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition:
+      transform 0.2s ease,
+      background-color 0.2s ease;
+  
+    &:hover {
+      transform: scale(1.1);
+      background-color: #373737;
+    }
+  }
 
-  &:hover {
-    transform: scale(1.1);
-    background-color: #373737;
+  &-collapsed {
+    z-index: 100;
+    position: fixed;
+    bottom: 10px;
+    right: 10px;
+    cursor: pointer;
+    width: 250px;
+    height: 140px;
+    background-color: #2e2e2e;
+    border-radius: 25px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition:
+      transform 0.2s ease,
+      background-color 0.2s ease;
+  
+    &:hover {
+      transform: scale(1.1);
+      background-color: #373737;
+    }
   }
 }
