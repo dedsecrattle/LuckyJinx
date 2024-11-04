@@ -3,6 +3,7 @@ import { io } from "./server";
 import { PrismaClient } from "@prisma/client";
 import { v4 as uuidv4 } from "uuid";
 import { fetchRandomQuestion } from "./util";
+import exp from "constants";
 
 const prisma = new PrismaClient();
 
