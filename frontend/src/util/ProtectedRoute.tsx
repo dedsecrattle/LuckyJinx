@@ -28,7 +28,7 @@ const ProtectedRoute = ({ element, userId }: ProtectedRouteProps): ReactElement 
     };
 
     checkRoomAccess();
-  }, [roomNumber]);
+  }, [roomNumber, userId]);
 
   if (hasAccess === null) {
     return <div>Loading...</div>;
