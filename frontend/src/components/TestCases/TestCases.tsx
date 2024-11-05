@@ -1,10 +1,5 @@
 import React from "react";
-import {
-  Typography,
-  Button,
-  TextField,
-  IconButton,
-} from "@mui/material";
+import { Typography, Button, TextField, IconButton } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import "./TestCases.scss";
 
@@ -21,11 +16,7 @@ interface TestCase {
 interface TestCasesProps {
   testCases: TestCase[];
   addTestCase: () => void;
-  updateTestCase: (
-    id: string,
-    field: "input" | "expectedOutput",
-    value: string
-  ) => void;
+  updateTestCase: (id: string, field: "input" | "expectedOutput", value: string) => void;
   submitTestCase: (id: string) => void;
   deleteTestCase: (id: string) => void;
 }
@@ -56,11 +47,7 @@ const TestCases: React.FC<TestCasesProps> = ({
         {testCases.map((testCase) => (
           <div key={testCase.id} className="test-case">
             {/* Delete button */}
-            <IconButton
-              className="delete-test-case-button"
-              onClick={() => deleteTestCase(testCase.id)}
-              size="small"
-            >
+            <IconButton className="delete-test-case-button" onClick={() => deleteTestCase(testCase.id)} size="small">
               <CloseIcon style={{ color: "#fff" }} />
             </IconButton>
             <div className="test-case-header">
@@ -87,8 +74,8 @@ const TestCases: React.FC<TestCasesProps> = ({
                         testCase.actualOutput.trim() === testCase.expectedOutput.trim()
                           ? "correct"
                           : testCase.actualOutput.trim() === ""
-                          ? "not-executed"
-                          : "incorrect"
+                            ? "not-executed"
+                            : "incorrect"
                       }`}
                     >
                       {testCase.actualOutput || "Not executed yet"}
@@ -105,9 +92,7 @@ const TestCases: React.FC<TestCasesProps> = ({
                     variant="outlined"
                     fullWidth
                     value={testCase.input}
-                    onChange={(e) =>
-                      updateTestCase(testCase.id, "input", e.target.value)
-                    }
+                    onChange={(e) => updateTestCase(testCase.id, "input", e.target.value)}
                     className="test-case-textfield"
                   />
                   <TextField
@@ -117,13 +102,7 @@ const TestCases: React.FC<TestCasesProps> = ({
                     variant="outlined"
                     fullWidth
                     value={testCase.expectedOutput}
-                    onChange={(e) =>
-                      updateTestCase(
-                        testCase.id,
-                        "expectedOutput",
-                        e.target.value
-                      )
-                    }
+                    onChange={(e) => updateTestCase(testCase.id, "expectedOutput", e.target.value)}
                     className="test-case-textfield"
                   />
                   <Button

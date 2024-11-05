@@ -60,11 +60,9 @@ class CursorWidget extends WidgetType {
 }
 
 // Function to create decorations
-const createCursorDecorations = (
-  otherCursors: {
-    [sid: string]: { cursor_position: number; color: string };
-  }
-): Extension => {
+const createCursorDecorations = (otherCursors: {
+  [sid: string]: { cursor_position: number; color: string };
+}): Extension => {
   return EditorView.decorations.of((view) => {
     const builder = new RangeSetBuilder<Decoration>();
     for (const [sid, cursor] of Object.entries(otherCursors)) {
@@ -77,10 +75,7 @@ const createCursorDecorations = (
         });
         builder.add(cursor_position, cursor_position, decoration);
       } else {
-        console.warn(
-          `Invalid cursor_position for sid ${sid}:`,
-          cursor_position
-        );
+        console.warn(`Invalid cursor_position for sid ${sid}:`, cursor_position);
       }
     }
     return builder.finish();
@@ -112,19 +107,9 @@ interface TestCase {
 
 const CodeEditor: React.FC = () => {
   const { user } = useContext(UserContext);
-  const {
-    sessionState,
-    questionId,
-    clearSession,
-    otherUserId,
-    otherUserProfile,
-  } = useContext(SessionContext);
-  const {
-    setConfirmationDialogTitle,
-    setConfirmationDialogContent,
-    setConfirmationCallBack,
-    openConfirmationDialog,
-  } = useConfirmationDialog();
+  const { sessionState, questionId, clearSession, otherUserId, otherUserProfile } = useContext(SessionContext);
+  const { setConfirmationDialogTitle, setConfirmationDialogContent, setConfirmationCallBack, openConfirmationDialog } =
+    useConfirmationDialog();
   const navigate = useNavigate();
 
   const [questionData, setQuestionData] = useState<QuestionData | null>(null);
@@ -203,17 +188,15 @@ const CodeEditor: React.FC = () => {
         const response = await QuestionService.getQuestion(questionId);
         setQuestionData(response);
         // Initialize test cases from fetched data
-        const fetchedTestCases: TestCase[] = response.testCases.map(
-          (tc, index) => ({
-            id: `default-${index + 1}-${Date.now()}`, // Unique ID
-            number: index + 1,
-            input: tc.input,
-            expectedOutput: tc.output,
-            actualOutput: "",
-            isDefault: true,
-            isSubmitted: false,
-          })
-        );
+        const fetchedTestCases: TestCase[] = response.testCases.map((tc, index) => ({
+          id: `default-${index + 1}-${Date.now()}`, // Unique ID
+          number: index + 1,
+          input: tc.input,
+          expectedOutput: tc.output,
+          actualOutput: "",
+          isDefault: true,
+          isSubmitted: false,
+        }));
         setTestCases(fetchedTestCases);
       } catch (error) {
         console.error("Failed to fetch question data:", error);
@@ -284,11 +267,11 @@ const CodeEditor: React.FC = () => {
         setLanguage(newLanguage as Language);
         if (newLanguage === "cpp") {
           setCode(
-            "#include <iostream>\nusing namespace std;\n\nint main() {\n\t// Write your solution here\n\treturn 0;\n}"
+            "#include <iostream>\nusing namespace std;\n\nint main() {\n\t// Write your solution here\n\treturn 0;\n}",
           );
         } else if (newLanguage === "java") {
           setCode(
-            "public class Main {\n\tpublic static void main(String[] args) {\n\t\t// Write your solution here\n\t}\n}"
+            "public class Main {\n\tpublic static void main(String[] args) {\n\t\t// Write your solution here\n\t}\n}",
           );
         } else {
           setCode("# Write your solution here\n");
@@ -309,10 +292,7 @@ const CodeEditor: React.FC = () => {
       if (sid === socket.id) return; // Ignore own cursor
 
       if (typeof cursor_position !== "number") {
-        console.error(
-          `Invalid cursor_position for sid ${sid}:`,
-          cursor_position
-        );
+        console.error(`Invalid cursor_position for sid ${sid}:`, cursor_position);
         return;
       }
 
@@ -344,7 +324,7 @@ const CodeEditor: React.FC = () => {
       if (user && uid !== user.id) {
         setConfirmationDialogTitle("Partner Disconnected");
         setConfirmationDialogContent(
-          "Your partner has left the coding session. Would you like to end the session and return to home page?"
+          "Your partner has left the coding session. Would you like to end the session and return to home page?",
         );
         setConfirmationCallBack(() => () => {
           clearSocketsAndPeer();
@@ -373,34 +353,23 @@ const CodeEditor: React.FC = () => {
       chatSocket.emit("join-room", user?.id as string, roomNumber);
     });
 
-    chatSocket.on(
-      "receive-message",
-      (
-        message: string,
-        senderId: string,
-        senderName: string,
-        timeStamp: number
-      ) => {
-        if (senderId === user.id) return;
-        const newMessage: ChatMessage = {
-          senderId: senderId,
-          senderName: senderName,
-          message: message,
-          timestamp: new Date(timeStamp),
-        };
-        appendToChatHistory(newMessage);
-      }
-    );
+    chatSocket.on("receive-message", (message: string, senderId: string, senderName: string, timeStamp: number) => {
+      if (senderId === user.id) return;
+      const newMessage: ChatMessage = {
+        senderId: senderId,
+        senderName: senderName,
+        message: message,
+        timestamp: new Date(timeStamp),
+      };
+      appendToChatHistory(newMessage);
+    });
 
-    communicationSocketRef.current?.on(
-      "user-disconnected",
-      (newUserId: string) => {
-        if (newUserId === user.id) return;
-        if (mediaConnectionRef.current) {
-          mediaConnectionRef.current.close();
-        }
+    communicationSocketRef.current?.on("user-disconnected", (newUserId: string) => {
+      if (newUserId === user.id) return;
+      if (mediaConnectionRef.current) {
+        mediaConnectionRef.current.close();
       }
-    );
+    });
   };
 
   const setUpVideoPeerConnection = (token: string) => {
@@ -498,9 +467,7 @@ const CodeEditor: React.FC = () => {
       console.error("Other user ID not found in session context.");
       return;
     }
-    console.log(
-      `User ${user?.username} calling the other user with peer ID ${otherUserId}`
-    );
+    console.log(`User ${user?.username} calling the other user with peer ID ${otherUserId}`);
     mediaConnectionRef.current?.close();
     const call = peerInstanceRef.current!.call(otherUserId, myStream.current!);
     mediaConnectionRef.current = call;
@@ -561,11 +528,11 @@ const CodeEditor: React.FC = () => {
       setLanguage(newLanguage);
       if (newLanguage === "cpp") {
         setCode(
-          "#include <iostream>\nusing namespace std;\n\nint main() {\n\t// Write your solution here\n\treturn 0;\n}"
+          "#include <iostream>\nusing namespace std;\n\nint main() {\n\t// Write your solution here\n\treturn 0;\n}",
         );
       } else if (newLanguage === "java") {
         setCode(
-          "public class Main {\n\tpublic static void main(String[] args) {\n\t\t// Write your solution here\n\t}\n}"
+          "public class Main {\n\tpublic static void main(String[] args) {\n\t\t// Write your solution here\n\t}\n}",
         );
       } else {
         setCode("# Write your solution here\n");
@@ -611,7 +578,8 @@ const CodeEditor: React.FC = () => {
   const [testCases, setTestCases] = useState<TestCase[]>([]);
 
   const addTestCase = () => {
-    if (testCases.length >= 5) { // Adjust the limit as needed
+    if (testCases.length >= 5) {
+      // Adjust the limit as needed
       alert("You can only add up to 5 test cases.");
       return;
     }
@@ -628,22 +596,14 @@ const CodeEditor: React.FC = () => {
   };
 
   // Function to update a test case field
-  const updateTestCase = (
-    id: string,
-    field: "input" | "expectedOutput",
-    value: string
-  ) => {
-    const updatedTestCases = testCases.map((tc) =>
-      tc.id === id ? { ...tc, [field]: value } : tc
-    );
+  const updateTestCase = (id: string, field: "input" | "expectedOutput", value: string) => {
+    const updatedTestCases = testCases.map((tc) => (tc.id === id ? { ...tc, [field]: value } : tc));
     setTestCases(updatedTestCases);
   };
 
   // Function to submit a test case (mark as submitted)
   const submitTestCase = (id: string) => {
-    const updatedTestCases = testCases.map((tc) =>
-      tc.id === id ? { ...tc, isSubmitted: true } : tc
-    );
+    const updatedTestCases = testCases.map((tc) => (tc.id === id ? { ...tc, isSubmitted: true } : tc));
     setTestCases(updatedTestCases);
   };
 
@@ -665,9 +625,7 @@ const CodeEditor: React.FC = () => {
       return;
     }
 
-    const submittedTestCases = testCases.filter(
-      (tc) => tc.isSubmitted || tc.isDefault
-    );
+    const submittedTestCases = testCases.filter((tc) => tc.isSubmitted || tc.isDefault);
 
     if (submittedTestCases.length === 0) {
       alert("No test cases to execute.");
@@ -707,10 +665,7 @@ const CodeEditor: React.FC = () => {
       // Assuming the API returns an array of actual outputs corresponding to the test cases
       const { actualOutputs } = result;
 
-      if (
-        !Array.isArray(actualOutputs) ||
-        actualOutputs.length !== submittedTestCases.length
-      ) {
+      if (!Array.isArray(actualOutputs) || actualOutputs.length !== submittedTestCases.length) {
         console.error("Invalid response from code execution API:", result);
         alert("Invalid response from code execution API.");
         return;
@@ -718,9 +673,7 @@ const CodeEditor: React.FC = () => {
 
       // Update actual outputs in test cases
       const updatedTestCases = testCases.map((tc) => {
-        const submissionIndex = submittedTestCases.findIndex(
-          (stc) => stc.id === tc.id
-        );
+        const submissionIndex = submittedTestCases.findIndex((stc) => stc.id === tc.id);
         if (submissionIndex !== -1) {
           return {
             ...tc,
@@ -748,14 +701,8 @@ const CodeEditor: React.FC = () => {
           </Typography>
 
           <div className="details">
-            <Chip
-              label={`Difficulty: ${questionData?.complexity}`}
-              className="detail-chip light-grey-chip"
-            />
-            <Chip
-              label={`Topic: ${questionData?.categories.join(", ")}`}
-              className="detail-chip light-grey-chip"
-            />
+            <Chip label={`Difficulty: ${questionData?.complexity}`} className="detail-chip light-grey-chip" />
+            <Chip label={`Topic: ${questionData?.categories.join(", ")}`} className="detail-chip light-grey-chip" />
             <Chip
               label={`URL: ${questionData?.link}`}
               className="detail-chip light-grey-chip"
@@ -768,29 +715,17 @@ const CodeEditor: React.FC = () => {
 
         <div className="editors">
           <div className="left-side">
-            <MDEditor.Markdown
-              source={questionData?.description || ""}
-              className="md-editor"
-            />
+            <MDEditor.Markdown source={questionData?.description || ""} className="md-editor" />
           </div>
 
           <div className="right-side">
             <div className="header">
-              <select
-                className="language-select"
-                onChange={handleLanguageChange}
-                value={language}
-              >
+              <select className="language-select" onChange={handleLanguageChange} value={language}>
                 <option value="python">Python</option>
                 <option value="cpp">C++</option>
                 <option value="java">Java</option>
               </select>
-              <Button
-                variant="contained"
-                size="small"
-                className="submit-button"
-                onClick={executeCode}
-              >
+              <Button variant="contained" size="small" className="submit-button" onClick={executeCode}>
                 Run Code
               </Button>
             </div>
@@ -798,10 +733,7 @@ const CodeEditor: React.FC = () => {
               value={code}
               height="500px"
               style={{ fontSize: "18px" }}
-              extensions={[
-                ...(languageExtensions[language] || []),
-                cursorDecorationsExtension,
-              ]}
+              extensions={[...(languageExtensions[language] || []), cursorDecorationsExtension]}
               onChange={handleCodeChange}
               onUpdate={(viewUpdate) => handleCursorChange(viewUpdate)}
               theme={okaidia}
@@ -821,12 +753,7 @@ const CodeEditor: React.FC = () => {
         </div>
 
         <div className="buttons">
-          <Button
-            variant="contained"
-            color="error"
-            className="buttons-leave"
-            onClick={chooseLeaveSession}
-          >
+          <Button variant="contained" color="error" className="buttons-leave" onClick={chooseLeaveSession}>
             Leave Session
           </Button>
         </div>
@@ -861,16 +788,9 @@ const CodeEditor: React.FC = () => {
         style={{ display: !isVideoCallExpanded && myStream.current ? "block" : "none" }}
       >
         <div className="video-box">
-          <video
-            ref={collapsedRemoteVideoRef}
-            autoPlay
-            playsInline
-            className="video-stream"
-          />
+          <video ref={collapsedRemoteVideoRef} autoPlay playsInline className="video-stream" />
           <Typography variant="subtitle2" className="video-label">
-            {isOtherUserStreaming
-              ? otherUserProfile?.username
-              : "Waiting for the other user..."}
+            {isOtherUserStreaming ? otherUserProfile?.username : "Waiting for the other user..."}
           </Typography>
         </div>
       </div>
@@ -893,13 +813,8 @@ const CodeEditor: React.FC = () => {
 
       {/* Floating AI Hint Button */}
       {!isHintBoxExpanded && (
-        <div
-          className="ai-hint-button"
-          onClick={() => setIsHintBoxExpanded(true)}
-        >
-          <LightbulbIcon
-            style={{ marginRight: "8px", color: "#FFD700" }}
-          />
+        <div className="ai-hint-button" onClick={() => setIsHintBoxExpanded(true)}>
+          <LightbulbIcon style={{ marginRight: "8px", color: "#FFD700" }} />
           <Typography variant="body1" style={{ color: "#fff" }}>
             AI Hint
           </Typography>
@@ -908,10 +823,7 @@ const CodeEditor: React.FC = () => {
 
       {/* HintBox Component */}
       {isHintBoxExpanded && questionData && (
-        <HintBox
-          questionId={questionId}
-          onClose={() => setIsHintBoxExpanded(false)}
-        />
+        <HintBox questionId={questionId} onClose={() => setIsHintBoxExpanded(false)} />
       )}
 
       <Footer />
