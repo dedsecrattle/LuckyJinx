@@ -12,7 +12,7 @@ services:
   code-execution-rabbitmq:
     image: rabbitmq:4.0-management
     ports:
-      - "7000:5672"
+      - "7004:5672"
 
   code-execution-redis:
     image: redis:alpine
@@ -57,6 +57,7 @@ services:
     build: ./backend/communication-service
     ports:
       - "3004:3004"
+      - "9000:9000"
 
   matching:
     build: ./backend/matching-service

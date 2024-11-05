@@ -38,7 +38,19 @@ router.post("/random", async (req: Request, res: Response) => {
   });
 
   if (!question) {
-    return res.status(404).json({ message: "Question not found" });
+    const otherQuestion = await Question.find({
+      categories: { $all: categories },
+    });
+
+    if (!otherQuestion) {
+      return res
+        .status(404)
+        .json({ message: "Question not found with given categories" });
+    } else {
+      const randomQuestion =
+        otherQuestion[Math.floor(Math.random() * otherQuestion.length)];
+      res.status(200).json(randomQuestion);
+    }
   } else {
     const randomQuestion =
       question[Math.floor(Math.random() * question.length)];
@@ -83,7 +95,7 @@ router.put("/:id", async (req: Request, res: Response) => {
     const updatedQuestion = await Question.findOneAndUpdate(
       { questionId: id },
       { title, description, categories, complexity },
-      { new: true },
+      { new: true }
     );
     if (!updatedQuestion)
       return res.status(404).json({ error: "Question not found" });
@@ -126,7 +138,7 @@ router.post("/test/:id", async (req: Request, res: Response) => {
     const tests = plainToInstance(Test, [req.body]);
     console.assert(
       tests.length === 1,
-      "tests must be an array of exactly 1 element",
+      "tests must be an array of exactly 1 element"
     );
     const test = tests[0];
     const errors = await validate(test);
@@ -139,7 +151,7 @@ router.post("/test/:id", async (req: Request, res: Response) => {
 
     const testCases: TestCase[] = [...question.testCases, ...test.customTests];
     const outputPromises = testCases.map((testCase) =>
-      testCode(test.code, test.lang, testCase, authtoken),
+      testCode(test.code, test.lang, testCase, authtoken)
     );
     try {
       const outputs = await Promise.all(outputPromises);

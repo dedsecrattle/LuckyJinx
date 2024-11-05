@@ -35,4 +35,5 @@ yarn.lock
 *.swp
 *~
 dev.db
+dev.db-journal
 migrations/

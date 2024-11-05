@@ -9,7 +9,45 @@ import {
   handleDisconnected,
 } from "./matchingService";
 
+import cors from "cors";
+import { PrismaClient } from "@prisma/client";
+
 const app = express();
+
+app.use(express.json());
+
+app.use(
+  cors({
+    origin: "*",
+  })
+);
+
+const prisma = new PrismaClient();
+
+app.post("/check", async (req, res) => {
+  const { userId, roomId } = req.body.data;
+
+  const record = await prisma.matchRecord.findFirst({
+    where: {
+      roomNumber: roomId,
+      OR: [
+        {
+          userId: userId,
+        },
+        {
+          matchedUserId: userId,
+        },
+      ],
+      matched: true,
+    },
+  });
+
+  if (!record) {
+    res.status(200).json({ hasAccess: false });
+  } else {
+    res.status(200).json({ hasAccess: true });
+  }
+});
 
 const server = createServer(app);
 export const io = new Server(server, {

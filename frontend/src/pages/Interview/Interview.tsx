@@ -52,6 +52,13 @@ const Interview = (): ReactElement => {
     setSessionState(SessionState.PENDING);
   });
 
+  socket.on("question_error", (data: any) => {
+    clearSession();
+    setMainDialogTitle("Error");
+    setMainDialogContent(data.message);
+    openMainDialog();
+  });
+
   socket.on("timeout", (message: string) => {
     console.log("Timeout: ", message);
     accumulateMatchingTime();
