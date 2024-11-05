@@ -3,6 +3,7 @@ import { io } from "./server";
 import { PrismaClient } from "@prisma/client";
 import { v4 as uuidv4 } from "uuid";
 import { fetchRandomQuestion } from "./util";
+import exp from "constants";
 
 const prisma = new PrismaClient();
 
@@ -11,7 +12,7 @@ const CONFIRM_DELAY_TIME = 10000;
 
 export async function handleMatchingRequest(
   userRequest: any,
-  socketId: string,
+  socketId: string
 ) {
   userRequest.socketId = socketId;
 
@@ -36,11 +37,11 @@ function sendConfirmDelayedTimeoutMessage(recordId: string) {
       recordId: recordId,
       type: "confirm_timeout",
     },
-    CONFIRM_DELAY_TIME,
+    CONFIRM_DELAY_TIME
   );
   console.log(
     "Sent delayed message for confirm timeout for recordId: ",
-    recordId,
+    recordId
   );
 }
 
@@ -58,7 +59,7 @@ export async function handleUserRequest(userRequest: any) {
       console.log("Duplicate socket detected. New socket will be used.");
       io.to(pastSocketId).emit(
         "duplicate socket",
-        "New connection detected for the same user. Please close the current page",
+        "New connection detected for the same user. Please close the current page"
       );
 
       // Update socket ID upon potential reconnection
@@ -85,9 +86,19 @@ export async function handleUserRequest(userRequest: any) {
   if (existingMatch !== null) {
     const roomNumber = uuidv4();
     const question = await fetchRandomQuestion(difficulty, topic);
-    console.log(
-      `Match found for ${userId} with ${existingMatch.userId} on topic ${topic}, difficulty ${difficulty}, roomNumber ${roomNumber}`,
-    );
+
+    if (!question) {
+      io.to(socketId).emit("question_error", {
+        message: "No Question found for the selected topic and difficulty",
+      });
+      io.to(existingMatch.socketId).emit("question_error", {
+        message: "No Question found for the selected topic and difficulty",
+      });
+      await prisma.matchRecord.delete({
+        where: { recordId: existingMatch.recordId },
+      });
+      return;
+    }
     // Match found, update both records to mark as isPending
     await prisma.matchRecord.update({
       where: { recordId: existingMatch.recordId },
@@ -103,26 +114,20 @@ export async function handleUserRequest(userRequest: any) {
         matchedUserId: existingMatch.userId,
         isPending: true,
         roomNumber,
-        questionId: question.questionId,
+        questionId: question?.questionId as number,
       },
     });
-
-    console.log(
-      `Matched ${userId} with ${existingMatch.userId} on topic ${topic}, difficulty ${difficulty}`,
-    );
-
-    console.log("Question matched with", question.questionId);
 
     // Update both clients about the successful match
     io.to(socketId).emit("matched", {
       matchedWith: existingMatch.userId,
       roomNumber,
-      questionId: question.questionId,
+      questionId: question?.questionId,
     });
     io.to(existingMatch.socketId).emit("matched", {
       matchedWith: userId,
       roomNumber,
-      questionId: question.questionId,
+      questionId: question?.questionId,
     });
 
     // Add confirm timeout messages
@@ -164,7 +169,7 @@ export async function handleMatchingConfirm(userRequest: any) {
       });
       io.to(matchedRecord.socketId).emit(
         "other_declined",
-        "Match not confirmed. Please try again.",
+        "Match not confirmed. Please try again."
       );
     }
     if (userRecord !== null) {
@@ -174,7 +179,7 @@ export async function handleMatchingConfirm(userRequest: any) {
       });
       io.to(userRecord.socketId).emit(
         "other_declined",
-        "Match not confirmed. Please try again.",
+        "Match not confirmed. Please try again."
       );
     }
     return;
@@ -206,20 +211,20 @@ export async function handleMatchingConfirm(userRequest: any) {
 
     io.to(userRecord.socketId).emit(
       "matching_success",
-      "Match confirmed. Proceeding to collaboration service.",
+      "Match confirmed. Proceeding to collaboration service."
     );
     io.to(matchedRecord.socketId).emit(
       "matching_success",
-      "Match confirmed. Proceeding to collaboration service.",
+      "Match confirmed. Proceeding to collaboration service."
     );
     // TODO: add further logic here to proceed to collaboration service
   } else {
     console.log(
-      `User ${userId} confirmed match, waiting for other user to confirm`,
+      `User ${userId} confirmed match, waiting for other user to confirm`
     );
     io.to(matchedRecord.socketId).emit(
       "other_accepted",
-      "Other user confirmed match. Please confirm.",
+      "Other user confirmed match. Please confirm."
     );
   }
 }
@@ -243,11 +248,11 @@ export async function handleMatchingDecline(userRequest: any) {
       });
       io.to(matchedRecord.socketId).emit(
         "other_declined",
-        "Match not confirmed. Please try again.",
+        "Match not confirmed. Please try again."
       );
       io.to(matchedRecord.socketId).emit(
         "matching_fail",
-        "Match not confirmed. Please try again.",
+        "Match not confirmed. Please try again."
       );
     }
     if (userRecord !== null) {
@@ -257,11 +262,11 @@ export async function handleMatchingDecline(userRequest: any) {
       });
       io.to(userRecord.socketId).emit(
         "other_declined",
-        "Match not confirmed. Please try again.",
+        "Match not confirmed. Please try again."
       );
       io.to(userRecord.socketId).emit(
         "matching_fail",
-        "Match not confirmed. Please try again.",
+        "Match not confirmed. Please try again."
       );
     }
 
@@ -277,7 +282,7 @@ export async function handleMatchingDecline(userRequest: any) {
   console.log(`User ${userId} declined match`);
   io.to(matchedRecord.socketId).emit(
     "other_declined",
-    "Match not confirmed. Please try again.",
+    "Match not confirmed. Please try again."
   );
   await prisma.matchRecord.update({
     where: { recordId: matchedRecord.recordId },
@@ -286,11 +291,11 @@ export async function handleMatchingDecline(userRequest: any) {
 
   io.to(userRecord.socketId).emit(
     "matching_fail",
-    "Match not confirmed. Please try again.",
+    "Match not confirmed. Please try again."
   );
   io.to(matchedRecord.socketId).emit(
     "matching_fail",
-    "Match not confirmed. Please try again.",
+    "Match not confirmed. Please try again."
   );
 }
 
@@ -323,16 +328,16 @@ export async function handleConfirmTimeout(recordId: string) {
   if (result !== null) {
     if (result.isConfirmed === false) {
       console.log(
-        `Timeout: Match not confirmed for recordId ${recordId} with userId ${result.userId}`,
+        `Timeout: Match not confirmed for recordId ${recordId} with userId ${result.userId}`
       );
     } else {
       console.log(
-        `Timeout: Match confirmed for recordId ${recordId} with userId ${result.userId} but other user did not confirm`,
+        `Timeout: Match confirmed for recordId ${recordId} with userId ${result.userId} but other user did not confirm`
       );
     }
     io.to(result.socketId).emit(
       "matching_fail",
-      "Match not confirmed. Please try again.",
+      "Match not confirmed. Please try again."
     );
     await prisma.matchRecord.update({
       where: { recordId: recordIdInt },

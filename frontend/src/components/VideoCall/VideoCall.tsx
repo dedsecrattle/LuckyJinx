@@ -1,165 +1,87 @@
-import React, { useEffect, useRef, useState, useContext } from "react";
-import { Typography, Button } from "@mui/material";
+import React, { useContext } from "react";
+import { Button, Typography } from "@mui/material";
+import Peer, { MediaConnection } from "peerjs";
 import "./VideoCall.scss";
-import Peer from "peerjs";
-import { Socket } from "socket.io-client";
 import { UserContext } from "../../contexts/UserContext";
+import { SessionContext } from "../../contexts/SessionContext";
 
 interface VideoCallProps {
   onClose: () => void;
-  communicationSocketRef: React.MutableRefObject<Socket | null>;
-  roomNumber: string;
+  setIsVideoCallExpanded: React.Dispatch<React.SetStateAction<boolean>>;
+  setIsVideoEnabled: React.Dispatch<React.SetStateAction<boolean>>;
+  setIsAudioEnabled: React.Dispatch<React.SetStateAction<boolean>>;
+  peerInstanceRef: React.MutableRefObject<Peer | undefined>;
+  mediaConnectionRef: React.MutableRefObject<MediaConnection | undefined>;
+  myVideoRef: React.MutableRefObject<HTMLVideoElement | null>;
+  remoteVideoRef: React.MutableRefObject<HTMLVideoElement | null>;
+  isOtherUserStreaming: boolean;
+  isVideoEnabled: boolean;
+  isAudioEnabled: boolean;
 }
 
-const VideoCall: React.FC<VideoCallProps> = ({ onClose, communicationSocketRef, roomNumber }) => {
-  const [isVideoHovered, setIsVideoHovered] = useState(false);
-  const [localStream, setLocalStream] = useState<MediaStream | null>(null);
-  const [remoteStreams, setRemoteStreams] = useState<{ [peerId: string]: MediaStream }>({});
-  const [peerId, setPeerId] = useState<string>("");
-  const peerRef = useRef<Peer | null>(null);
+const VideoCall: React.FC<VideoCallProps> = ({
+  onClose,
+  setIsVideoCallExpanded,
+  setIsVideoEnabled,
+  setIsAudioEnabled,
+  mediaConnectionRef,
+  myVideoRef,
+  remoteVideoRef,
+  isOtherUserStreaming,
+  isVideoEnabled,
+  isAudioEnabled,
+}) => {
   const { user } = useContext(UserContext);
+  const { otherUserProfile } = useContext(SessionContext);
 
-  const localVideoRef = useRef<HTMLVideoElement>(null);
-  const remoteVideoRefs = useRef<{ [peerId: string]: HTMLVideoElement }>({});
+  const toggleVideo = () => {
+    setIsVideoEnabled(!isVideoEnabled);
+  };
 
-  useEffect(() => {
-    // Initialize PeerJS
-    const peer = new Peer('', {
-      host: process.env.REACT_APP_PEERJS_SERVER_HOST || "/",
-      port: parseInt(process.env.REACT_APP_PEERJS_SERVER_PORT || "9000"),
-      path: "/peerjs",
-      secure: process.env.REACT_APP_PEERJS_SECURE === "true",
-    });
-    peerRef.current = peer;
+  const toggleAudio = () => {
+    setIsAudioEnabled(!isAudioEnabled);
+  };
 
-    let currentStream: MediaStream;
-
-    // Get local media stream
-    navigator.mediaDevices
-      .getUserMedia({ video: true, audio: true })
-      .then((stream) => {
-        setLocalStream(stream);
-        currentStream = stream;
-
-        if (localVideoRef.current) {
-          localVideoRef.current.srcObject = stream;
-        }
-
-        peer.on("call", (call) => {
-          call.answer(stream); 
-
-          call.on("stream", (remoteStream) => {
-            setRemoteStreams((prev) => ({ ...prev, [call.peer]: remoteStream }));
-          });
-
-          call.on("close", () => {
-            setRemoteStreams((prev) => {
-              const newStreams = { ...prev };
-              delete newStreams[call.peer];
-              return newStreams;
-            });
-          });
-
-          call.on("error", (err) => {
-            console.error("Peer call error:", err);
-          });
-        });
-
-        peer.on("open", (id) => {
-          setPeerId(id);
-          communicationSocketRef.current?.emit("peer-id", id, roomNumber);
-        });
-
-        peer.on("error", (err) => {
-          console.error("Peer error:", err);
-        });
-      })
-      .catch((err) => {
-        console.error("Failed to get local stream:", err);
-      });
-
-    communicationSocketRef.current?.on("peer-id", (otherPeerId: string) => {
-      if (otherPeerId === peerId) return; 
-      if (!localStream) return;
-
-      const call = peer.call(otherPeerId, localStream);
-
-      call.on("stream", (remoteStream) => {
-        setRemoteStreams((prev) => ({ ...prev, [call.peer]: remoteStream }));
-      });
-
-      call.on("close", () => {
-        setRemoteStreams((prev) => {
-          const newStreams = { ...prev };
-          delete newStreams[call.peer];
-          return newStreams;
-        });
-      });
-
-      call.on("error", (err) => {
-        console.error("Peer call error:", err);
-      });
-    });
-
-    return () => {
-      if (currentStream) {
-        currentStream.getTracks().forEach((track) => track.stop());
-      }
-      if (peer) {
-        peer.destroy();
-      }
-      communicationSocketRef.current?.off("peer-id");
-    };
-  }, [communicationSocketRef, peerId, roomNumber]);
-
-  const handleHangUp = () => {
-    if (localStream) {
-      localStream.getTracks().forEach((track) => track.stop());
-    }
-    if (peerRef.current) {
-      peerRef.current.destroy();
-    }
-    setRemoteStreams({});
+  const handleEndCall = () => {
+    mediaConnectionRef.current?.close();
     onClose();
   };
 
   return (
-    <div
-      className="video-call-expanded"
-      onMouseEnter={() => setIsVideoHovered(true)}
-      onMouseLeave={() => setIsVideoHovered(false)}
-    >
-      <div className="video-call-header">Hang Up
+    <div className="video-call-expanded">
+      <div className="video-call-header">
         <Typography variant="h6">Video Call</Typography>
-        <Button className="video-call-close-button" onClick={handleHangUp}>
-          Hang Up
+        <Button onClick={() => setIsVideoCallExpanded(false)} className="video-call-close-button">
+          Collapse
         </Button>
       </div>
+
       <div className="video-call-container">
-        <div className="video-streams">
-          {localStream && (
-            <video
-              className="local-video"
-              ref={localVideoRef}
-              autoPlay
-              muted
-              playsInline
-            />
-          )}
-          {Object.entries(remoteStreams).map(([peerId, stream]) => (
-            <video
-              key={peerId}
-              className="remote-video"
-              ref={(el) => {
-                if (el && !remoteVideoRefs.current[peerId]) {
-                  remoteVideoRefs.current[peerId] = el;
-                  el.srcObject = stream;
-                }
-              }}
-              autoPlay
-              playsInline
-            />
-          ))}
+        <div className="video-grid">
+          <div className="video-box">
+            <video ref={myVideoRef} muted autoPlay playsInline className="video-stream" />
+            <Typography variant="subtitle2" className="video-label">
+              {user?.username} (You)
+            </Typography>
+          </div>
+          <div className="video-box">
+            <video ref={remoteVideoRef} autoPlay playsInline className="video-stream" />
+            <Typography variant="subtitle2" className="video-label">
+              {isOtherUserStreaming ? otherUserProfile?.username : "Waiting for the other user..."}
+            </Typography>
+          </div>
+        </div>
+
+        <div className="video-controls">
+          <Button variant="contained" color={isAudioEnabled ? "primary" : "error"} onClick={toggleAudio}>
+            {isAudioEnabled ? "Mute" : "Unmute"}
+          </Button>
+          <Button variant="contained" color={isVideoEnabled ? "primary" : "error"} onClick={toggleVideo}>
+            {isVideoEnabled ? "Stop Video" : "Start Video"}
+          </Button>
+          <Button variant="contained" color="error" onClick={handleEndCall}>
+            End Call
+          </Button>
         </div>
       </div>
     </div>

@@ -26,9 +26,11 @@ import { UserContext } from "../../contexts/UserContext";
 import { ChatMessage } from "../../models/communication.model";
 import { SessionContext, SessionState } from "../../contexts/SessionContext";
 import { useConfirmationDialog } from "../../contexts/ConfirmationDialogContext";
+import Peer, { MediaConnection } from "peerjs";
 
 const COMMUNICATION_WEBSOCKET_URL = process.env.REACT_APP_COMMUNICATION_SERVICE_URL as string;
 const COLLABORATION_WEBSOCKET_URL = process.env.REACT_APP_COLLABORATION_SERVICE_URL as string;
+const VIDEO_PEER_SERVICE_PORT = process.env.REACT_APP_VIDEO_SERVICE_PORT;
 
 // Define Language Type
 type Language = "python" | "cpp" | "java";
@@ -102,7 +104,7 @@ interface TestCase {
 
 const CodeEditor: React.FC = () => {
   const { user } = useContext(UserContext);
-  const { sessionState, questionId, clearSession } = useContext(SessionContext);
+  const { sessionState, questionId, clearSession, otherUserId, otherUserProfile } = useContext(SessionContext);
   const { setConfirmationDialogTitle, setConfirmationDialogContent, setConfirmationCallBack, openConfirmationDialog } =
     useConfirmationDialog();
   const navigate = useNavigate();
@@ -121,8 +123,22 @@ const CodeEditor: React.FC = () => {
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
   const chatHistoryRef = useRef<ChatMessage[]>([]); // For updating state of chatHistory
 
+  const myStream = useRef<MediaStream | null>(null);
+
+  const remoteVideoRef = useRef<HTMLVideoElement>(null);
+  // To keep the video playing in the collapsed video call window, necessary to create a duplicate ref
+  // Cannot use the same ref for both elements, because ref is recreated in the DOM
+  const collapsedRemoteVideoRef = useRef<HTMLVideoElement>(null);
+
+  const myVideoRef = useRef<HTMLVideoElement>(null);
+
   const collaborationSocketRef = useRef<Socket | null>(null);
   const communicationSocketRef = useRef<Socket | null>(null);
+  const peerInstanceRef = useRef<Peer>();
+  const mediaConnectionRef = useRef<MediaConnection>();
+  const [isOtherUserStreaming, setIsOtherUserStreaming] = useState(false);
+  const [isVideoEnabled, setIsVideoEnabled] = useState(true);
+  const [isAudioEnabled, setIsAudioEnabled] = useState(true);
 
   const lastCursorPosition = useRef<number | null>(null);
   const [otherCursors, setOtherCursors] = useState<{ [sid: string]: { cursor_position: number; color: string } }>({});
@@ -161,6 +177,7 @@ const CodeEditor: React.FC = () => {
       clearSession();
       return;
     }
+
     const fetchQuestionData = async () => {
       try {
         const response = await QuestionService.getQuestion(questionId);
@@ -181,7 +198,7 @@ const CodeEditor: React.FC = () => {
     chatHistoryRef.current = chatHistory;
   }, [chatHistory]);
 
-  const clearSockets = () => {
+  const clearSocketsAndPeer = () => {
     if (collaborationSocketRef.current) {
       collaborationSocketRef.current.disconnect();
       console.log("Disconnected from collaboration websocket server.");
@@ -190,32 +207,24 @@ const CodeEditor: React.FC = () => {
       communicationSocketRef.current.disconnect();
       console.log("Disconnected from communication websocket server.");
     }
+    myStream.current?.getTracks().forEach((track) => track.stop());
+    myStream.current = null;
+    mediaConnectionRef.current?.close();
+    peerInstanceRef.current?.destroy();
   };
 
   const chooseLeaveSession = () => {
     setConfirmationDialogTitle("Leave Session");
     setConfirmationDialogContent("Are you sure you want to leave the session?");
     setConfirmationCallBack(() => () => {
-      clearSockets();
+      clearSocketsAndPeer();
       clearSession();
       navigate("/");
     });
     openConfirmationDialog();
   };
 
-  useEffect(() => {
-    // set up websockets
-    if (!roomNumber) {
-      console.error("No roomNumber provided.");
-      return;
-    }
-
-    const token = localStorage.getItem("jwt-token");
-    if (!token) {
-      console.error("No JWT token found in localStorage.");
-      return;
-    }
-
+  const setUpCollaborationSocket = (token: string) => {
     // Collaboration socket for code editing
     const socket = io(COLLABORATION_WEBSOCKET_URL, {
       extraHeaders: {
@@ -302,21 +311,26 @@ const CodeEditor: React.FC = () => {
           "Your partner has left the coding session. Would you like to end the session and return to home page?",
         );
         setConfirmationCallBack(() => () => {
-          clearSockets();
+          clearSocketsAndPeer();
           clearSession();
           navigate("/");
         });
         openConfirmationDialog();
       }
     });
+  };
 
+  const setUpCommunicationSocket = (token: string) => {
     // Communication socket for chat
     if (!user) {
-      console.error("No user found.");
+      console.error("No user found when setting up communication socket.");
       return;
     }
-
-    const chatSocket = io(COMMUNICATION_WEBSOCKET_URL);
+    const chatSocket = io(COMMUNICATION_WEBSOCKET_URL, {
+      extraHeaders: {
+        Authorization: `${token}`,
+      },
+    });
     communicationSocketRef.current = chatSocket;
 
     chatSocket.on("connect", () => {
@@ -334,11 +348,163 @@ const CodeEditor: React.FC = () => {
       appendToChatHistory(newMessage);
     });
 
+    communicationSocketRef.current?.on("user-disconnected", (newUserId: string) => {
+      if (newUserId === user.id) return;
+      if (mediaConnectionRef.current) {
+        mediaConnectionRef.current.close();
+      }
+    });
+  };
+
+  const setUpVideoPeerConnection = (token: string) => {
+    if (!user) {
+      console.error("No user found when setting up peer connection.");
+      return;
+    }
+
+    // Peer connection for video call
+    const peer = new Peer(user.id as string, {
+      host: "localhost",
+      port: Number(VIDEO_PEER_SERVICE_PORT),
+      path: "/peerjs",
+      token: token,
+    });
+
+    peerInstanceRef.current = peer;
+
+    peer.on("open", (id) => {
+      console.log(`User ${user.username} opened peer with ID: ${id}`);
+    });
+
+    peer.on("call", (call) => {
+      console.log("Received call from other user.");
+      call.answer(myStream.current!);
+      mediaConnectionRef.current?.close();
+      mediaConnectionRef.current = call;
+
+      call.on("stream", (remoteStream) => {
+        console.log("Streaming video from caller.");
+        if (remoteVideoRef.current) {
+          remoteVideoRef.current.srcObject = remoteStream;
+        }
+        if (collapsedRemoteVideoRef.current) {
+          collapsedRemoteVideoRef.current.srcObject = remoteStream;
+        }
+        setIsOtherUserStreaming(true);
+      });
+
+      call.on("close", () => {
+        console.log("Call is hung up.");
+        setIsOtherUserStreaming(false);
+      });
+    });
+  };
+
+  useEffect(() => {
+    // set up websockets
+    if (!roomNumber) {
+      return;
+    }
+
+    const token = localStorage.getItem("jwt-token");
+    if (!token) {
+      console.error("No JWT token found in localStorage.");
+      return;
+    }
+
+    setUpCollaborationSocket(token);
+    setUpCommunicationSocket(token);
+    setUpVideoPeerConnection(token);
+
     // Cleanup on component unmount
     return () => {
-      clearSockets();
+      clearSocketsAndPeer();
     };
   }, [roomNumber]);
+
+  const getUserMediaStream = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: true,
+        audio: true,
+      });
+
+      stream.getVideoTracks().forEach((track) => {
+        track.enabled = isVideoEnabled;
+      });
+      stream.getAudioTracks().forEach((track) => {
+        track.enabled = isAudioEnabled;
+      });
+      myStream.current = stream;
+
+      if (myVideoRef.current) {
+        myVideoRef.current.srcObject = stream;
+      }
+    } catch (err) {
+      console.error("Failed to initialize call:", err);
+    }
+  };
+
+  const callOtherUserPeer = () => {
+    // connect to the peer identified by the other user's ID
+    if (!otherUserId) {
+      console.error("Other user ID not found in session context.");
+      return;
+    }
+    console.log(`User ${user?.username} calling the other user with peer ID ${otherUserId}`);
+    mediaConnectionRef.current?.close();
+    const call = peerInstanceRef.current!.call(otherUserId, myStream.current!);
+    mediaConnectionRef.current = call;
+
+    call.on("stream", (remoteStream) => {
+      if (!remoteStream) {
+        console.log("Callee is not ready to stream video.");
+        call.close();
+      }
+      console.log("Streaming video from callee.");
+      if (remoteVideoRef.current) {
+        remoteVideoRef.current.srcObject = remoteStream;
+      }
+      if (collapsedRemoteVideoRef.current) {
+        collapsedRemoteVideoRef.current.srcObject = remoteStream;
+      }
+      setIsOtherUserStreaming(true);
+    });
+
+    call.on("close", () => {
+      console.log("Call is hung up.");
+      setIsOtherUserStreaming(false);
+    });
+  };
+
+  const openVideoCall = async () => {
+    setIsVideoCallExpanded(true);
+    if (!myStream.current) {
+      await getUserMediaStream();
+    }
+    if (myStream.current) {
+      callOtherUserPeer();
+    }
+  };
+
+  useEffect(() => {
+    myStream.current?.getVideoTracks().forEach((track) => {
+      track.enabled = isVideoEnabled;
+    });
+  }, [isVideoEnabled]);
+
+  useEffect(() => {
+    myStream.current?.getAudioTracks().forEach((track) => {
+      track.enabled = isAudioEnabled;
+    });
+  }, [isAudioEnabled]);
+
+  const hangUpVideoCall = () => {
+    myStream.current?.getTracks().forEach((track) => track.stop());
+    myStream.current = null;
+    mediaConnectionRef.current?.close();
+    setIsVideoCallExpanded(false);
+  };
 
   const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newLanguage = e.target.value as Language;
@@ -487,20 +653,46 @@ const CodeEditor: React.FC = () => {
         />
       )}
 
-      {/* Floating Video Call Icon */}
-      {!isVideoCallExpanded && (
-        <div className="video-call-icon" onClick={() => setIsVideoCallExpanded(true)}>
+      {!isVideoCallExpanded && !myStream.current && (
+        <div className="video-call-icon" onClick={openVideoCall}>
           <VideoCallIcon style={{ fontSize: "2rem", color: "#fff" }} />
         </div>
       )}
 
-      {isVideoCallExpanded && (
-        <VideoCall
-          onClose={handleHangUp}
-          communicationSocketRef={communicationSocketRef}
-          roomNumber={roomNumber || ""}
-        />
+      {!isVideoCallExpanded && !myStream.current && (
+        <div className="video-call-icon" onClick={openVideoCall}>
+          <VideoCallIcon style={{ fontSize: "2rem", color: "#fff" }} />
+        </div>
       )}
+
+      <div
+        className="video-call-collapsed"
+        onClick={openVideoCall}
+        style={{ display: !isVideoCallExpanded && myStream.current ? "block" : "none" }}
+      >
+        <div className="video-box">
+          <video ref={collapsedRemoteVideoRef} autoPlay playsInline className="video-stream" />
+          <Typography variant="subtitle2" className="video-label">
+            {isOtherUserStreaming ? otherUserProfile?.username : "Waiting for the other user..."}
+          </Typography>
+        </div>
+      </div>
+
+      <div style={{ display: isVideoCallExpanded ? "block" : "none" }}>
+        <VideoCall
+          onClose={hangUpVideoCall}
+          setIsVideoCallExpanded={setIsVideoCallExpanded}
+          setIsVideoEnabled={setIsVideoEnabled}
+          setIsAudioEnabled={setIsAudioEnabled}
+          peerInstanceRef={peerInstanceRef}
+          mediaConnectionRef={mediaConnectionRef}
+          myVideoRef={myVideoRef}
+          remoteVideoRef={remoteVideoRef}
+          isOtherUserStreaming={isOtherUserStreaming}
+          isVideoEnabled={isVideoEnabled}
+          isAudioEnabled={isAudioEnabled}
+        />
+      </div>
 
       {/* Floating AI Hint Button */}
       {!isHintBoxExpanded && (
@@ -516,6 +708,18 @@ const CodeEditor: React.FC = () => {
       {isHintBoxExpanded && questionData && (
         <HintBox questionId={questionId} onClose={() => setIsHintBoxExpanded(false)} />
       )}
+      <div
+        className="video-call-collapsed"
+        onClick={openVideoCall}
+        style={{ display: !isVideoCallExpanded && myStream.current ? "block" : "none" }}
+      >
+        <div className="video-box">
+          <video ref={collapsedRemoteVideoRef} autoPlay playsInline className="video-stream" />
+          <Typography variant="subtitle2" className="video-label">
+            {isOtherUserStreaming ? otherUserProfile?.username : "Waiting for the other user..."}
+          </Typography>
+        </div>
+      </div>
 
       <Footer />
     </div>
