@@ -53,6 +53,8 @@
 
       .test-case-field {
         display: flex;
+        align-items: center;
+        gap: 10px;
 
         .field-label {
           font-weight: bold;
@@ -60,7 +62,23 @@
         }
 
         .field-value {
+          flex: 1;
           color: #e4e4e4;
+        }
+
+        &.correct {
+          color: #28a745; // Green
+          font-weight: bold;
+        }
+
+        &.incorrect {
+          color: #dc3545; // Red
+          font-weight: bold;
+        }
+
+        &.not-executed {
+          color: #6c757d; // Grey
+          font-weight: bold;
         }
       }
 
@@ -87,5 +105,20 @@
         margin-top: 10px;
       }
     }
+  }
+
+  .correct {
+    color: #28a745; // Green
+    font-weight: bold;
+  }
+
+  .incorrect {
+    color: #dc3545; // Red
+    font-weight: bold;
+  }
+
+  .not-executed {
+    color: #6c757d; // Grey
+    font-weight: bold;
   }
 }
