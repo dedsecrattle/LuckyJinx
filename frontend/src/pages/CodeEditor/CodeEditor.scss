@@ -82,6 +82,10 @@
         background-color: #caff33;
         color: #121212;
         border-radius: 5px;
+
+        &.disabled {
+          color: #6c757d;
+        }
       }
     }
 

@@ -578,6 +578,7 @@ const CodeEditor: React.FC = () => {
   // State for all test cases
   const [givenTestCases, setGivenTestCases] = useState<TestCase[]>([]);
   const [customTestCases, setCustomTestCases] = useState<TestCase[]>([]);
+  const [isExecuting, setIsExecuting] = useState<boolean>(false);
 
   const addTestCase = () => {
     if (givenTestCases.length + customTestCases.length >= 5) {
@@ -643,7 +644,9 @@ const CodeEditor: React.FC = () => {
     };
 
     try {
+      setIsExecuting(true);
       const response = await QuestionService.test(questionId, payload);
+      setIsExecuting(false);
       // Assuming the API returns an array of actual outputs corresponding to the test cases
       const { outputs } = response;
 
@@ -714,7 +717,13 @@ const CodeEditor: React.FC = () => {
                 <option value="cpp">C++</option>
                 <option value="java">Java</option>
               </select>
-              <Button variant="contained" size="small" className="submit-button" onClick={executeCode}>
+              <Button
+                variant="contained"
+                size="small"
+                className={"submit-button" + (isExecuting ? " disabled" : "")}
+                onClick={executeCode}
+                disabled={isExecuting}
+              >
                 Run Code
               </Button>
             </div>
