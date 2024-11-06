@@ -2,6 +2,7 @@ import React from "react";
 import { Typography, Button, TextField, IconButton } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import "./TestCases.scss";
+import { EditNote } from "@mui/icons-material";
 
 interface TestCase {
   id: string;
@@ -13,7 +14,6 @@ interface TestCase {
     error: string | null;
     isCorrect: boolean | null;
   };
-  isDefault: boolean;
   isSubmitted?: boolean;
 }
 
@@ -22,6 +22,7 @@ interface TestCasesProps {
   customTestCases: TestCase[];
   addTestCase: () => void;
   updateTestCase: (id: string, field: "input" | "expectedOutput", value: string) => void;
+  unsubmitTestCase: (id: string) => void;
   submitTestCase: (id: string) => void;
   deleteTestCase: (id: string) => void;
 }
@@ -31,6 +32,7 @@ const TestCases: React.FC<TestCasesProps> = ({
   customTestCases,
   addTestCase,
   updateTestCase,
+  unsubmitTestCase,
   submitTestCase,
   deleteTestCase,
 }) => {
@@ -89,10 +91,13 @@ const TestCases: React.FC<TestCasesProps> = ({
             <IconButton className="delete-test-case-button" onClick={() => deleteTestCase(testCase.id)} size="small">
               <CloseIcon style={{ color: "#fff" }} />
             </IconButton>
-            <div className="test-case-header">
+            <div className="test-case-header test-case-header-editable">
               <Typography variant="subtitle1" className="test-case-number">
                 Test Case {testCase.number}
               </Typography>
+              <IconButton onClick={() => unsubmitTestCase(testCase.id)}>
+                <EditNote className="test-case-edit" />
+              </IconButton>
             </div>
             <div className="test-case-content">
               {testCase.isSubmitted ? (
@@ -150,7 +155,7 @@ const TestCases: React.FC<TestCasesProps> = ({
                     onClick={() => submitTestCase(testCase.id)}
                     className="submit-test-case-button"
                   >
-                    Add Test Case
+                    Save Test Case
                   </Button>
                 </>
               )}

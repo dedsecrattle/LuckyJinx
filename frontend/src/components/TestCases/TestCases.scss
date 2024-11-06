@@ -46,6 +46,17 @@
       }
     }
 
+    .test-case-header-editable {
+      display: flex;
+      flex-direction: row;
+      gap: 20px;
+      align-items: center;
+
+      .test-case-edit {
+        color: #f1f1f1;
+      }
+    }
+
     .test-case-content {
       display: flex;
       flex-direction: column;

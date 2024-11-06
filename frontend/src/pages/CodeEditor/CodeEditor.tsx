@@ -105,7 +105,6 @@ interface TestCase {
     error: string | null;
     isCorrect: boolean | null;
   };
-  isDefault: boolean;
   isSubmitted?: boolean;
 }
 
@@ -197,7 +196,6 @@ const CodeEditor: React.FC = () => {
           number: index + 1,
           input: tc.input,
           expectedOutput: tc.output,
-          isDefault: true,
           isSubmitted: false,
         }));
         setGivenTestCases(fetchedTestCases);
@@ -592,7 +590,6 @@ const CodeEditor: React.FC = () => {
       number: givenTestCases.length + customTestCases.length + 1,
       input: "",
       expectedOutput: "",
-      isDefault: false,
       isSubmitted: false,
     };
     setCustomTestCases([...customTestCases, newTestCase]);
@@ -602,6 +599,11 @@ const CodeEditor: React.FC = () => {
   const updateTestCase = (id: string, field: "input" | "expectedOutput", value: string) => {
     const updatedTestCases = customTestCases.map((tc) => (tc.id === id ? { ...tc, [field]: value } : tc));
     setCustomTestCases(updatedTestCases);
+  };
+
+  // Make a custom test case editable
+  const unsubmitTestCase = (id: string) => {
+    setCustomTestCases(customTestCases.map((tc) => (tc.id === id ? { ...tc, isSubmitted: false } : tc)));
   };
 
   // Function to submit a test case (mark as submitted)
@@ -628,7 +630,7 @@ const CodeEditor: React.FC = () => {
       return;
     }
 
-    const submittedTestCases = customTestCases.filter((tc) => tc.isSubmitted || tc.isDefault);
+    const submittedTestCases = customTestCases.filter((tc) => tc.isSubmitted);
 
     // Prepare payload for the API
     const payload = {
@@ -735,6 +737,7 @@ const CodeEditor: React.FC = () => {
             customTestCases={customTestCases}
             addTestCase={addTestCase}
             updateTestCase={updateTestCase}
+            unsubmitTestCase={unsubmitTestCase}
             submitTestCase={submitTestCase}
             deleteTestCase={deleteTestCase}
           />
