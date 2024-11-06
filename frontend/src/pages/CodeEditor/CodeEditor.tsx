@@ -100,7 +100,11 @@ interface TestCase {
   number: number;
   input: string;
   expectedOutput: string;
-  actualOutput: string;
+  actualOutput?: {
+    output: string | null;
+    error: string | null;
+    isCorrect: boolean | null;
+  };
   isDefault: boolean;
   isSubmitted?: boolean;
 }
@@ -193,7 +197,6 @@ const CodeEditor: React.FC = () => {
           number: index + 1,
           input: tc.input,
           expectedOutput: tc.output,
-          actualOutput: "",
           isDefault: true,
           isSubmitted: false,
         }));
@@ -589,7 +592,6 @@ const CodeEditor: React.FC = () => {
       number: givenTestCases.length + customTestCases.length + 1,
       input: "",
       expectedOutput: "",
-      actualOutput: "",
       isDefault: false,
       isSubmitted: false,
     };
@@ -655,7 +657,7 @@ const CodeEditor: React.FC = () => {
         if (submissionIndex !== -1) {
           return {
             ...tc,
-            actualOutput: outputs[submissionIndex].output,
+            actualOutput: outputs[submissionIndex],
           };
         }
         return tc;
@@ -665,7 +667,7 @@ const CodeEditor: React.FC = () => {
       const updatedGivenTestCases = givenTestCases.map((tc, i) => {
         return {
           ...tc,
-          actualOutput: outputs[i].output,
+          actualOutput: outputs[i],
         }
       });
       setGivenTestCases(updatedGivenTestCases);
@@ -729,7 +731,8 @@ const CodeEditor: React.FC = () => {
         {/* Test Cases Section */}
         <div className="test-cases-section">
           <TestCases
-            testCases={customTestCases}
+            givenTestCases={givenTestCases}
+            customTestCases={customTestCases}
             addTestCase={addTestCase}
             updateTestCase={updateTestCase}
             submitTestCase={submitTestCase}
