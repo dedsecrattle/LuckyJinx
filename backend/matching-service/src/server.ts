@@ -19,7 +19,7 @@ app.use(express.json());
 app.use(
   cors({
     origin: "*",
-  })
+  }),
 );
 
 const prisma = new PrismaClient();

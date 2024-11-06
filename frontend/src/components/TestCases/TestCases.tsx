@@ -2,29 +2,37 @@ import React from "react";
 import { Typography, Button, TextField, IconButton } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import "./TestCases.scss";
+import { EditNote } from "@mui/icons-material";
 
 interface TestCase {
+  id: string;
   number: number;
   input: string;
   expectedOutput: string;
-  actualOutput: string;
+  actualOutput?: {
+    output: string | null;
+    error: string | null;
+    isCorrect: boolean | null;
+  };
   isSubmitted?: boolean;
 }
 
 interface TestCasesProps {
-  defaultTestCases: TestCase[];
-  userTestCases: TestCase[];
+  givenTestCases: TestCase[];
+  customTestCases: TestCase[];
   addTestCase: () => void;
-  updateTestCase: (index: number, field: "input" | "expectedOutput", value: string) => void;
-  submitTestCase: (index: number) => void;
-  deleteTestCase: (index: number) => void;
+  updateTestCase: (id: string, field: "input" | "expectedOutput", value: string) => void;
+  unsubmitTestCase: (id: string) => void;
+  submitTestCase: (id: string) => void;
+  deleteTestCase: (id: string) => void;
 }
 
 const TestCases: React.FC<TestCasesProps> = ({
-  defaultTestCases,
-  userTestCases,
+  givenTestCases,
+  customTestCases,
   addTestCase,
   updateTestCase,
+  unsubmitTestCase,
   submitTestCase,
   deleteTestCase,
 }) => {
@@ -34,81 +42,138 @@ const TestCases: React.FC<TestCasesProps> = ({
         <Typography variant="h6" className="test-cases-title">
           Test Cases
         </Typography>
-        <Button variant="contained" size="small" onClick={addTestCase} disabled={userTestCases.length >= 5}>
-          Add Test Case
+        <Button
+          variant="contained"
+          size="small"
+          onClick={addTestCase}
+          disabled={givenTestCases.length + customTestCases.length >= 8} // Adjust the limit as needed
+        >
+          Add One More Test Case
         </Button>
       </div>
       <div className="test-cases-list">
-        {[...defaultTestCases, ...userTestCases].map((testCase, index) => {
-          const isUserTestCase = index >= defaultTestCases.length;
-          const userTestCaseIndex = index - defaultTestCases.length;
-
-          return (
-            <div key={testCase.number} className="test-case">
-              {/* Delete button */}
-              {isUserTestCase && (
-                <IconButton className="delete-test-case-button" onClick={() => deleteTestCase(userTestCaseIndex)}>
-                  <CloseIcon style={{ color: "#fff" }} />
-                </IconButton>
-              )}
-              <div className="test-case-header">
-                <Typography variant="subtitle1" className="test-case-number">
-                  Test Case {testCase.number}
-                </Typography>
-              </div>
-              <div className="test-case-content">
-                {isUserTestCase && !testCase.isSubmitted ? (
-                  <>
-                    <TextField
-                      label="Input"
-                      multiline
-                      rows={2}
-                      variant="outlined"
-                      fullWidth
-                      value={testCase.input}
-                      onChange={(e) => updateTestCase(userTestCaseIndex, "input", e.target.value)}
-                      className="test-case-textfield"
-                    />
-                    <TextField
-                      label="Expected Output"
-                      multiline
-                      rows={1}
-                      variant="outlined"
-                      fullWidth
-                      value={testCase.expectedOutput}
-                      onChange={(e) => updateTestCase(userTestCaseIndex, "expectedOutput", e.target.value)}
-                      className="test-case-textfield"
-                    />
-                    <Button
-                      variant="contained"
-                      size="small"
-                      onClick={() => submitTestCase(userTestCaseIndex)}
-                      className="submit-test-case-button"
-                    >
-                      Add Test Case
-                    </Button>
-                  </>
-                ) : (
-                  // Display test case
-                  <>
-                    <div className="test-case-field">
-                      <span className="field-label">Input:</span>
-                      <span className="field-value">{testCase.input}</span>
-                    </div>
-                    <div className="test-case-field">
-                      <span className="field-label">Expected Output:</span>
-                      <span className="field-value">{testCase.expectedOutput}</span>
-                    </div>
-                    <div className="test-case-field">
-                      <span className="field-label">Actual Output:</span>
-                      <span className="field-value">{testCase.actualOutput}</span>
-                    </div>
-                  </>
-                )}
-              </div>
+        {givenTestCases.map((testCase) => (
+          <div key={testCase.id} className="test-case">
+            <div className="test-case-header">
+              <Typography variant="subtitle1" className="test-case-number">
+                Test Case {testCase.number}
+              </Typography>
             </div>
-          );
-        })}
+            <div className="test-case-content">
+              <div className="test-case-field">
+                <span className="field-label">Input:</span>
+                <code className="field-value">{testCase.input}</code>
+              </div>
+              <div className="test-case-field">
+                <span className="field-label">Expected Output:</span>
+                <code className="field-value">{testCase.expectedOutput}</code>
+              </div>
+              <div className="test-case-field">
+                <span className="field-label">Actual Output:</span>
+                <code
+                  className={`field-value ${
+                    testCase.actualOutput
+                      ? testCase.actualOutput.isCorrect === false
+                        ? "incorrect"
+                        : "correct"
+                      : "not-executed"
+                  }`}
+                >
+                  {testCase.actualOutput ? testCase.actualOutput.output : "Not executed yet"}
+                </code>
+              </div>
+              {testCase.actualOutput?.error && (
+                <div className="test-case-field">
+                  <span className="field-label">Error:</span>
+                  <code className="field-value error">{testCase.actualOutput.error}</code>
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+        {customTestCases.map((testCase) => (
+          <div key={testCase.id} className="test-case">
+            {/* Delete button */}
+            <IconButton className="delete-test-case-button" onClick={() => deleteTestCase(testCase.id)} size="small">
+              <CloseIcon style={{ color: "#fff" }} />
+            </IconButton>
+            <div className="test-case-header test-case-header-editable">
+              <Typography variant="subtitle1" className="test-case-number">
+                Test Case {testCase.number}
+              </Typography>
+              <IconButton onClick={() => unsubmitTestCase(testCase.id)}>
+                <EditNote className="test-case-edit" />
+              </IconButton>
+            </div>
+            <div className="test-case-content">
+              {testCase.isSubmitted ? (
+                // Display test case
+                <>
+                  <div className="test-case-field">
+                    <span className="field-label">Input:</span>
+                    <code className="field-value">{testCase.input}</code>
+                  </div>
+                  <div className="test-case-field">
+                    <span className="field-label">Expected Output:</span>
+                    <code className="field-value">{testCase.expectedOutput}</code>
+                  </div>
+                  <div className="test-case-field">
+                    <span className="field-label">Actual Output:</span>
+                    <code
+                      className={`field-value ${
+                        testCase.actualOutput
+                          ? testCase.actualOutput.isCorrect === false
+                            ? "incorrect"
+                            : "correct"
+                          : "not-executed"
+                      }`}
+                    >
+                      {testCase.actualOutput ? testCase.actualOutput.output : "Not executed yet"}
+                    </code>
+                  </div>
+                  {testCase.actualOutput?.error && (
+                    <div className="test-case-field">
+                      <span className="field-label">Error:</span>
+                      <code className="field-value error">{testCase.actualOutput.error}</code>
+                    </div>
+                  )}
+                </>
+              ) : (
+                // Editable test case fields
+                <>
+                  <TextField
+                    label="Input"
+                    multiline
+                    rows={2}
+                    variant="outlined"
+                    fullWidth
+                    value={testCase.input}
+                    onChange={(e) => updateTestCase(testCase.id, "input", e.target.value)}
+                    className="test-case-textfield"
+                  />
+                  <TextField
+                    label="Expected Output"
+                    multiline
+                    rows={2}
+                    variant="outlined"
+                    fullWidth
+                    value={testCase.expectedOutput}
+                    onChange={(e) => updateTestCase(testCase.id, "expectedOutput", e.target.value)}
+                    className="test-case-textfield"
+                  />
+                  <Button
+                    variant="contained"
+                    size="small"
+                    onClick={() => submitTestCase(testCase.id)}
+                    className="submit-test-case-button"
+                  >
+                    Save Test Case
+                  </Button>
+                </>
+              )}
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );

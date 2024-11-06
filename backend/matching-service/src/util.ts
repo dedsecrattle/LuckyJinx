@@ -5,7 +5,7 @@ import Question from "./model/question";
 configDotenv();
 const fetchRandomQuestion = async (
   complexity: string,
-  categories: string
+  categories: string,
 ): Promise<Question | null> => {
   const response = await axios.post(`${process.env.QUESTION_SERVICE}/random`, {
     complexity,
