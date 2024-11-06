@@ -9,6 +9,7 @@ import QuestionService from "../../services/question.service";
 import { useConfirmationDialog } from "../../contexts/ConfirmationDialogContext";
 import { UserContext } from "../../contexts/UserContext";
 import { isAdmin } from "../../util/user.helper";
+import Spinner from "../Spinner/Spinner";
 
 const QuestionList = (): ReactElement => {
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -151,7 +152,7 @@ const QuestionList = (): ReactElement => {
       </Typography>
       <div className={styles.questiontablebody}>
         {loading ? (
-          <Typography align="center">Loading questions...</Typography>
+          <Spinner />
         ) : error ? (
           <Typography align="center" color="error">
             {error}

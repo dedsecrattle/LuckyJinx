@@ -201,6 +201,14 @@
     transform 0.2s ease,
     background-color 0.2s ease;
 
+  &-alert {
+    z-index: 101;
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    transform: scale(0.7);
+  }
+
   &:hover {
     transform: scale(1.1);
     background-color: #373737;
@@ -224,6 +232,14 @@
     transition:
       transform 0.2s ease,
       background-color 0.2s ease;
+
+    &-alert {
+      z-index: 101;
+      position: absolute;
+      top: -5px;
+      right: -5px;
+      transform: scale(0.7);
+    }
 
     &:hover {
       transform: scale(1.1);
