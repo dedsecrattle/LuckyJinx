@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import { Navigate, useParams } from "react-router-dom";
 import axios from "axios";
 import { ReactElement } from "react";
+import Spinner from "../components/Spinner/Spinner";
+import { useMainDialog } from "../contexts/MainDialogContext";
 
 interface ProtectedRouteProps {
   element: ReactElement;
@@ -11,6 +13,7 @@ interface ProtectedRouteProps {
 
 const ProtectedRoute = ({ element, userId }: ProtectedRouteProps): ReactElement => {
   const { roomNumber } = useParams();
+  const { setMainDialogTitle, setMainDialogContent, openMainDialog } = useMainDialog();
   const [hasAccess, setHasAccess] = useState<boolean | null>(null);
 
   useEffect(() => {
@@ -31,7 +34,17 @@ const ProtectedRoute = ({ element, userId }: ProtectedRouteProps): ReactElement 
   }, [roomNumber, userId]);
 
   if (hasAccess === null) {
-    return <div>Loading...</div>;
+    return (
+      <div style={{ height: "100vh" }}>
+        <Spinner />
+      </div>
+    );
+  }
+
+  if (!hasAccess) {
+    setMainDialogTitle("Access Denied");
+    setMainDialogContent("It seems you do not have access. Please double check if you are in the correct room.");
+    openMainDialog();
   }
 
   return hasAccess ? element : <Navigate to="/" />;
