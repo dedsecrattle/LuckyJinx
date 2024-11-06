@@ -25,6 +25,7 @@ import { ChatMessage } from "../../models/communication.model";
 import { SessionContext, SessionState } from "../../contexts/SessionContext";
 import { useConfirmationDialog } from "../../contexts/ConfirmationDialogContext";
 import Peer, { MediaConnection } from "peerjs";
+import { Circle } from "@mui/icons-material";
 
 const COMMUNICATION_WEBSOCKET_URL = process.env.REACT_APP_COMMUNICATION_SERVICE_URL as string;
 const COLLABORATION_WEBSOCKET_URL = process.env.REACT_APP_COLLABORATION_SERVICE_URL as string;
@@ -118,6 +119,8 @@ const CodeEditor: React.FC = () => {
   const [isVideoCallExpanded, setIsVideoCallExpanded] = useState(false);
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
   const chatHistoryRef = useRef<ChatMessage[]>([]); // For updating state of chatHistory
+  const [hasNewChatMessage, setHasNewChatMessage] = useState(false);
+  const [hasNewVideoCall, setHasNewVideoCall] = useState(false);
 
   const myStream = useRef<MediaStream | null>(null);
 
@@ -342,6 +345,7 @@ const CodeEditor: React.FC = () => {
         timestamp: new Date(timeStamp),
       };
       appendToChatHistory(newMessage);
+      setHasNewChatMessage(true);
     });
 
     communicationSocketRef.current?.on("user-disconnected", (newUserId: string) => {
@@ -377,6 +381,7 @@ const CodeEditor: React.FC = () => {
       call.answer(myStream.current!);
       mediaConnectionRef.current?.close();
       mediaConnectionRef.current = call;
+      setHasNewVideoCall(true);
 
       call.on("stream", (remoteStream) => {
         console.log("Streaming video from caller.");
@@ -392,6 +397,7 @@ const CodeEditor: React.FC = () => {
       call.on("close", () => {
         console.log("Call is hung up.");
         setIsOtherUserStreaming(false);
+        setHasNewVideoCall(false);
       });
     });
   };
@@ -470,11 +476,13 @@ const CodeEditor: React.FC = () => {
     call.on("close", () => {
       console.log("Call is hung up.");
       setIsOtherUserStreaming(false);
+      setHasNewVideoCall(false);
     });
   };
 
   const openVideoCall = async () => {
     setIsVideoCallExpanded(true);
+    setHasNewVideoCall(false);
     if (!myStream.current) {
       await getUserMediaStream();
     }
@@ -500,6 +508,7 @@ const CodeEditor: React.FC = () => {
     myStream.current = null;
     mediaConnectionRef.current?.close();
     setIsVideoCallExpanded(false);
+    setHasNewVideoCall(false);
   };
 
   const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -631,12 +640,16 @@ const CodeEditor: React.FC = () => {
       {!isChatboxExpanded && (
         <div className="chatbox-icon" onClick={() => setIsChatboxExpanded(true)}>
           <ChatIcon style={{ fontSize: "2rem", color: "#fff" }} />
+          {hasNewChatMessage && <Circle className="chatbox-icon-alert" color="primary" />}
         </div>
       )}
 
       {isChatboxExpanded && (
         <Chatbox
-          onClose={() => setIsChatboxExpanded(false)}
+          onClose={() => {
+            setIsChatboxExpanded(false);
+            setHasNewChatMessage(false);
+          }}
           roomNumber={roomNumber}
           communicationSocketRef={communicationSocketRef}
           appendToChatHistory={appendToChatHistory}
@@ -647,6 +660,7 @@ const CodeEditor: React.FC = () => {
       {!isVideoCallExpanded && !myStream.current && (
         <div className="video-call-icon" onClick={openVideoCall}>
           <VideoCallIcon style={{ fontSize: "2rem", color: "#fff" }} />
+          {hasNewVideoCall && <Circle className="video-call-icon-alert" color="primary" />}
         </div>
       )}
 
