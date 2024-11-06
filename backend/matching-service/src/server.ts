@@ -19,12 +19,16 @@ app.use(express.json());
 app.use(
   cors({
     origin: "*",
-  }),
+  })
 );
 
 const prisma = new PrismaClient();
 
 app.post("/check", async (req, res) => {
+  if (!req.body.data) {
+    res.status(400).json({ error: "Request was malformed." });
+    return;
+  }
   const { userId, roomId } = req.body.data;
 
   const record = await prisma.matchRecord.findFirst({
@@ -38,7 +42,6 @@ app.post("/check", async (req, res) => {
           matchedUserId: userId,
         },
       ],
-      matched: true,
     },
   });
 
@@ -46,6 +49,162 @@ app.post("/check", async (req, res) => {
     res.status(200).json({ hasAccess: false });
   } else {
     res.status(200).json({ hasAccess: true });
+  }
+});
+
+app.get("/session", async (req, res) => {
+  if (!req.query.userId) {
+    res.status(400).json({ error: "Request was malformed." });
+    return;
+  }
+  const userId = req.query.userId as string;
+
+  const record = await prisma.sessionHistory.findFirst({
+    where: {
+      OR: [
+        {
+          userOneId: userId,
+        },
+        {
+          userTwoId: userId,
+        },
+      ],
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+
+  if (!record) {
+    res.status(200).json({ session: null });
+  } else {
+    const session = {
+      isOngoing: record.isOngoing,
+      roomNumber: record.roomNumber,
+      questionId: record.questionId,
+      otherUserId: record.userOneId === userId ? record.userTwoId : record.userOneId,
+      submission: record.submission,
+    };
+    res.status(200).json({ session: session });
+  }
+});
+
+app.get("/session-history", async (req, res) => {
+  if (!req.query.userId) {
+    res.status(400).json({ error: "Request was malformed." });
+    return;
+  }
+  const userId = req.query.userId as string;
+
+  const records = await prisma.sessionHistory.findMany({
+    where: {
+      OR: [
+        {
+          userOneId: userId,
+        },
+        {
+          userTwoId: userId,
+        },
+      ],
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+    take: 3,
+  });
+
+  if (!records || records.length === 0) {
+    res.status(200).json({ sessions: [] });
+  } else {
+    const sessions = records.map((record) => ({
+      isOngoing: record.isOngoing,
+      roomNumber: record.roomNumber,
+      questionId: record.questionId,
+      otherUserId: record.userOneId === userId ? record.userTwoId : record.userOneId,
+      submission: record.submission,
+    }));
+    res.status(200).json({ sessions: sessions });
+  }
+});
+
+app.put("/leave-session", async (req, res) => {
+  if (!req.body.data) {
+    res.status(400).json({ error: "Request was malformed." });
+    return;
+  }
+  const { userId, roomId } = req.body.data;
+  const record = await prisma.sessionHistory.findFirst({
+    where: {
+      isOngoing: true,
+      roomNumber: roomId,
+      OR: [
+        {
+          userOneId: userId,
+        },
+        {
+          userTwoId: userId,
+        },
+      ],
+    },
+  });
+  if (!record) {
+    res.status(404).json({ error: "Request did not match with any ongoing session that the user is in." });
+    return;
+  } else {
+    const isUserOneActive = record.userOneId === userId ? false : record.isUserOneActive;
+    const isUserTwoActive = record.userTwoId === userId ? false : record.isUserTwoActive;
+    const isOngoing = isUserOneActive || isUserTwoActive;
+    await prisma.sessionHistory.update({
+      where: {
+        sessionId: record.sessionId,
+      },
+      data: {
+        isUserOneActive: isUserOneActive,
+        isUserTwoActive: isUserTwoActive,
+        isOngoing: isOngoing,
+      },
+    });
+  }
+  res.status(200).json({ ok: "ok" });
+});
+
+app.put("/rejoin-session", async (req, res) => {
+  if (!req.body.data) {
+    res.status(400).json({ error: "Request was malformed." });
+    return;
+  }
+  const { userId, roomId } = req.body.data;
+  const record = await prisma.sessionHistory.findFirst({
+    where: {
+      isOngoing: true,
+      roomNumber: roomId,
+      OR: [
+        {
+          userOneId: userId,
+        },
+        {
+          userTwoId: userId,
+        },
+      ],
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+  if (!record) {
+    res.status(404).json({ error: "Request did not match with any ongoing session that the user is in." });
+  } else {
+    await prisma.sessionHistory.update({
+      where: {
+        sessionId: record.sessionId,
+      },
+      data: record.userOneId === userId ? { isUserOneActive: true } : { isUserTwoActive: true },
+    });
+    res.status(200).json({
+      roomNumber: record.roomNumber,
+      questionId: record.questionId,
+      otherUserId: record.userOneId === userId ? record.userTwoId : record.userOneId,
+    });
   }
 });
 
