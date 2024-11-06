@@ -197,7 +197,7 @@ const CodeEditor: React.FC = () => {
           isDefault: true,
           isSubmitted: false,
         }));
-        setTestCases(fetchedTestCases);
+        setGivenTestCases(fetchedTestCases);
       } catch (error) {
         console.error("Failed to fetch question data:", error);
       }
@@ -575,47 +575,48 @@ const CodeEditor: React.FC = () => {
   }, [otherCursors]);
 
   // State for all test cases
-  const [testCases, setTestCases] = useState<TestCase[]>([]);
+  const [givenTestCases, setGivenTestCases] = useState<TestCase[]>([]);
+  const [customTestCases, setCustomTestCases] = useState<TestCase[]>([]);
 
   const addTestCase = () => {
-    if (testCases.length >= 5) {
+    if (givenTestCases.length + customTestCases.length >= 5) {
       // Adjust the limit as needed
       alert("You can only add up to 5 test cases.");
       return;
     }
     const newTestCase: TestCase = {
       id: `user-${Date.now()}`,
-      number: testCases.length + 1,
+      number: givenTestCases.length + customTestCases.length + 1,
       input: "",
       expectedOutput: "",
       actualOutput: "",
       isDefault: false,
       isSubmitted: false,
     };
-    setTestCases([...testCases, newTestCase]);
+    setCustomTestCases([...customTestCases, newTestCase]);
   };
 
   // Function to update a test case field
   const updateTestCase = (id: string, field: "input" | "expectedOutput", value: string) => {
-    const updatedTestCases = testCases.map((tc) => (tc.id === id ? { ...tc, [field]: value } : tc));
-    setTestCases(updatedTestCases);
+    const updatedTestCases = customTestCases.map((tc) => (tc.id === id ? { ...tc, [field]: value } : tc));
+    setCustomTestCases(updatedTestCases);
   };
 
   // Function to submit a test case (mark as submitted)
   const submitTestCase = (id: string) => {
-    const updatedTestCases = testCases.map((tc) => (tc.id === id ? { ...tc, isSubmitted: true } : tc));
-    setTestCases(updatedTestCases);
+    const updatedTestCases = customTestCases.map((tc) => (tc.id === id ? { ...tc, isSubmitted: true } : tc));
+    setCustomTestCases(updatedTestCases);
   };
 
   // Function to delete a test case
   const deleteTestCase = (id: string) => {
-    const updatedTestCases = testCases.filter((tc) => tc.id !== id);
+    const updatedTestCases = customTestCases.filter((tc) => tc.id !== id);
     // Re-number the remaining test cases
     const renumberedTestCases = updatedTestCases.map((tc, index) => ({
       ...tc,
-      number: index + 1,
+      number: givenTestCases.length + index + 1,
     }));
-    setTestCases(renumberedTestCases);
+    setCustomTestCases(renumberedTestCases);
   };
 
   // Function to execute the code against all test cases
@@ -625,65 +626,49 @@ const CodeEditor: React.FC = () => {
       return;
     }
 
-    const submittedTestCases = testCases.filter((tc) => tc.isSubmitted || tc.isDefault);
-
-    if (submittedTestCases.length === 0) {
-      alert("No test cases to execute.");
-      return;
-    }
+    const submittedTestCases = customTestCases.filter((tc) => tc.isSubmitted || tc.isDefault);
 
     // Prepare payload for the API
     const payload = {
-      language: language,
+      lang: language,
       code: code,
-      testCases: submittedTestCases.map((tc) => ({
+      customTests: submittedTestCases.map((tc) => ({
         input: tc.input,
-        expectedOutput: tc.expectedOutput,
+        output: tc.expectedOutput || null,
       })),
     };
 
     try {
-      // Replace '/api/execute' with your actual API endpoint
-      const response = await fetch("/api/execute", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("jwt-token")}`,
-        },
-        body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error("Code execution failed:", errorData);
-        alert(`Code execution failed: ${errorData.message || "Unknown error"}`);
-        return;
-      }
-
-      const result = await response.json();
-
+      const response = await QuestionService.test(questionId, payload);
       // Assuming the API returns an array of actual outputs corresponding to the test cases
-      const { actualOutputs } = result;
+      const { outputs } = response;
 
-      if (!Array.isArray(actualOutputs) || actualOutputs.length !== submittedTestCases.length) {
-        console.error("Invalid response from code execution API:", result);
+      if (!Array.isArray(outputs) || outputs.length !== givenTestCases.length + submittedTestCases.length) {
+        console.error("Invalid response from code execution API:", response);
         alert("Invalid response from code execution API.");
         return;
       }
 
       // Update actual outputs in test cases
-      const updatedTestCases = testCases.map((tc) => {
+      const updatedCustomTestCases = customTestCases.map((tc) => {
         const submissionIndex = submittedTestCases.findIndex((stc) => stc.id === tc.id);
         if (submissionIndex !== -1) {
           return {
             ...tc,
-            actualOutput: actualOutputs[submissionIndex],
+            actualOutput: outputs[submissionIndex].output,
           };
         }
         return tc;
       });
+      setCustomTestCases(updatedCustomTestCases);
 
-      setTestCases(updatedTestCases);
+      const updatedGivenTestCases = givenTestCases.map((tc, i) => {
+        return {
+          ...tc,
+          actualOutput: outputs[i].output,
+        }
+      });
+      setGivenTestCases(updatedGivenTestCases);
     } catch (error) {
       console.error("Error executing code:", error);
       alert("An error occurred while executing the code.");
@@ -744,7 +729,7 @@ const CodeEditor: React.FC = () => {
         {/* Test Cases Section */}
         <div className="test-cases-section">
           <TestCases
-            testCases={testCases}
+            testCases={customTestCases}
             addTestCase={addTestCase}
             updateTestCase={updateTestCase}
             submitTestCase={submitTestCase}
