@@ -86,7 +86,11 @@ const App = (): ReactElement => {
               <Route
                 path="/code-editor/:roomNumber"
                 element={
-                  user ? <ProtectedRoute element={<CodeEditor />} userId={user.id as string} /> : <Navigate to={""} />
+                  user ? (
+                    <ProtectedRoute element={<CodeEditor />} userId={user.id as string} />
+                  ) : (
+                    <Navigate to={"/login"} />
+                  )
                 }
               />
             </Routes>
