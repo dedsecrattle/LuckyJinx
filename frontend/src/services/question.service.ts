@@ -12,15 +12,13 @@ export default class QuestionService {
         "Content-type": "application/json",
       },
     });
-    client.interceptors.request.use(
-      (config) => {
-        const token = localStorage.getItem("jwt-token");
-        if (token) {
-          config.headers["Authorization"] = token;
-        }
-        return config;
-      },
-    );
+    client.interceptors.request.use((config) => {
+      const token = localStorage.getItem("jwt-token");
+      if (token) {
+        config.headers["Authorization"] = token;
+      }
+      return config;
+    });
     return client;
   }
 

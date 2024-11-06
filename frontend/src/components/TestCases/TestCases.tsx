@@ -85,9 +85,7 @@ const TestCases: React.FC<TestCasesProps> = ({
               {testCase.actualOutput?.error && (
                 <div className="test-case-field">
                   <span className="field-label">Error:</span>
-                  <code className="field-value error">
-                    {testCase.actualOutput.error}
-                  </code>
+                  <code className="field-value error">{testCase.actualOutput.error}</code>
                 </div>
               )}
             </div>
@@ -136,9 +134,7 @@ const TestCases: React.FC<TestCasesProps> = ({
                   {testCase.actualOutput?.error && (
                     <div className="test-case-field">
                       <span className="field-label">Error:</span>
-                      <code className="field-value error">
-                        {testCase.actualOutput.error}
-                      </code>
+                      <code className="field-value error">{testCase.actualOutput.error}</code>
                     </div>
                   )}
                 </>

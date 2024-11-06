@@ -673,7 +673,7 @@ const CodeEditor: React.FC = () => {
         return {
           ...tc,
           actualOutput: outputs[i],
-        }
+        };
       });
       setGivenTestCases(updatedGivenTestCases);
     } catch (error) {

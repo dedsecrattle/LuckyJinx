@@ -76,17 +76,17 @@
           flex: 1;
           color: #e4e4e4;
           white-space: pre-wrap;
-          
+
           &.correct {
             color: #28a745; // Green
             font-weight: bold;
           }
-  
+
           &.incorrect {
             color: #dc3545; // Red
             font-weight: bold;
           }
-  
+
           &.not-executed {
             color: #6c757d; // Grey
             font-weight: bold;
