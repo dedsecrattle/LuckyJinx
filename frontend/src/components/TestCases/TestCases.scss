@@ -91,6 +91,10 @@
             color: #6c757d; // Grey
             font-weight: bold;
           }
+
+          &.error {
+            color: #dc3545; // Red
+          }
         }
       }
 

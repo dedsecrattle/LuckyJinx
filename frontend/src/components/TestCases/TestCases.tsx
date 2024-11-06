@@ -62,15 +62,15 @@ const TestCases: React.FC<TestCasesProps> = ({
             <div className="test-case-content">
               <div className="test-case-field">
                 <span className="field-label">Input:</span>
-                <span className="field-value">{testCase.input}</span>
+                <code className="field-value">{testCase.input}</code>
               </div>
               <div className="test-case-field">
                 <span className="field-label">Expected Output:</span>
-                <span className="field-value">{testCase.expectedOutput}</span>
+                <code className="field-value">{testCase.expectedOutput}</code>
               </div>
               <div className="test-case-field">
                 <span className="field-label">Actual Output:</span>
-                <span
+                <code
                   className={`field-value ${
                     testCase.actualOutput
                       ? testCase.actualOutput.isCorrect === false
@@ -80,7 +80,15 @@ const TestCases: React.FC<TestCasesProps> = ({
                   }`}
                 >
                   {testCase.actualOutput ? testCase.actualOutput.output : "Not executed yet"}
-                </span>
+                </code>
+                {testCase.actualOutput?.error && (
+                    <div className="test-case-field">
+                      <span className="field-label">Error:</span>
+                      <code className="field-value error">
+                        {testCase.actualOutput.error}
+                      </code>
+                    </div>
+                  )}
               </div>
             </div>
           </div>
@@ -105,15 +113,15 @@ const TestCases: React.FC<TestCasesProps> = ({
                 <>
                   <div className="test-case-field">
                     <span className="field-label">Input:</span>
-                    <span className="field-value">{testCase.input}</span>
+                    <code className="field-value">{testCase.input}</code>
                   </div>
                   <div className="test-case-field">
                     <span className="field-label">Expected Output:</span>
-                    <span className="field-value">{testCase.expectedOutput}</span>
+                    <code className="field-value">{testCase.expectedOutput}</code>
                   </div>
                   <div className="test-case-field">
                     <span className="field-label">Actual Output:</span>
-                    <span
+                    <code
                       className={`field-value ${
                         testCase.actualOutput
                           ? testCase.actualOutput.isCorrect === false
@@ -123,8 +131,16 @@ const TestCases: React.FC<TestCasesProps> = ({
                       }`}
                     >
                       {testCase.actualOutput ? testCase.actualOutput.output : "Not executed yet"}
-                    </span>
+                    </code>
                   </div>
+                  {testCase.actualOutput?.error && (
+                    <div className="test-case-field">
+                      <span className="field-label">Error:</span>
+                      <code className="field-value error">
+                        {testCase.actualOutput.error}
+                      </code>
+                    </div>
+                  )}
                 </>
               ) : (
                 // Editable test case fields
@@ -142,7 +158,7 @@ const TestCases: React.FC<TestCasesProps> = ({
                   <TextField
                     label="Expected Output"
                     multiline
-                    rows={1}
+                    rows={2}
                     variant="outlined"
                     fullWidth
                     value={testCase.expectedOutput}
