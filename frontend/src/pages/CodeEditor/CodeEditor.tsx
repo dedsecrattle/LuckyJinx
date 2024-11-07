@@ -6,8 +6,6 @@ import { okaidia } from "@uiw/codemirror-theme-okaidia";
 import { python } from "@codemirror/lang-python";
 import { cpp } from "@codemirror/lang-cpp";
 import { java } from "@codemirror/lang-java";
-import Navbar from "../../components/Navbar/Navbar";
-import Footer from "../../components/Footer/Footer";
 import Chatbox from "../../components/Chatbox/Chatbox";
 import VideoCall from "../../components/VideoCall/VideoCall";
 import HintBox from "../../components/HintBox/HintBox";
@@ -29,6 +27,7 @@ import { useConfirmationDialog } from "../../contexts/ConfirmationDialogContext"
 import Peer, { MediaConnection } from "peerjs";
 import TestCases from "../../components/TestCases/TestCases";
 import { Circle } from "@mui/icons-material";
+import SessionService from "../../services/session.service";
 
 const COMMUNICATION_WEBSOCKET_URL = process.env.REACT_APP_COMMUNICATION_SERVICE_URL as string;
 const COLLABORATION_WEBSOCKET_URL = process.env.REACT_APP_COLLABORATION_SERVICE_URL as string;
@@ -124,7 +123,6 @@ const CodeEditor: React.FC = () => {
   const { roomNumber } = useParams();
   const [joinedRoom, setJoinedRoom] = useState(false); // New state
   const [isHintBoxExpanded, setIsHintBoxExpanded] = useState(false); // New state
-  const [isVideoHovered, setIsVideoHovered] = useState(false);
   const [isChatboxExpanded, setIsChatboxExpanded] = useState(false);
   const [isVideoCallExpanded, setIsVideoCallExpanded] = useState(false);
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
@@ -237,6 +235,7 @@ const CodeEditor: React.FC = () => {
     setConfirmationDialogTitle("Leave Session");
     setConfirmationDialogContent("Are you sure you want to leave the session?");
     setConfirmationCallBack(() => () => {
+      SessionService.leaveSession(user?.id as string, roomNumber!);
       clearSocketsAndPeer();
       clearSession();
       navigate("/");
@@ -693,8 +692,6 @@ const CodeEditor: React.FC = () => {
 
   return (
     <div className="app-container">
-      <Navbar />
-
       <div className="container">
         <div className="top-section">
           <Typography variant="h3" className="question-title">
@@ -839,8 +836,6 @@ const CodeEditor: React.FC = () => {
       {isHintBoxExpanded && questionData && (
         <HintBox questionId={questionId} onClose={() => setIsHintBoxExpanded(false)} />
       )}
-
-      <Footer />
     </div>
   );
 };

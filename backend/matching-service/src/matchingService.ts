@@ -198,8 +198,8 @@ export async function handleMatchingConfirm(userRequest: any) {
     });
     await prisma.sessionHistory.create({
       data: {
-        roomNumber: userRecord.roomNumber,
-        questionId: userRecord.questionId ?? matchedRecord.questionId ?? 0,
+        roomNumber: matchedRecord.roomNumber,
+        questionId: matchedRecord.questionId ?? userRecord.questionId ?? 0,
         isOngoing: true,
         userOneId: userRecord.userId,
         userTwoId: matchedRecord.userId,

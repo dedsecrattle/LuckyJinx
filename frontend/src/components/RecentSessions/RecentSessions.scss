@@ -6,13 +6,13 @@
   flex-direction: column;
   padding: 10px 20px;
   gap: 10px;
+  height: 340px;
 
   &-sessions {
-    height: 150px;
+    height: 250px;
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    padding: 5px 10px;
+    gap: 10px;
 
     &-text {
       font-size: 0.8rem !important;
@@ -21,8 +21,31 @@
     }
   }
 
+  &-session {
+    height: 20%;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 15px;
+    border-radius: 10px;
+    border: 0.867px solid var(--Grey-15, #262626);
+    background: var(--Grey-11, #1C1C1C);
+
+    &-info {
+      max-width: 70%;
+      display: flex;
+      flex-direction: column;
+
+      &-text {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+    }
+  }
+
   &-new {
-    padding-block: 10px;
     display: flex;
     flex-direction: column;
     align-items: center;
