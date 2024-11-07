@@ -73,8 +73,8 @@ export default class SessionService {
     }
   }
 
-  static async getLatestSession(): Promise<SessionResponse> {
-    const response = await SessionService.client.get("/session");
+  static async getLatestSession(userId: string): Promise<SessionResponse | null> {
+    const response = await SessionService.client.get("/session", { params: { userId } });
     return response.data.session;
   }
 

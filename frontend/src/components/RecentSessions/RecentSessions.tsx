@@ -47,14 +47,13 @@ const RecentSessions = (): ReactElement => {
       setSessionState(SessionState.SUCCESS);
       setQuestionId(rejoinResponse.questionId);
       setRoomNumber(rejoinResponse.roomNumber);
-      console.log(roomNumber);
       navigate(`/code-editor/${rejoinResponse.roomNumber}`);
     } catch (error) {
       if (error instanceof AxiosError) {
         if (error.response?.status === 404) {
           fetchSessionHistory();
           setMainDialogTitle("Too late");
-          setMainDialogContent("The interview session has ended. Join another one instead!");
+          setMainDialogContent("The previous interview session has ended. Join another one instead!");
           openMainDialog();
           return;
         }
