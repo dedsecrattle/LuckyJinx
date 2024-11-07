@@ -208,6 +208,45 @@ app.put("/rejoin-session", async (req, res) => {
   }
 });
 
+app.put("/submit-session", async (req, res) => {
+  if (!req.body.data) {
+    res.status(400).json({ error: "Request was malformed." });
+    return;
+  }
+  const { userId, roomId, submission } = req.body.data;
+  const record = await prisma.sessionHistory.findFirst({
+    where: {
+      isOngoing: true,
+      roomNumber: roomId,
+      OR: [
+        {
+          userOneId: userId,
+        },
+        {
+          userTwoId: userId,
+        },
+      ],
+    },
+  });
+  if (!record) {
+    res.status(404).json({ error: "Request did not match with any ongoing session that the user is in." });
+    return;
+  } else {
+    await prisma.sessionHistory.update({
+      where: {
+        sessionId: record.sessionId,
+      },
+      data: {
+        isOngoing: false,
+        isUserOneActive: false,
+        isUserTwoActive: false,
+        submission: submission,
+      },
+    });
+  }
+  res.status(200).json({ ok: "ok" });
+});
+
 const server = createServer(app);
 export const io = new Server(server, {
   cors: {

@@ -28,6 +28,8 @@ import Peer, { MediaConnection } from "peerjs";
 import TestCases from "../../components/TestCases/TestCases";
 import { Circle } from "@mui/icons-material";
 import SessionService from "../../services/session.service";
+import { AxiosError } from "axios";
+import { useMainDialog } from "../../contexts/MainDialogContext";
 
 const COMMUNICATION_WEBSOCKET_URL = process.env.REACT_APP_COMMUNICATION_SERVICE_URL as string;
 const COLLABORATION_WEBSOCKET_URL = process.env.REACT_APP_COLLABORATION_SERVICE_URL as string;
@@ -113,6 +115,7 @@ const CodeEditor: React.FC = () => {
   const { sessionState, questionId, clearSession, otherUserId, otherUserProfile } = useContext(SessionContext);
   const { setConfirmationDialogTitle, setConfirmationDialogContent, setConfirmationCallBack, openConfirmationDialog } =
     useConfirmationDialog();
+  const { setMainDialogTitle, setMainDialogContent, openMainDialog } = useMainDialog();
   const navigate = useNavigate();
 
   const [questionData, setQuestionData] = useState<QuestionData | null>(null);
@@ -330,6 +333,7 @@ const CodeEditor: React.FC = () => {
           "Your partner has left the coding session. Would you like to end the session and return to home page?",
         );
         setConfirmationCallBack(() => () => {
+          SessionService.leaveSession(user?.id as string, roomNumber!);
           clearSocketsAndPeer();
           clearSession();
           navigate("/");
@@ -575,10 +579,6 @@ const CodeEditor: React.FC = () => {
     }
   };
 
-  const handleHangUp = () => {
-    setIsVideoCallExpanded(false);
-  };
-
   const cursorDecorationsExtension = useMemo(() => {
     return createCursorDecorations(otherCursors);
   }, [otherCursors]);
@@ -690,6 +690,29 @@ const CodeEditor: React.FC = () => {
     }
   };
 
+  const submitAndEndSession = async () => {
+    try {
+      setConfirmationDialogTitle("Submit and end session");
+      setConfirmationDialogContent(
+        "You are about to submit your code and end the session for both you and your partner. Are you sure?",
+      );
+      setConfirmationCallBack(() => async () => {
+        await SessionService.submitSession(user?.id as string, roomNumber!, code);
+        clearSocketsAndPeer();
+        clearSession();
+        navigate("/");
+      });
+      openConfirmationDialog();
+    } catch (error) {
+      setMainDialogTitle("Error");
+      setMainDialogContent(
+        error instanceof AxiosError && error.response?.data.message
+          ? error.response?.data.message
+          : "An error occurred while submitting the code.",
+      );
+    }
+  };
+
   return (
     <div className="app-container">
       <div className="container">
@@ -723,15 +746,20 @@ const CodeEditor: React.FC = () => {
                 <option value="cpp">C++</option>
                 <option value="java">Java</option>
               </select>
-              <Button
-                variant="contained"
-                size="small"
-                className={"submit-button" + (isExecuting ? " disabled" : "")}
-                onClick={executeCode}
-                disabled={isExecuting}
-              >
-                Run Code
-              </Button>
+              <div>
+                <Button
+                  variant="contained"
+                  size="small"
+                  className={"submit-button" + (isExecuting ? " disabled" : "")}
+                  onClick={executeCode}
+                  disabled={isExecuting}
+                >
+                  Run Code
+                </Button>
+                <Button variant="contained" size="small" onClick={submitAndEndSession} disabled={isExecuting}>
+                  Submit
+                </Button>
+              </div>
             </div>
             <CodeMirror
               value={code}

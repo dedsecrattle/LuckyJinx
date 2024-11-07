@@ -93,4 +93,8 @@ export default class SessionService {
     const response = await SessionService.client.put("/rejoin-session", { data: { userId, roomId } });
     return response.data;
   }
+
+  static async submitSession(userId: string, roomId: string, submission: string): Promise<void> {
+    await SessionService.client.put("/submit-session", { data: { userId, roomId, submission } });
+  }
 }
