@@ -28,6 +28,7 @@ model SessionHistory {
   roomNumber      String
   questionId      Int
   submission      String?
+  language        String?
   isOngoing       Boolean  @default(true)
   userOneId       String
   userTwoId       String

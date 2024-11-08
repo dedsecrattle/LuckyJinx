@@ -27,16 +27,13 @@ import { useConfirmationDialog } from "../../contexts/ConfirmationDialogContext"
 import Peer, { MediaConnection } from "peerjs";
 import TestCases from "../../components/TestCases/TestCases";
 import { Circle } from "@mui/icons-material";
-import SessionService from "../../services/session.service";
+import SessionService, { Language } from "../../services/session.service";
 import { AxiosError } from "axios";
 import { useMainDialog } from "../../contexts/MainDialogContext";
 
 const COMMUNICATION_WEBSOCKET_URL = process.env.REACT_APP_COMMUNICATION_SERVICE_URL as string;
 const COLLABORATION_WEBSOCKET_URL = process.env.REACT_APP_COLLABORATION_SERVICE_URL as string;
 const VIDEO_PEER_SERVICE_PORT = process.env.REACT_APP_VIDEO_SERVICE_PORT;
-
-// Define Language Type
-type Language = "python" | "cpp" | "java";
 
 // Define the CursorWidget
 class CursorWidget extends WidgetType {
@@ -713,7 +710,7 @@ const CodeEditor: React.FC = () => {
         "You are about to submit your code and end the session for both you and your partner. Are you sure?",
       );
       setConfirmationCallBack(() => async () => {
-        await SessionService.submitSession(user?.id as string, roomNumber!, codeRef.current);
+        await SessionService.submitSession(user?.id as string, roomNumber!, codeRef.current, languageRef.current);
         clearSocketsAndPeer();
         clearSession();
         navigate("/");

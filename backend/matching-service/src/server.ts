@@ -84,6 +84,8 @@ app.get("/session", async (req, res) => {
       questionId: record.questionId,
       otherUserId: record.userOneId === userId ? record.userTwoId : record.userOneId,
       submission: record.submission,
+      language: record.language,
+      createdAt: record.createdAt,
     };
     res.status(200).json({ session: session });
   }
@@ -95,6 +97,7 @@ app.get("/session-history", async (req, res) => {
     return;
   }
   const userId = req.query.userId as string;
+  const count = req.query.count ? parseInt(req.query.count as string) : 3;
 
   const records = await prisma.sessionHistory.findMany({
     where: {
@@ -110,7 +113,7 @@ app.get("/session-history", async (req, res) => {
     orderBy: {
       createdAt: "desc",
     },
-    take: 3,
+    take: count,
   });
 
   if (!records || records.length === 0) {
@@ -122,6 +125,8 @@ app.get("/session-history", async (req, res) => {
       questionId: record.questionId,
       otherUserId: record.userOneId === userId ? record.userTwoId : record.userOneId,
       submission: record.submission,
+      language: record.language,
+      createdAt: record.createdAt,
     }));
     res.status(200).json({ sessions: sessions });
   }
@@ -213,7 +218,7 @@ app.put("/submit-session", async (req, res) => {
     res.status(400).json({ error: "Request was malformed." });
     return;
   }
-  const { userId, roomId, submission } = req.body.data;
+  const { userId, roomId, submission, language } = req.body.data;
   const record = await prisma.sessionHistory.findFirst({
     where: {
       isOngoing: true,
@@ -241,6 +246,7 @@ app.put("/submit-session", async (req, res) => {
         isUserOneActive: false,
         isUserTwoActive: false,
         submission: submission,
+        language: language,
       },
     });
   }

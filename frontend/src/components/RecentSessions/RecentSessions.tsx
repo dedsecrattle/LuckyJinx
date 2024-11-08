@@ -3,7 +3,7 @@ import { ReactElement, useContext, useEffect, useState } from "react";
 import "./RecentSessions.scss";
 import { UserContext } from "../../contexts/UserContext";
 import { useNavigate } from "react-router-dom";
-import SessionService, { SessionData } from "../../services/session.service";
+import SessionService, { Language, SessionData } from "../../services/session.service";
 import { SessionContext, SessionState } from "../../contexts/SessionContext";
 import { AxiosError } from "axios";
 import { useMainDialog } from "../../contexts/MainDialogContext";
@@ -66,10 +66,8 @@ const RecentSessions = (): ReactElement => {
     }
   };
 
-  const viewAttempt = (session: SessionData) => {
-    setMainDialogTitle(`Attempt for "${session.questionId}. ${session.questionTitle}"`);
-    setMainDialogContent(session.submission ?? "No code was submitted during this session.");
-    openMainDialog();
+  const viewSubmission = (questionId: number, language: Language | undefined, code: string | undefined) => {
+    navigate("/view", { state: { questionId, language, code } });
   };
 
   return (
@@ -114,7 +112,7 @@ const RecentSessions = (): ReactElement => {
                     <Button
                       variant="outlined"
                       onClick={() => {
-                        viewAttempt(session);
+                        viewSubmission(session.questionId, session.language, session.submission);
                       }}
                     >
                       <Typography variant="body2">View</Typography>
