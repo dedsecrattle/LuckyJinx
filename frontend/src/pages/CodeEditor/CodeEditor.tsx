@@ -837,8 +837,13 @@ const CodeEditor: React.FC = () => {
 
       {/* HintBox Component */}
       {isHintBoxExpanded && questionData && (
-        <HintBox questionId={questionId} onClose={() => setIsHintBoxExpanded(false)} />
+        <HintBox
+          questionId={questionId}
+          onClose={() => setIsHintBoxExpanded(false)}
+          code={code} // Pass the current code
+        />
       )}
+
 
       <Footer />
     </div>
