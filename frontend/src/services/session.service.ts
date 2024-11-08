@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import QuestionService from "./question.service";
 import UserService from "./user.service";
 import { User } from "../models/user.model";
@@ -51,12 +51,17 @@ export default class SessionService {
 
   private static async mapSessionResponseToSessionData(session: SessionResponse): Promise<SessionData> {
     try {
-      const { title, description } = await QuestionService.getQuestion(session.questionId);
+      const question = await QuestionService.getQuestion(session.questionId);
       const user: User | Error = await UserService.getUser(session.otherUserId);
 
+      if (question instanceof Error) {
+        throw question;
+      }
       if (user instanceof Error) {
         throw user;
       }
+
+      const { title, description } = question;
 
       return {
         roomNumber: session.roomNumber,
@@ -86,27 +91,112 @@ export default class SessionService {
   }
 
   static async getLatestSession(userId: string): Promise<SessionResponse | null> {
-    const response = await SessionService.client.get("/session", { params: { userId } });
-    return response.data.session;
+    try {
+      const response = await SessionService.client.get("/session", { params: { userId } });
+      if (response instanceof AxiosError) {
+        throw response;
+      }
+      return response.data.session;
+    } catch (error) {
+      if (error instanceof AxiosError) {
+        if (error.response?.status === 400) {
+          console.error("Bad request: ", error.response.data);
+        } else if (error.response?.status === 404) {
+          console.error("Session not found: ", error.response.data);
+        }
+      } else {
+        console.error("Unexpected error: ", error);
+      }
+      return null;
+    }
   }
 
   static async getSessionHistory(userId: string, count?: number): Promise<SessionData[]> {
-    const response = await SessionService.client.get("/session-history", { params: { userId, count } });
-    const sessions: SessionResponse[] = response.data.sessions;
-    const sessionData = await Promise.all(sessions.map(this.mapSessionResponseToSessionData));
-    return sessionData;
+    try {
+      const response = await SessionService.client.get("/session-history", { params: { userId, count } });
+      if (response instanceof AxiosError) {
+        throw response;
+      }
+      const sessions: SessionResponse[] = response.data.sessions;
+      const sessionData = await Promise.all(sessions.map(this.mapSessionResponseToSessionData));
+      if (sessionData instanceof AxiosError) {
+        throw sessionData;
+      }
+      return sessionData;
+    } catch (error) {
+      if (error instanceof AxiosError) {
+        if (error.response?.status === 400) {
+          console.error("Bad request: ", error.response.data);
+        } else if (error.response?.status === 404) {
+          console.error("Session history not found: ", error.response.data);
+        }
+      } else {
+        console.error("Unexpected error: ", error);
+      }
+      return [];
+    }
   }
 
   static async leaveSession(userId: string, roomId: string): Promise<void> {
-    await SessionService.client.put("/leave-session", { data: { userId, roomId } });
+    try {
+      const response = await SessionService.client.put("/leave-session", { data: { userId, roomId } });
+      if (response instanceof AxiosError) {
+        throw response;
+      }
+    } catch (error) {
+      if (error instanceof AxiosError) {
+        console.log(error);
+        if (error.response?.status === 400) {
+          console.error("Bad request: ", error.response.data);
+        } else if (error.response?.status === 404) {
+          console.error("Session not found: ", error.response.data);
+        }
+      } else {
+        console.error("Unexpected error: ", error);
+      }
+    }
   }
 
   static async rejoinSession(userId: string, roomId: string): Promise<SessionResponse> {
-    const response = await SessionService.client.put("/rejoin-session", { data: { userId, roomId } });
-    return response.data;
+    try {
+      const response = await SessionService.client.put("/rejoin-session", { data: { userId, roomId } });
+      if (response instanceof AxiosError) {
+        throw response;
+      }
+      return response.data;
+    } catch (error) {
+      if (error instanceof AxiosError) {
+        if (error.response?.status === 400) {
+          console.error("Bad request: ", error.response.data);
+        } else if (error.response?.status === 404) {
+          console.error("Session not found: ", error.response.data);
+        }
+      } else {
+        console.error("Unexpected error: ", error);
+      }
+      throw error;
+    }
   }
 
   static async submitSession(userId: string, roomId: string, submission: string, language: Language): Promise<void> {
-    await SessionService.client.put("/submit-session", { data: { userId, roomId, submission, language } });
+    try {
+      const response = await SessionService.client.put("/submit-session", {
+        data: { userId, roomId, submission, language },
+      });
+      if (response instanceof AxiosError) {
+        throw response;
+      }
+    } catch (error) {
+      if (error instanceof AxiosError) {
+        if (error.response?.status === 400) {
+          console.error("Bad request: ", error.response.data);
+        } else if (error.response?.status === 404) {
+          console.error("Session not found: ", error.response.data);
+        }
+      } else {
+        console.error("Unexpected error: ", error);
+      }
+      throw error;
+    }
   }
 }
