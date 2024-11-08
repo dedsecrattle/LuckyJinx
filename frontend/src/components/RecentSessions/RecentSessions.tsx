@@ -15,9 +15,10 @@ const RecentSessions = (): ReactElement => {
   const { setMainDialogTitle, setMainDialogContent, openMainDialog } = useMainDialog();
   const navigate = useNavigate();
   const [sessionHistory, setSessionHistory] = useState<SessionData[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   const fetchSessionHistory = async () => {
+    setLoading(true);
     const sessions = await SessionService.getSessionHistory(user!.id as string);
     setSessionHistory(sessions);
     setLoading(false);
@@ -67,7 +68,7 @@ const RecentSessions = (): ReactElement => {
 
   const viewAttempt = (session: SessionData) => {
     setMainDialogTitle(`Attempt for "${session.questionId}. ${session.questionTitle}"`);
-    setMainDialogContent(session.submission ?? "No code was submited during this session.");
+    setMainDialogContent(session.submission ?? "No code was submitted during this session.");
     openMainDialog();
   };
 
@@ -80,37 +81,49 @@ const RecentSessions = (): ReactElement => {
         <Spinner />
       ) : (
         <Box className="RecentSessions-sessions">
-          {sessionHistory.map((session) => (
-            <Box key={session.roomNumber} className="RecentSessions-session">
-              <Box className="RecentSessions-session-info">
-                <Typography variant="body1" className="RecentSessions-session-info-text">
-                  {`${session.questionId}. ${session.questionTitle}`}
-                </Typography>
-                <Typography variant="body2" className="RecentSessions-session-info-text">
-                  {`With ${session.otherUserName}`}
-                </Typography>
-              </Box>
-              <Box>
-                {session.isOngoing ? (
-                  <Chip
-                    color="warning"
-                    variant="outlined"
-                    label="Ongoing"
-                    onClick={() => resumeSession(session.roomNumber)}
-                  ></Chip>
-                ) : (
-                  <Button
-                    variant="outlined"
-                    onClick={() => {
-                      viewAttempt(session);
-                    }}
-                  >
-                    <Typography variant="body2">View</Typography>
-                  </Button>
-                )}
-              </Box>
+          {!user ? (
+            <Box className="RecentSessions-sessions-message">
+              <Typography textAlign="center">Log in to view session history</Typography>
             </Box>
-          ))}
+          ) : sessionHistory.length === 0 ? (
+            <Box className="RecentSessions-sessions-message">
+              <Typography className="RecentSessions-sessions-message" textAlign="center">
+                No sessions yet
+              </Typography>
+            </Box>
+          ) : (
+            sessionHistory.map((session) => (
+              <Box key={session.roomNumber} className="RecentSessions-session">
+                <Box className="RecentSessions-session-info">
+                  <Typography variant="body1" className="RecentSessions-session-info-text">
+                    {`${session.questionId}. ${session.questionTitle}`}
+                  </Typography>
+                  <Typography variant="body2" className="RecentSessions-session-info-text">
+                    {`With ${session.otherUserName}`}
+                  </Typography>
+                </Box>
+                <Box>
+                  {session.isOngoing ? (
+                    <Chip
+                      color="warning"
+                      variant="outlined"
+                      label="Ongoing"
+                      onClick={() => resumeSession(session.roomNumber)}
+                    ></Chip>
+                  ) : (
+                    <Button
+                      variant="outlined"
+                      onClick={() => {
+                        viewAttempt(session);
+                      }}
+                    >
+                      <Typography variant="body2">View</Typography>
+                    </Button>
+                  )}
+                </Box>
+              </Box>
+            ))
+          )}
         </Box>
       )}
       <Box className="RecentSessions-new">

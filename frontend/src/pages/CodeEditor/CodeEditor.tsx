@@ -120,8 +120,19 @@ const CodeEditor: React.FC = () => {
 
   const [questionData, setQuestionData] = useState<QuestionData | null>(null);
 
+  // Use state + ref combination to handle real-time state change + socket events
   const [code, setCode] = useState<string>("# Write your solution here\n");
   const [language, setLanguage] = useState<Language>("python");
+  const codeRef = useRef<string>(code);
+  const languageRef = useRef<Language>(language);
+
+  useEffect(() => {
+    codeRef.current = code;
+  }, [code]);
+
+  useEffect(() => {
+    languageRef.current = language;
+  }, [language]);
 
   const { roomNumber } = useParams();
   const [joinedRoom, setJoinedRoom] = useState(false); // New state
@@ -184,12 +195,6 @@ const CodeEditor: React.FC = () => {
   };
 
   useEffect(() => {
-    if (sessionState !== SessionState.SUCCESS) {
-      navigate("/");
-      clearSession();
-      return;
-    }
-
     const fetchQuestionData = async () => {
       try {
         const response = await QuestionService.getQuestion(questionId);
@@ -208,8 +213,13 @@ const CodeEditor: React.FC = () => {
       }
     };
 
-    fetchQuestionData();
-  }, [questionId, sessionState, navigate, clearSession]);
+    if (sessionState !== SessionState.SUCCESS) {
+      navigate("/");
+      clearSession();
+    } else {
+      fetchQuestionData();
+    }
+  }, [questionId, sessionState]);
 
   const appendToChatHistory = (newMessage: ChatMessage) => {
     setChatHistory([...chatHistoryRef.current, newMessage]);
@@ -262,10 +272,16 @@ const CodeEditor: React.FC = () => {
 
     socket.on("join_request", (data: any) => {
       console.log("Received join_request data:", data);
-      if (data.code) {
-        setCode(data.code);
+      if (data?.user_id && data.user_id === user?.id) {
+        // Current user successfully joined a room
+        setJoinedRoom(true);
+      } else {
+        // emit current code and cursor for any new user joining the room
+        console.log("emitting");
+        socket.emit("language_change", { language: languageRef.current, room_id: roomNumber });
+        socket.emit("code_updated", { code: codeRef.current });
+        socket.emit("cursor_updated", { cursor_position: lastCursorPosition.current });
       }
-      setJoinedRoom(true); // User has successfully joined a room
     });
 
     socket.on("language_change", (newLanguage: string) => {
@@ -289,7 +305,7 @@ const CodeEditor: React.FC = () => {
 
     // Handle real-time code updates
     socket.on("code_updated", (newCode: string) => {
-      setCode(newCode);
+      codeRef.current = newCode;
     });
 
     // Handle cursor updates
@@ -643,8 +659,8 @@ const CodeEditor: React.FC = () => {
 
     // Prepare payload for the API
     const payload = {
-      lang: language,
-      code: code,
+      lang: languageRef.current,
+      code: codeRef.current,
       customTests: submittedTestCases.map((tc) => ({
         input: tc.input,
         output: tc.expectedOutput || null,
@@ -697,7 +713,7 @@ const CodeEditor: React.FC = () => {
         "You are about to submit your code and end the session for both you and your partner. Are you sure?",
       );
       setConfirmationCallBack(() => async () => {
-        await SessionService.submitSession(user?.id as string, roomNumber!, code);
+        await SessionService.submitSession(user?.id as string, roomNumber!, codeRef.current);
         clearSocketsAndPeer();
         clearSession();
         navigate("/");
@@ -710,6 +726,7 @@ const CodeEditor: React.FC = () => {
           ? error.response?.data.message
           : "An error occurred while submitting the code.",
       );
+      openMainDialog();
     }
   };
 
