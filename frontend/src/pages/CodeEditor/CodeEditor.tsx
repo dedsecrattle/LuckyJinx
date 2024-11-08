@@ -305,7 +305,7 @@ const CodeEditor: React.FC = () => {
 
     // Handle real-time code updates
     socket.on("code_updated", (newCode: string) => {
-      codeRef.current = newCode;
+      setCode(newCode);
     });
 
     // Handle cursor updates

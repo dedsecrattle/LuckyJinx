@@ -16,6 +16,7 @@ import { SessionContextProvider } from "./contexts/SessionContext";
 import VideoChat from "./pages/Communication/Commincation";
 import CodeEditor from "./pages/CodeEditor/CodeEditor";
 import ProtectedRoute from "./util/ProtectedRoute";
+import History from "./pages/History/History";
 
 const theme = createTheme({
   typography: {
@@ -82,6 +83,7 @@ const App = (): ReactElement => {
               <Route path="/settings" element={user ? <AccountSettings /> : <Navigate to={"/login"} />} />
               <Route path="/questions" element={<Questions />} />
               <Route path="/interview" element={user ? <Interview /> : <Navigate to={"/"} />} />
+              <Route path="/history" element={user ? <History /> : <Navigate to={"/"} />} />
               <Route path="/video" element={<VideoChat />} />
               <Route
                 path="/code-editor/:roomNumber"
