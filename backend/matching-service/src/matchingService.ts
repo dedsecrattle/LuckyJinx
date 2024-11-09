@@ -3,7 +3,6 @@ import { io } from "./server";
 import { PrismaClient } from "@prisma/client";
 import { v4 as uuidv4 } from "uuid";
 import { fetchRandomQuestion } from "./util";
-import exp from "constants";
 
 const prisma = new PrismaClient();
 
@@ -115,13 +114,9 @@ export async function handleUserRequest(userRequest: any) {
     // Update both clients about the successful match
     io.to(socketId).emit("matched", {
       matchedWith: existingMatch.userId,
-      roomNumber,
-      questionId: question?.questionId,
     });
     io.to(existingMatch.socketId).emit("matched", {
       matchedWith: userId,
-      roomNumber,
-      questionId: question?.questionId,
     });
 
     // Add confirm timeout messages
@@ -196,18 +191,30 @@ export async function handleMatchingConfirm(userRequest: any) {
       where: { recordId: userRecord.recordId },
       data: { isArchived: true },
     });
+
+    // Set roomNumber and questionId in this session
+    // Currently: use data from matchedRecord, i.e. user who confirmed first
+    const roomNumber = matchedRecord.roomNumber;
+    const questionId = matchedRecord.questionId ?? userRecord.questionId ?? 1;
+
     await prisma.sessionHistory.create({
       data: {
-        roomNumber: matchedRecord.roomNumber,
-        questionId: matchedRecord.questionId ?? userRecord.questionId ?? 0,
+        roomNumber: roomNumber,
+        questionId: questionId,
         isOngoing: true,
         userOneId: userRecord.userId,
         userTwoId: matchedRecord.userId,
       },
     });
 
-    io.to(userRecord.socketId).emit("matching_success", "Match confirmed. Proceeding to collaboration service.");
-    io.to(matchedRecord.socketId).emit("matching_success", "Match confirmed. Proceeding to collaboration service.");
+    io.to(userRecord.socketId).emit("matching_success", {
+      roomNumber,
+      questionId,
+    });
+    io.to(matchedRecord.socketId).emit("matching_success", {
+      roomNumber,
+      questionId,
+    });
     // TODO: add further logic here to proceed to collaboration service
   } else {
     console.log(`User ${userId} confirmed match, waiting for other user to confirm`);
