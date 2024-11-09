@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   question:
     build: ./backend/question-service
@@ -80,11 +78,11 @@ services:
   ai-hint-service:
     build: ./backend/ai-hint-service
     ports:
-      - "3006:3006" 
+      - "3006:3006" # Expose port 3006 for AI Hint Service
     environment:
-      HUGGINGFACE_API_KEY: ${HUGGINGFACE_API_KEY} 
+      OPENAI_API_KEY: "${OPENAI_API_KEY}" # Ensure to set your OpenAI API key in the environment
     depends_on:
-      - rabbitmq 
+      - rabbitmq # If needed, add dependencies
 
   frontend:
     build: ./frontend
@@ -98,4 +96,4 @@ services:
       - question
       - collaboration
       - rabbitmq
-      - ai-hint-service
+      - ai-hint-service # Ensure frontend waits for ai-hint-service

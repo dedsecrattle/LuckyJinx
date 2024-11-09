@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import { router } from '../dist/routes/hintRoutes.js';
+import hintRoutes from '../dist/routes/hintRoutes.js';
 
 dotenv.config();
 
@@ -13,14 +13,14 @@ app.use(cors());
 app.use(express.json());
 
 // Routes
-app.use('/api', router);
+app.use('/api/ai-hint', hintRoutes);
 
 // Health Check
-app.get('/health', (req, res) => {
-  res.send('AI Hint Service is up and running.');
+app.get('/api/ai-hint/health', (req, res) => {
+  res.status(200).send({ status: 'AI Hint Service is running.' });
 });
 
 // Start Server
 app.listen(PORT, () => {
-  console.log(`AI Hint Service is listening on port ${PORT}`);
+  console.log(`AI Hint Service is running on port ${PORT}`);
 });

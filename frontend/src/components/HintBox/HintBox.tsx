@@ -37,6 +37,7 @@ const HintBox: React.FC<HintBoxProps> = ({ onClose, questionId, code }) => {
               "Content-Type": "application/json",
             },
           });
+          console.log("Response:", response);
 
           if (!response.ok) {
             throw new Error(`Error: ${response.statusText}`);
