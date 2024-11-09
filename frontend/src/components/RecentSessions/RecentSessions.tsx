@@ -11,7 +11,7 @@ import Spinner from "../Spinner/Spinner";
 
 const RecentSessions = (): ReactElement => {
   const { user } = useContext(UserContext);
-  const { setSessionState, setQuestionId, setRoomNumber } = useContext(SessionContext);
+  const { setSessionState, setQuestionId, setRoomNumber, setOtherUserId } = useContext(SessionContext);
   const { setMainDialogTitle, setMainDialogContent, openMainDialog } = useMainDialog();
   const navigate = useNavigate();
   const [sessionHistory, setSessionHistory] = useState<SessionData[]>([]);
@@ -48,6 +48,7 @@ const RecentSessions = (): ReactElement => {
       setSessionState(SessionState.SUCCESS);
       setQuestionId(rejoinResponse.questionId);
       setRoomNumber(rejoinResponse.roomNumber);
+      setOtherUserId(rejoinResponse.otherUserId);
       navigate(`/code-editor/${rejoinResponse.roomNumber}`);
     } catch (error) {
       if (error instanceof AxiosError) {

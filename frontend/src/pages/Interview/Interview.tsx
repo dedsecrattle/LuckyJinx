@@ -47,12 +47,8 @@ const Interview = (): ReactElement => {
 
   socket.on("matched", (data: any) => {
     console.log("Matched with: ", data.matchedWith);
-    console.log("Received roomNumber: ", data.roomNumber);
     setOtherUserId(data.matchedWith);
-    setRoomNumber(data.roomNumber); // Use server-assigned room number
-    setQuestionId(data.questionId);
     accumulateMatchingTime();
-    console.log("QuestionId", data.questionId);
     setSessionState(SessionState.PENDING);
   });
 
@@ -89,7 +85,7 @@ const Interview = (): ReactElement => {
     setOtherUserDeclined(true);
   });
 
-  socket.on("matching_success", () => {
+  socket.on("matching_success", (data: any) => {
     console.log("Matching succeeded");
     if (!userAccepted) {
       setUserAccepted(true);
@@ -97,6 +93,8 @@ const Interview = (): ReactElement => {
     if (!otherUserAccepted) {
       setOtherUserAccepted(true);
     }
+    setRoomNumber(data.roomNumber);
+    setQuestionId(data.questionId);
     setTimeout(() => {
       setSessionState(SessionState.SUCCESS);
     }, 1000);
@@ -144,6 +142,7 @@ const Interview = (): ReactElement => {
       setSessionState(SessionState.SUCCESS);
       setQuestionId(rejoinResponse.questionId);
       setRoomNumber(rejoinResponse.roomNumber);
+      setOtherUserId(rejoinResponse.otherUserId);
       navigate(`/code-editor/${rejoinResponse.roomNumber}`);
     } catch (error) {
       if (error instanceof AxiosError) {

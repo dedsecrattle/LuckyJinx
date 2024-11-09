@@ -46,6 +46,7 @@ class Room:
         self.id = room_id
         self.users: list[User] = [user]
         self.code = ""
+        self.submitted = False
         Room.rooms[room_id] = self
         user.join_room(self)
 
