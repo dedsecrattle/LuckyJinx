@@ -1,63 +1,62 @@
 .CodeContainer {
+  display: flex;
+
+  .left-side {
+    flex: 0.4;
+    padding: 10px;
+    color: #fff;
     display: flex;
-  
-    .left-side {
-      flex: 0.4;
-      padding: 10px;
+    flex-direction: column;
+
+    .md-editor {
+      background-color: #1e1e1e;
+      border-radius: 10px;
+      border: 1px solid #3c3c3c;
+      padding: 20px;
       color: #fff;
-      display: flex;
-      flex-direction: column;
-  
-      .md-editor {
-        background-color: #1e1e1e;
-        border-radius: 10px;
-        border: 1px solid #3c3c3c;
-        padding: 20px;
-        color: #fff;
-        height: 500px;
-        overflow: auto;
-      }
-    }
-  
-    .right-side {
-      flex: 0.6;
-      padding: 10px;
-      color: #fff;
-      display: flex;
-      flex-direction: column;
-  
-      .header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 10px;
-  
-        .language-select {
-          background-color: #1e1e1e;
-          color: #fff;
-          border: 1px solid #3c3c3c;
-          padding: 5px;
-          border-radius: 5px;
-        }
-  
-        .submit-button {
-          background-color: #caff33;
-          color: #121212;
-          border-radius: 5px;
-  
-          &.disabled {
-            color: #6c757d;
-          }
-        }
-      }
-  
-      .code-editor {
-        background-color: #1e1e1e;
-        border-radius: 10px;
-        border: 1px solid #3c3c3c;
-        color: #fff;
-        overflow: hidden;
-      }
+      height: 500px;
+      overflow: auto;
     }
   }
-  
+
+  .right-side {
+    flex: 0.6;
+    padding: 10px;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+
+      .language-select {
+        background-color: #1e1e1e;
+        color: #fff;
+        border: 1px solid #3c3c3c;
+        padding: 5px;
+        border-radius: 5px;
+      }
+
+      .submit-button {
+        background-color: #caff33;
+        color: #121212;
+        border-radius: 5px;
+
+        &.disabled {
+          color: #6c757d;
+        }
+      }
+    }
+
+    .code-editor {
+      background-color: #1e1e1e;
+      border-radius: 10px;
+      border: 1px solid #3c3c3c;
+      color: #fff;
+      overflow: hidden;
+    }
+  }
+}
