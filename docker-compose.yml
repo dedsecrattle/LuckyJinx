@@ -112,7 +112,7 @@ services:
     ports:
       - "3003:3003"
     environment:
-      - QUESTION_SERVICE=http://localhost:3002
+      - QUESTION_SERVICE=http://question:3002
       - PORT=3003
       - RABBITMQ_URL=amqp://rabbitmq:5672
 
