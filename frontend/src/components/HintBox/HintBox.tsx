@@ -3,6 +3,7 @@ import { Typography, Button, CircularProgress, Tabs, Tab, Box } from "@mui/mater
 import CloseIcon from "@mui/icons-material/Close";
 import axios from "axios";
 import "./HintBox.scss";
+import { set } from "lodash";
 
 interface HintBoxProps {
   onClose: () => void;
@@ -29,6 +30,7 @@ const HintBox: React.FC<HintBoxProps> = ({ onClose, questionId, code, language }
       setError("");
       try {
         // Fetch Hint
+        console.log('Fetching hint for questionId:', questionId);
         const hintResponse = await axios.get(`${AI_HINT_SERVICE_URL}/api/hint/${questionId}`, {
           headers: {
             "Content-Type": "application/json",
@@ -37,19 +39,21 @@ const HintBox: React.FC<HintBoxProps> = ({ onClose, questionId, code, language }
         setHint(hintResponse.data.hint);
 
         // Fetch Model Answer
-        const modelAnswerResponse = await axios.get(`${AI_HINT_SERVICE_URL}/api/model-answer/${questionId}`, {
+        const modelAnswerResponse = await axios.get(`${AI_HINT_SERVICE_URL}/api/ai_answer/${questionId}`, {
           headers: {
             "Content-Type": "application/json",
           },
         });
-        setModelAnswer(modelAnswerResponse.data.model_answer);
-
+        setModelAnswer(modelAnswerResponse.data.ai_answer);
+        // setModelAnswer("Model answer is not available for this question.");
+        console.log('User code:', code);
+        console.log('User Language:', language);
         // Fetch Code Complexity Analysis
         const analysisResponse = await axios.post(
           `${AI_HINT_SERVICE_URL}/api/code-analysis/`,
           {
-            userCode: code,
-            userLanguage: language,
+            userCode: String(code),
+            userLanguage: String(language),
           },
           {
             headers: {

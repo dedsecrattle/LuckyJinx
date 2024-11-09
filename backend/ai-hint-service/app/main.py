@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from openai import OpenAI
-from .routes import hint, code_analysis, model_answer
+from .routes import hint, code_analysis, ai_answer
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 import os
@@ -29,7 +29,7 @@ app.add_middleware(
 # Include routers
 app.include_router(hint.router, prefix="/api/hint", tags=["Hint"])
 app.include_router(code_analysis.router, prefix="/api/code-analysis", tags=["Code Analysis"])
-app.include_router(model_answer.router, prefix="/api/model-answer", tags=["Model Answer"])
+app.include_router(ai_answer.router, prefix="/api/ai_answer", tags=["Model Answer"])
 
 # Root endpoint
 @app.get("/")
