@@ -1,6 +1,6 @@
 services:
   question:
-    build: ./backend/question-service
+    image: echomo/cs3219-question
     ports:
       - "3002:3002"
     restart: always
@@ -11,7 +11,7 @@ services:
       - CODE_EXECUTION_SERVICE_URL=http://code-execution-server:7002
 
   user:
-    build: ./backend/user-service
+    image: echomo/cs3219-user
     ports:
       - "3001:3001"
     restart: always
@@ -42,9 +42,10 @@ services:
       retries: 5
 
   code-execution-server:
-    build: ./backend/code-execution-service/server
+    image: echomo/cs3219-code-exec-server
     ports:
       - "7002:7002"
+    restart: always
     depends_on:
       code-execution-rabbitmq:
         condition: service_healthy
@@ -58,10 +59,11 @@ services:
       - USER_SERVICE_URL=http://user:3001
 
   code-execution-worker:
-    build: ./backend/code-execution-service/worker
+    image: echomo/cs3219-code-exec-worker
     pids_limit: 60
     cpus: 1
     mem_limit: 150M
+    restart: on-failure
     depends_on:
       code-execution-rabbitmq:
         condition: service_healthy
@@ -92,19 +94,21 @@ services:
       retries: 5
 
   communication:
-    build: ./backend/communication-service
+    image: echomo/cs3219-communication
     ports:
       - "3004:3004"
       - "9000:9000"
+    restart: always
     environment:
       - PORT=3004
       - PEERJS_PORT=9000
 
   matching:
-    build: ./backend/matching-service
+    image: echomo/cs3219-matching
     depends_on:
       rabbitmq:
         condition: service_healthy
+    restart: always
     ports:
       - "3003:3003"
     environment:
@@ -113,24 +117,17 @@ services:
       - RABBITMQ_URL=amqp://rabbitmq:5672
 
   collaboration:
-    build: ./backend/collaboration-service
+    image: echomo/cs3219-collaboration
     ports:
       - "3005:3005"
+    restart: always
     environment:
       - LOG_LEVEL=20
       - USER_SERVICE_URL=http://user:3001
       - MATCHING_SERVICE_URL=http://matching:3003
 
   frontend:
-    build:
-      context: ./frontend
-      args:
-        REACT_APP_USER_SERVICE_URL: http://localhost:3001/
-        REACT_APP_QUESTION_SERVICE_URL: http://localhost:3002/
-        REACT_APP_MATCHING_SERVICE_URL: http://localhost:3003
-        REACT_APP_COMMUNICATION_SERVICE_URL: http://localhost:3004
-        REACT_APP_COLLABORATION_SERVICE_URL: http://localhost:3005
-        REACT_APP_VIDEO_SERVICE_PORT: 9000
+    image: echomo/cs3219-frontend
     environment:
       - REACT_APP_USER_SERVICE_URL=http://localhost:3001/
       - REACT_APP_QUESTION_SERVICE_URL=http://localhost:3002/
