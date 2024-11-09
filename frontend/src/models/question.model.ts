@@ -23,3 +23,16 @@ export interface Question {
     output: string;
   }[];
 }
+
+export interface TestCase {
+  id: string;
+  number: number;
+  input: string;
+  expectedOutput: string;
+  actualOutput?: {
+    output: string | null;
+    error: string | null;
+    isCorrect: boolean | null;
+  };
+  isSubmitted?: boolean;
+}
