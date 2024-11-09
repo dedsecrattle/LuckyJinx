@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { Typography, Button, CircularProgress, Tabs, Tab, Box } from "@mui/material";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { materialDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import CloseIcon from "@mui/icons-material/Close";
 import axios from "axios";
 import "./HintBox.scss";
-import { set } from "lodash";
 
 interface HintBoxProps {
   onClose: () => void;
@@ -29,48 +30,21 @@ const HintBox: React.FC<HintBoxProps> = ({ onClose, questionId, code, language }
       setLoading(true);
       setError("");
       try {
-        // Fetch Hint
-        console.log("Fetching hint for questionId:", questionId);
-        const hintResponse = await axios.get(`${AI_HINT_SERVICE_URL}/api/hint/${questionId}`, {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
+        const hintResponse = await axios.get(`${AI_HINT_SERVICE_URL}/api/hint/${questionId}`);
         setHint(hintResponse.data.hint);
 
-        // Fetch Model Answer
-        const modelAnswerResponse = await axios.get(`${AI_HINT_SERVICE_URL}/api/ai_answer/${questionId}`, {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
+        const modelAnswerResponse = await axios.get(`${AI_HINT_SERVICE_URL}/api/ai_answer/${questionId}`);
         setModelAnswer(modelAnswerResponse.data.ai_answer);
-        // setModelAnswer("Model answer is not available for this question.");
-        console.log("User code:", code);
-        console.log("User Language:", language);
-        // Fetch Code Complexity Analysis
-        const analysisResponse = await axios.post(
-          `${AI_HINT_SERVICE_URL}/api/code-analysis/`,
-          {
-            code: code,
-            language: language,
-          },
-          {
-            headers: {
-              "Content-Type": "application/json",
-            },
-          },
-        );
+
+        const analysisResponse = await axios.post(`${AI_HINT_SERVICE_URL}/api/code-analysis/`, { code, language });
         setComplexity(analysisResponse.data.complexity);
         setAnalysis(analysisResponse.data.analysis);
-      } catch (err: any) {
-        console.error("Failed to fetch AI hints:", err);
+      } catch (err) {
         setError("Failed to load AI hints. Please try again.");
       } finally {
         setLoading(false);
       }
     };
-
     fetchAllData();
   }, [questionId, code, language]);
 
@@ -78,11 +52,31 @@ const HintBox: React.FC<HintBoxProps> = ({ onClose, questionId, code, language }
     setActiveTab(newValue);
   };
 
+  const renderContent = (content: string) => {
+    const sections = content.split(/(```[\s\S]*?```)/g); // Split by code blocks
+    return sections.map((section, index) => {
+      if (section.startsWith("```") && section.endsWith("```")) {
+        // Strip backticks and render code with SyntaxHighlighter
+        const code = section.slice(3, -3).trim();
+        return (
+          <SyntaxHighlighter key={index} language="python" style={materialDark}>
+            {code}
+          </SyntaxHighlighter>
+        );
+      }
+      return (
+        <Typography key={index} paragraph>
+          {section}
+        </Typography>
+      );
+    });
+  };
+
   return (
     <div className="hintbox-expanded">
       <div className="hintbox-header">
         <Typography variant="h6">AI Hints</Typography>
-        <Button onClick={onClose} className="hintbox-close-button" aria-label="Close Hint Box">
+        <Button onClick={onClose} className="hintbox-close-button">
           <CloseIcon />
         </Button>
       </div>
@@ -101,20 +95,21 @@ const HintBox: React.FC<HintBoxProps> = ({ onClose, questionId, code, language }
               indicatorColor="primary"
               textColor="primary"
               variant="fullWidth"
+              className="custom-tabs"
             >
               <Tab label="Hint" />
               <Tab label="Complexity Analysis" />
               <Tab label="Model Answer" />
             </Tabs>
             <Box p={2}>
-              {activeTab === 0 && <Typography>{hint}</Typography>}
+              {activeTab === 0 && renderContent(hint)}
               {activeTab === 1 && (
                 <>
                   <Typography variant="subtitle1">Complexity: {complexity}</Typography>
-                  <Typography>{analysis}</Typography>
+                  {renderContent(analysis)}
                 </>
               )}
-              {activeTab === 2 && <Typography style={{ whiteSpace: "pre-wrap" }}>{modelAnswer}</Typography>}
+              {activeTab === 2 && renderContent(modelAnswer)}
             </Box>
           </>
         )}
