@@ -78,12 +78,9 @@ services:
   ai-hint-service:
     build: ./backend/ai-hint-service
     ports:
-      - "8000:8000"
-    environment:
-      - OPENAI_API_KEY=${OPENAI_API_KEY}  # Ensure you set this in your environment or .env file
+      - "3006:8000"
     depends_on:
-      - question  # Assuming 'question' service is needed to fetch question descriptions
-
+      - question # Assuming 'question' service is needed to fetch question descriptions
 
   frontend:
     build: ./frontend

@@ -1,8 +1,11 @@
-# backend/ai-hint-service/app/main.py
-
 from fastapi import FastAPI
+from openai import OpenAI
 from .routes import hint, code_analysis, model_answer
 from fastapi.middleware.cors import CORSMiddleware
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
 
 app = FastAPI(
     title="AI Hint Service",
@@ -10,11 +13,9 @@ app = FastAPI(
     version="1.0.0",
 )
 
-# CORS settings - adjust origins as needed
+
 origins = [
-    "http://localhost",
-    "http://localhost:80",
-    # Add other frontend URLs here
+    "*",
 ]
 
 app.add_middleware(
