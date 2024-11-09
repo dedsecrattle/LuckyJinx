@@ -8,6 +8,7 @@ const prisma = new PrismaClient();
 
 const DELAY_TIME = 30000;
 const CONFIRM_DELAY_TIME = 10000;
+const RELAX_CONSTRAINT_DELAY = 10000;
 
 export async function handleMatchingRequest(
   userRequest: any,
@@ -44,7 +45,139 @@ function sendConfirmDelayedTimeoutMessage(recordId: string) {
   );
 }
 
-export async function handleUserRequest(userRequest: any) {
+function sendRelaxConstraintsMessage(userRequest: any) {
+  userRequest["type"] = "relax_constraints";
+  sendDelayedMessage(userRequest, RELAX_CONSTRAINT_DELAY);
+  console.log("Scheduled to relax constraints for user:", userRequest.userId);
+}
+
+export async function handleUserRequestWithRelaxedConstraints(
+  userRequest: any
+) {
+  const { userId, topic, difficulty } = userRequest;
+
+  const user = await prisma.matchRecord.findFirst({
+    where: { userId, isPending: false, isArchived: false },
+  });
+
+  if (user) {
+    await prisma.matchRecord.update({
+      where: { recordId: user.recordId },
+      data: { constraintsRelaxed: true },
+    });
+  } else {
+    console.error(
+      `No match record found for user ${userId} during relaxed constraints matching`
+    );
+    return;
+  }
+
+  const excludedUserIds = [userId];
+
+  let existingMatch = null;
+
+  existingMatch = await prisma.matchRecord.findFirst({
+    where: {
+      topic,
+      difficulty,
+      matched: false,
+      isArchived: false,
+      userId: {
+        notIn: excludedUserIds,
+      },
+    },
+  });
+
+  if (existingMatch === null) {
+    existingMatch = await prisma.matchRecord.findFirst({
+      where: {
+        topic,
+        matched: false,
+        isArchived: false,
+        userId: {
+          notIn: excludedUserIds,
+        },
+      },
+    });
+  }
+
+  if (existingMatch !== null && existingMatch.constraintsRelaxed) {
+    // Proceed with matching logic
+    const roomNumber = uuidv4();
+    const question = await fetchRandomQuestion(difficulty, topic);
+
+    if (!question) {
+      io.to(userRequest.socketId).emit("question_error", {
+        message: "No Question found for the selected topic",
+      });
+      io.to(existingMatch.socketId).emit("question_error", {
+        message: "No Question found for the selected topic",
+      });
+      await prisma.matchRecord.delete({
+        where: { recordId: existingMatch.recordId },
+      });
+      return;
+    }
+
+    // Match found, update both records to mark as isPending
+    await prisma.matchRecord.update({
+      where: { recordId: existingMatch.recordId },
+      data: {
+        matched: true,
+        matchedUserId: userId,
+        isPending: true,
+        roomNumber,
+        questionId: question.questionId as number,
+      },
+    });
+
+    // Update current user's match record
+    const currentUserRecord = await prisma.matchRecord.findFirst({
+      where: { userId, isPending: false, isArchived: false },
+    });
+
+    if (currentUserRecord) {
+      await prisma.matchRecord.update({
+        where: { recordId: currentUserRecord.recordId },
+        data: {
+          matched: true,
+          matchedUserId: existingMatch.userId,
+          isPending: true,
+          roomNumber,
+          questionId: question.questionId as number,
+        },
+      });
+    } else {
+      console.error(
+        `No match record found for user ${userId} during relaxed constraints matching`
+      );
+      return;
+    }
+
+    // Update both clients about the successful match
+    io.to(currentUserRecord.socketId).emit("matched", {
+      matchedWith: existingMatch.userId,
+      roomNumber,
+      questionId: question.questionId,
+    });
+    io.to(existingMatch.socketId).emit("matched", {
+      matchedWith: userId,
+      roomNumber,
+      questionId: question.questionId,
+    });
+
+    sendConfirmDelayedTimeoutMessage(currentUserRecord.recordId.toString());
+    sendConfirmDelayedTimeoutMessage(existingMatch.recordId.toString());
+  } else {
+    console.log(
+      `No match found for ${userId} after relaxing constraints, waiting for future matches`
+    );
+  }
+}
+
+export async function handleUserRequestWithoutRelaxedConstraints(
+  userRequest: any
+) {
   const { userId, topic, difficulty, socketId } = userRequest;
 
   // Check if user already has a match record
@@ -122,35 +255,6 @@ export async function handleUserRequest(userRequest: any) {
     });
   }
 
-  if (existingMatch === null) {
-    // Third attempt: same topic and difficulty, including previous matches
-    existingMatch = await prisma.matchRecord.findFirst({
-      where: {
-        topic,
-        difficulty,
-        matched: false,
-        isArchived: false,
-        userId: {
-          not: userId,
-        },
-      },
-    });
-  }
-
-  if (existingMatch === null) {
-    // Fourth attempt: same topic, any difficulty, including previous matches
-    existingMatch = await prisma.matchRecord.findFirst({
-      where: {
-        topic,
-        matched: false,
-        isArchived: false,
-        userId: {
-          not: userId,
-        },
-      },
-    });
-  }
-
   if (existingMatch !== null) {
     // Proceed with matching logic
     const roomNumber = uuidv4();
@@ -172,7 +276,13 @@ export async function handleUserRequest(userRequest: any) {
     // Match found, update both records to mark as isPending
     await prisma.matchRecord.update({
       where: { recordId: existingMatch.recordId },
-      data: { matched: true, matchedUserId: userId, isPending: true },
+      data: {
+        matched: true,
+        matchedUserId: userId,
+        isPending: true,
+        roomNumber,
+        questionId: question.questionId as number,
+      },
     });
     const current = await prisma.matchRecord.create({
       data: {
@@ -188,7 +298,6 @@ export async function handleUserRequest(userRequest: any) {
       },
     });
 
-    // Update both clients about the successful match
     io.to(socketId).emit("matched", {
       matchedWith: existingMatch.userId,
       roomNumber,
@@ -204,7 +313,34 @@ export async function handleUserRequest(userRequest: any) {
     sendConfirmDelayedTimeoutMessage(current.recordId.toString());
     sendConfirmDelayedTimeoutMessage(existingMatch.recordId.toString());
   } else {
-    // No match found, add user to matchRecord
+    // No match found
+    // Add user to match record and schedule constraint relaxation
+    console.log(
+      `No match found for ${userId}, added to record and scheduling constraint relaxation`
+    );
+    await addOrUpdateMatchRecord(userRequest);
+    sendRelaxConstraintsMessage(userRequest);
+  }
+}
+
+async function addOrUpdateMatchRecord(userRequest: any) {
+  const { userId, topic, difficulty, socketId } = userRequest;
+
+  // Check if a matchRecord already exists for the user
+  const existingRecord = await prisma.matchRecord.findFirst({
+    where: { userId, isArchived: false, isPending: false, matched: false },
+  });
+
+  if (existingRecord) {
+    // Update the existing record's socketId if necessary
+    if (existingRecord.socketId !== socketId) {
+      await prisma.matchRecord.update({
+        where: { recordId: existingRecord.recordId },
+        data: { socketId },
+      });
+    }
+  } else {
+    // Create a new matchRecord
     const roomNumber = uuidv4();
     await prisma.matchRecord.create({
       data: {
@@ -216,8 +352,6 @@ export async function handleUserRequest(userRequest: any) {
         roomNumber,
       },
     });
-
-    console.log(`No match found for ${userId}, added to record`);
   }
 }
 
@@ -358,7 +492,7 @@ export async function handleMatchingDecline(userRequest: any) {
     data: { isArchived: true },
   });
 
-  // user decline, match failed regardlessly
+  // user decline, match failed regardless
   console.log(`User ${userId} declined match`);
   io.to(matchedRecord.socketId).emit(
     "other_declined",
@@ -430,7 +564,7 @@ export async function handleDisconnected(socketId: string) {
   const result = await prisma.matchRecord.findMany({
     where: { socketId },
   });
-  if (result !== null) {
+  if (result && result.length > 0) {
     await prisma.matchRecord.updateMany({
       where: { socketId },
       data: { isArchived: true },
