@@ -5,7 +5,7 @@ import {
   handleConfirmTimeout,
 } from "./matchingService";
 
-const RABBITMQ_URL = process.env.RABBITMQ_URL || "amqp://localhost";
+const RABBITMQ_URL = process.env.RABBITMQ_URL || "amqp://rabbitmq:5672";
 const QUEUE_NAME = "topic_queue_math";
 const DELAY_EXCHANGE = "delayed_exchange";
 const DELAY_QUEUE = "delayed_queue";
