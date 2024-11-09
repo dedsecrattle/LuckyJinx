@@ -30,7 +30,7 @@ const HintBox: React.FC<HintBoxProps> = ({ onClose, questionId, code, language }
       setError("");
       try {
         // Fetch Hint
-        console.log('Fetching hint for questionId:', questionId);
+        console.log("Fetching hint for questionId:", questionId);
         const hintResponse = await axios.get(`${AI_HINT_SERVICE_URL}/api/hint/${questionId}`, {
           headers: {
             "Content-Type": "application/json",
@@ -46,14 +46,14 @@ const HintBox: React.FC<HintBoxProps> = ({ onClose, questionId, code, language }
         });
         setModelAnswer(modelAnswerResponse.data.ai_answer);
         // setModelAnswer("Model answer is not available for this question.");
-        console.log('User code:', code);
-        console.log('User Language:', language);
+        console.log("User code:", code);
+        console.log("User Language:", language);
         // Fetch Code Complexity Analysis
         const analysisResponse = await axios.post(
           `${AI_HINT_SERVICE_URL}/api/code-analysis/`,
           {
-            userCode: String(code),
-            userLanguage: String(language),
+            code: code,
+            language: language,
           },
           {
             headers: {
