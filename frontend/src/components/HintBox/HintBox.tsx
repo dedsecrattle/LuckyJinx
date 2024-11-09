@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Typography, Button, CircularProgress, Tabs, Tab, Box } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
+import axios from "axios";
 import "./HintBox.scss";
-import { Language } from "@mui/icons-material";
 
 interface HintBoxProps {
   onClose: () => void;
@@ -10,6 +10,8 @@ interface HintBoxProps {
   code: string;
   language: string;
 }
+
+const AI_HINT_SERVICE_URL = process.env.REACT_APP_AI_HINT_URL;
 
 const HintBox: React.FC<HintBoxProps> = ({ onClose, questionId, code, language }) => {
   const [activeTab, setActiveTab] = useState<number>(0);
@@ -27,56 +29,36 @@ const HintBox: React.FC<HintBoxProps> = ({ onClose, questionId, code, language }
       setError("");
       try {
         // Fetch Hint
-        // const hintResponse = await fetch(`/ai-hint-service/api/hint/${questionId}`, {
-        const hintResponse = await fetch(`http://localhost:8000/api/hint/${questionId}`, {
-          method: "GET",
+        const hintResponse = await axios.get(`${AI_HINT_SERVICE_URL}/api/hint/${questionId}`, {
           headers: {
             "Content-Type": "application/json",
           },
         });
-
-        if (!hintResponse.ok) {
-          throw new Error(`Hint Error: ${hintResponse.statusText}`);
-        }
-
-        const hintData = await hintResponse.json();
-        setHint(hintData.hint);
+        setHint(hintResponse.data.hint);
 
         // Fetch Model Answer
-        const modelAnswerResponse = await fetch(`/ai-hint-service/api/model-answer/${questionId}`, {
-          method: "GET",
+        const modelAnswerResponse = await axios.get(`${AI_HINT_SERVICE_URL}/api/model-answer/${questionId}`, {
           headers: {
             "Content-Type": "application/json",
           },
         });
-
-        if (!modelAnswerResponse.ok) {
-          throw new Error(`Model Answer Error: ${modelAnswerResponse.statusText}`);
-        }
-
-        const modelAnswerData = await modelAnswerResponse.json();
-        setModelAnswer(modelAnswerData.model_answer);
+        setModelAnswer(modelAnswerResponse.data.model_answer);
 
         // Fetch Code Complexity Analysis
-        // Assuming you have access to the current code and language from props or context
-        const userCode = code; // Replace with actual code
-        const userLanguage = language; // Replace with actual language
-
-        const analysisResponse = await fetch(`/ai-hint-service/api/code-analysis/`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
+        const analysisResponse = await axios.post(
+          `${AI_HINT_SERVICE_URL}/api/code-analysis/`,
+          {
+            userCode: code,
+            userLanguage: language,
           },
-          body: JSON.stringify({ userCode, userLanguage }),
-        });
-
-        if (!analysisResponse.ok) {
-          throw new Error(`Code Analysis Error: ${analysisResponse.statusText}`);
-        }
-
-        const analysisData = await analysisResponse.json();
-        setComplexity(analysisData.complexity);
-        setAnalysis(analysisData.analysis);
+          {
+            headers: {
+              "Content-Type": "application/json",
+            },
+          },
+        );
+        setComplexity(analysisResponse.data.complexity);
+        setAnalysis(analysisResponse.data.analysis);
       } catch (err: any) {
         console.error("Failed to fetch AI hints:", err);
         setError("Failed to load AI hints. Please try again.");
@@ -86,7 +68,7 @@ const HintBox: React.FC<HintBoxProps> = ({ onClose, questionId, code, language }
     };
 
     fetchAllData();
-  }, [questionId]);
+  }, [questionId, code, language]);
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setActiveTab(newValue);
@@ -109,7 +91,13 @@ const HintBox: React.FC<HintBoxProps> = ({ onClose, questionId, code, language }
           <Typography color="error">{error}</Typography>
         ) : (
           <>
-            <Tabs value={activeTab} onChange={handleTabChange} indicatorColor="primary" textColor="primary" variant="fullWidth">
+            <Tabs
+              value={activeTab}
+              onChange={handleTabChange}
+              indicatorColor="primary"
+              textColor="primary"
+              variant="fullWidth"
+            >
               <Tab label="Hint" />
               <Tab label="Complexity Analysis" />
               <Tab label="Model Answer" />
