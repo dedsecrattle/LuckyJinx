@@ -142,6 +142,7 @@ const Interview = (): ReactElement => {
       setSessionState(SessionState.SUCCESS);
       setQuestionId(rejoinResponse.questionId);
       setRoomNumber(rejoinResponse.roomNumber);
+      setOtherUserId(rejoinResponse.otherUserId);
       navigate(`/code-editor/${rejoinResponse.roomNumber}`);
     } catch (error) {
       if (error instanceof AxiosError) {
