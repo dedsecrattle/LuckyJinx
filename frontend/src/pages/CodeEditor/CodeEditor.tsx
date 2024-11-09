@@ -245,7 +245,6 @@ const CodeEditor: React.FC = () => {
     setConfirmationDialogTitle("Leave Session");
     setConfirmationDialogContent("Are you sure you want to leave the session?");
     setConfirmationCallBack(() => () => {
-      SessionService.leaveSession(user?.id as string, roomNumber!);
       clearSocketsAndPeer();
       clearSession();
       navigate("/");
@@ -265,6 +264,13 @@ const CodeEditor: React.FC = () => {
     socket.on("connect", () => {
       console.log("Connected to socket.io server.");
       socket.emit("join_request", { room_id: roomNumber });
+    });
+
+    socket.on("disconnect", () => {
+      console.log("Disconnected from socket.io server.");
+      clearSocketsAndPeer();
+      clearSession();
+      navigate("/");
     });
 
     socket.on("join_request", (data: any) => {
@@ -334,6 +340,19 @@ const CodeEditor: React.FC = () => {
       });
     });
 
+    // Handle other user submitting code and ending session
+    socket.on("code_submitted", (sid: string) => {
+      console.log(`Code submitted: ${sid}`);
+      setMainDialogTitle("Code submitted");
+      setMainDialogContent(
+        "Your partner has submitted the code and ended the session. You can view the code in your session history!",
+      );
+      openMainDialog();
+      clearSocketsAndPeer();
+      clearSession();
+      navigate("/");
+    });
+
     // Handle socket errors
     socket.on("error", (error: any) => {
       console.error("Socket error:", error);
@@ -346,7 +365,6 @@ const CodeEditor: React.FC = () => {
           "Your partner has left the coding session. Would you like to end the session and return to home page?",
         );
         setConfirmationCallBack(() => () => {
-          SessionService.leaveSession(user?.id as string, roomNumber!);
           clearSocketsAndPeer();
           clearSession();
           navigate("/");
@@ -711,9 +729,7 @@ const CodeEditor: React.FC = () => {
       );
       setConfirmationCallBack(() => async () => {
         await SessionService.submitSession(user?.id as string, roomNumber!, codeRef.current, languageRef.current);
-        clearSocketsAndPeer();
-        clearSession();
-        navigate("/");
+        collaborationSocketRef.current?.emit("code_submitted");
       });
       openConfirmationDialog();
     } catch (error) {
