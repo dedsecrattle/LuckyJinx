@@ -2,7 +2,7 @@ FROM python:3.10
 
 WORKDIR /app
 
-RUN apt-get update \
+RUN apt-get update --fix-missing \
     # javascript
     && apt-get install -y nodejs \
     # tsc
