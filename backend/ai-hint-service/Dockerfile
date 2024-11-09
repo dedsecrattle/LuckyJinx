@@ -1,23 +1,24 @@
-# Use an official Node.js runtime as the base image
-FROM node:18-alpine
+# backend/ai-hint-service/Dockerfile
 
-# Set the working directory
+FROM python:3.9-slim
+
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
+# Set work directory
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
-
 # Install dependencies
-RUN npm install
+COPY requirements.txt .
+RUN pip install --upgrade pip
+RUN pip install -r requirements.txt
 
-# Copy the rest of the application code
-COPY . .
+# Copy application code
+COPY ./app /app/app
 
-# Build TypeScript (if using TypeScript)
-RUN npm run build
+# Expose port
+EXPOSE 8000
 
-# Expose the port
-EXPOSE 3006
-
-# Start the application
-CMD ["npm", "start"]
+# Command to run the application
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
