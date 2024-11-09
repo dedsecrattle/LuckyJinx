@@ -3,29 +3,43 @@ services:
     build: ./backend/question-service
     ports:
       - "3002:3002"
+    restart: on-failure
 
   user:
     build: ./backend/user-service
     ports:
       - "3001:3001"
+    restart: on-failure
 
   code-execution-rabbitmq:
     image: rabbitmq:4.0-management
     ports:
       - "7004:5672"
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   code-execution-redis:
     image: redis:alpine
     ports:
       - "7001:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   code-execution-server:
     build: ./backend/code-execution-service/server
     ports:
       - "7002:7002"
     depends_on:
-      - code-execution-rabbitmq
-      - code-execution-redis
+      code-execution-rabbitmq:
+        condition: service_healthy
+      code-execution-redis:
+        condition: service_healthy
 
   code-execution-worker:
     build: ./backend/code-execution-service/worker
@@ -33,10 +47,12 @@ services:
     cpus: 1
     mem_limit: 150M
     depends_on:
-      - code-execution-rabbitmq
-      - code-execution-redis
+      code-execution-rabbitmq:
+        condition: service_healthy
+      code-execution-redis:
+        condition: service_healthy
     deploy:
-      replicas: 4
+      replicas: 1
       restart_policy:
         condition: any
         delay: 3s
@@ -66,9 +82,6 @@ services:
         condition: service_healthy
     ports:
       - "3003:3003"
-    environment:
-      DATABASE_URL: "file:./dev.db"
-      RABBITMQ_URL: "amqp://rabbitmq:5672"
 
   collaboration:
     build: ./backend/collaboration-service
@@ -77,8 +90,9 @@ services:
 
   frontend:
     build: ./frontend
-    env_file:
-      - ./frontend/nginx/.env
+    environment:
+      - QUESTION_SERVICE_URL=http://question:3002
+      - USER_SERVICE_URL=http://user:3001/
     ports:
       - "80:80"
     depends_on:
