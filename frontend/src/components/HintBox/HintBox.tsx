@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Typography, Button, CircularProgress, Tabs, Tab, Box } from "@mui/material";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import { materialDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import { materialDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 import CloseIcon from "@mui/icons-material/Close";
 import axios from "axios";
 import "./HintBox.scss";
