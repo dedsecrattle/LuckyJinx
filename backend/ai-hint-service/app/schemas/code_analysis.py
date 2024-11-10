@@ -5,5 +5,5 @@ class CodeAnalysisRequest(BaseModel):
     language: str  # e.g., "python", "cpp", "java"
 
 class CodeAnalysisResponse(BaseModel):
-    complexity: str
+    # complexity: str
     analysis: str

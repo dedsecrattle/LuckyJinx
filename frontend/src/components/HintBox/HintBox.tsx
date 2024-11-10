@@ -21,7 +21,7 @@ const HintBox: React.FC<HintBoxProps> = ({ onClose, questionId, code, language }
   const [error, setError] = useState<string>("");
 
   const [hint, setHint] = useState<string>("");
-  const [complexity, setComplexity] = useState<string>("");
+  // const [complexity, setComplexity] = useState<string>("");
   const [analysis, setAnalysis] = useState<string>("");
   const [modelAnswer, setModelAnswer] = useState<string>("");
 
@@ -33,11 +33,11 @@ const HintBox: React.FC<HintBoxProps> = ({ onClose, questionId, code, language }
         const hintResponse = await axios.get(`${AI_HINT_SERVICE_URL}/api/hint/${questionId}`);
         setHint(hintResponse.data.hint);
 
-        const modelAnswerResponse = await axios.get(`${AI_HINT_SERVICE_URL}/api/ai_answer/${questionId}`);
+        const modelAnswerResponse = await axios.post(`${AI_HINT_SERVICE_URL}/api/ai_answer/`, { question_id: questionId, language: language });
         setModelAnswer(modelAnswerResponse.data.ai_answer);
 
-        const analysisResponse = await axios.post(`${AI_HINT_SERVICE_URL}/api/code-analysis/`, { code, language });
-        setComplexity(analysisResponse.data.complexity);
+        const analysisResponse = await axios.post(`${AI_HINT_SERVICE_URL}/api/code-analysis/`, { code: code, language: language });
+        // setComplexity(analysisResponse.data.complexity);
         setAnalysis(analysisResponse.data.analysis);
       } catch (err) {
         setError("Failed to load AI hints. Please try again.");
@@ -59,7 +59,7 @@ const HintBox: React.FC<HintBoxProps> = ({ onClose, questionId, code, language }
         // Strip backticks and render code with SyntaxHighlighter
         const code = section.slice(3, -3).trim();
         return (
-          <SyntaxHighlighter key={index} language="python" style={materialDark}>
+          <SyntaxHighlighter key={index} language={language} style={materialDark}>
             {code}
           </SyntaxHighlighter>
         );
@@ -105,7 +105,7 @@ const HintBox: React.FC<HintBoxProps> = ({ onClose, questionId, code, language }
               {activeTab === 0 && renderContent(hint)}
               {activeTab === 1 && (
                 <>
-                  <Typography variant="subtitle1">Complexity: {complexity}</Typography>
+                  {/* <Typography variant="subtitle1">Complexity: {complexity}</Typography> */}
                   {renderContent(analysis)}
                 </>
               )}

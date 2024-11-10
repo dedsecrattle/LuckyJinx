@@ -1,23 +1,24 @@
 from fastapi import APIRouter, HTTPException
 from ..services.openai_service import generate_ai_answer
-from ..schemas.ai_answer import ModelAnswerResponse
+from ..schemas.ai_answer import AiAnswerRequest, AiAnswerResponse
 from typing import Optional
 
 router = APIRouter()
 
-@router.get("/{question_id}", response_model=ModelAnswerResponse)
-async def get_ai_answer(question_id: int):
+@router.post("/", response_model=AiAnswerResponse)
+async def get_ai_answer(request: AiAnswerRequest):
     """
     Generate a model answer for the given question ID.
     """
     # Placeholder: Fetch question description from the question service
-    question_description = fetch_question_description(question_id)
+    question_description = fetch_question_description(request.question_id)
     if not question_description:
         raise HTTPException(status_code=404, detail="Question not found.")
     
     try:
-        ai_answer = generate_ai_answer(question_description, language="python")  # Adjust language as needed
-        return ModelAnswerResponse(ai_answer=ai_answer)
+        ai_answer = generate_ai_answer(question_description, language=request.language)  
+        print(ai_answer)
+        return AiAnswerResponse(ai_answer=ai_answer)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
