@@ -33,10 +33,16 @@ const HintBox: React.FC<HintBoxProps> = ({ onClose, questionId, code, language }
         const hintResponse = await axios.get(`${AI_HINT_SERVICE_URL}/api/hint/${questionId}`);
         setHint(hintResponse.data.hint);
 
-        const modelAnswerResponse = await axios.post(`${AI_HINT_SERVICE_URL}/api/ai_answer/`, { question_id: questionId, language: language });
+        const modelAnswerResponse = await axios.post(`${AI_HINT_SERVICE_URL}/api/ai_answer/`, {
+          question_id: questionId,
+          language: language,
+        });
         setModelAnswer(modelAnswerResponse.data.ai_answer);
 
-        const analysisResponse = await axios.post(`${AI_HINT_SERVICE_URL}/api/code-analysis/`, { code: code, language: language });
+        const analysisResponse = await axios.post(`${AI_HINT_SERVICE_URL}/api/code-analysis/`, {
+          code: code,
+          language: language,
+        });
         // setComplexity(analysisResponse.data.complexity);
         setAnalysis(analysisResponse.data.analysis);
       } catch (err) {
