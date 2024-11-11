@@ -17,7 +17,7 @@ def execute(code: str, lang: str, input: str, timeout: int) -> tuple[str | None,
             result =  _execute_java(code, input, timeout)
         case "c":
             result =  _execute_c(code, input, timeout)
-        case "c++":
+        case "cpp":
             result =  _execute_cpp(code, input, timeout)
     _cleanup()
     return result
