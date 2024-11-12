@@ -126,6 +126,13 @@ services:
       - USER_SERVICE_URL=http://user:3001
       - MATCHING_SERVICE_URL=http://matching:3003
 
+  ai-hint-service:
+    build: ./backend/ai-hint-service
+    ports:
+      - "3006:8000"
+    depends_on:
+      - question # Assuming 'question' service is needed to fetch question descriptions
+
   frontend:
     image: echomo/cs3219-frontend
     environment:
@@ -144,3 +151,4 @@ services:
       - question
       - collaboration
       - rabbitmq
+      - ai-hint-service # Ensure frontend waits for ai-hint-service

@@ -4,3 +4,4 @@ class Events:
     CURSOR_UPDATED = 'cursor_updated'
     USER_LEFT = 'user_left'
     LANGUAGE_CHANGE= 'language_change'
+    CODE_SUBMITTED = 'code_submitted'

@@ -12,7 +12,7 @@ from user import UserAuthentication
 
 
 app = FastAPI()
-languages = ["python", "javascript", "typescript", "java", "c", "c++"]
+languages = ["python", "javascript", "typescript", "java", "c", "cpp"]
 authentication = UserAuthentication()
 
 

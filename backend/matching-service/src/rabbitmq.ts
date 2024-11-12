@@ -1,8 +1,9 @@
 import amqp from "amqplib";
 import {
-  handleUserRequest,
+  handleUserRequestWithRelaxedConstraints,
   handleTimeout,
   handleConfirmTimeout,
+  handleUserRequestWithoutRelaxedConstraints,
 } from "./matchingService";
 
 const RABBITMQ_URL = process.env.RABBITMQ_URL || "amqp://rabbitmq:5672";
@@ -29,7 +30,7 @@ export async function setupRabbitMQ() {
       if (msg !== null) {
         const userRequest = JSON.parse(msg.content.toString());
         console.log("Received from queue:", userRequest);
-        await handleUserRequest(userRequest);
+        await handleUserRequestWithoutRelaxedConstraints(userRequest);
         rabbitMQChannel.ack(msg);
       }
     });
@@ -43,8 +44,9 @@ export async function setupRabbitMQ() {
           await handleTimeout(userRequest);
         } else if (userRequest.type === "confirm_timeout") {
           await handleConfirmTimeout(userRequest.recordId);
+        } else if (userRequest.type === "relax_constraints") {
+          await handleUserRequestWithRelaxedConstraints(userRequest);
         }
-
         rabbitMQChannel.ack(msg);
       }
     });
@@ -66,6 +68,6 @@ export function sendDelayedMessage(message: any, delay: number) {
     Buffer.from(JSON.stringify(message)),
     {
       headers: { "x-delay": delay },
-    },
+    }
   );
 }

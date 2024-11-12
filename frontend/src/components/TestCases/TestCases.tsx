@@ -3,39 +3,59 @@ import { Typography, Button, TextField, IconButton } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import "./TestCases.scss";
 import { EditNote } from "@mui/icons-material";
-
-interface TestCase {
-  id: string;
-  number: number;
-  input: string;
-  expectedOutput: string;
-  actualOutput?: {
-    output: string | null;
-    error: string | null;
-    isCorrect: boolean | null;
-  };
-  isSubmitted?: boolean;
-}
+import { TestCase } from "../../models/question.model";
 
 interface TestCasesProps {
   givenTestCases: TestCase[];
   customTestCases: TestCase[];
-  addTestCase: () => void;
-  updateTestCase: (id: string, field: "input" | "expectedOutput", value: string) => void;
-  unsubmitTestCase: (id: string) => void;
-  submitTestCase: (id: string) => void;
-  deleteTestCase: (id: string) => void;
+  setCustomTestCases: React.Dispatch<React.SetStateAction<TestCase[]>>;
 }
 
-const TestCases: React.FC<TestCasesProps> = ({
-  givenTestCases,
-  customTestCases,
-  addTestCase,
-  updateTestCase,
-  unsubmitTestCase,
-  submitTestCase,
-  deleteTestCase,
-}) => {
+const TestCases: React.FC<TestCasesProps> = ({ givenTestCases, customTestCases, setCustomTestCases }) => {
+  const addTestCase = () => {
+    if (givenTestCases.length + customTestCases.length >= 5) {
+      // Adjust the limit as needed
+      alert("You can only add up to 5 test cases.");
+      return;
+    }
+    const newTestCase: TestCase = {
+      id: `user-${Date.now()}`,
+      number: givenTestCases.length + customTestCases.length + 1,
+      input: "",
+      expectedOutput: "",
+      isSubmitted: false,
+    };
+    setCustomTestCases([...customTestCases, newTestCase]);
+  };
+
+  // Function to update a test case field
+  const updateTestCase = (id: string, field: "input" | "expectedOutput", value: string) => {
+    const updatedTestCases = customTestCases.map((tc) => (tc.id === id ? { ...tc, [field]: value } : tc));
+    setCustomTestCases(updatedTestCases);
+  };
+
+  // Make a custom test case editable
+  const unsubmitTestCase = (id: string) => {
+    setCustomTestCases(customTestCases.map((tc) => (tc.id === id ? { ...tc, isSubmitted: false } : tc)));
+  };
+
+  // Function to submit a test case (mark as submitted)
+  const submitTestCase = (id: string) => {
+    const updatedTestCases = customTestCases.map((tc) => (tc.id === id ? { ...tc, isSubmitted: true } : tc));
+    setCustomTestCases(updatedTestCases);
+  };
+
+  // Function to delete a test case
+  const deleteTestCase = (id: string) => {
+    const updatedTestCases = customTestCases.filter((tc) => tc.id !== id);
+    // Re-number the remaining test cases
+    const renumberedTestCases = updatedTestCases.map((tc, index) => ({
+      ...tc,
+      number: givenTestCases.length + index + 1,
+    }));
+    setCustomTestCases(renumberedTestCases);
+  };
+
   return (
     <div className="test-cases-box">
       <div className="test-cases-header">

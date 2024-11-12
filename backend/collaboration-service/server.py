@@ -158,6 +158,29 @@ async def language_change(sid, data):
     except Exception as e:
         logging.error(f"Failed to emit LANGUAGE_CHANGE for user {sid}: {e}")
 
+@sio.on(Events.CODE_SUBMITTED)
+async def code_submitted(sid):
+    logging.debug(f'code_submitted {sid=}')
+    user: User = User.users.get(sid)
+
+    if user is None:
+        logging.error(f"User not found for sid {sid}")
+        return
+    
+    if user.room is None:
+        logging.error(f"User {sid} is not associated with any room")
+        return
+
+    user.room.submitted = True
+    
+    try:
+        await sio.emit(Events.CODE_SUBMITTED, None, room=user.room.id, skip_sid=sid)
+        logging.debug(f"Emitted CODE_SUBMITTED to room {user.room.id}")
+    except Exception as e:
+        logging.error(f"Failed to emit CODE_SUBMITTED for user {sid}: {e}")
+
+    await sio.disconnect(sid);
+
 
 @sio.event
 async def disconnect(sid):
@@ -181,7 +204,7 @@ async def disconnect(sid):
 
     room_still_exists = room.remove_user(user)
     
-    if room_still_exists:
+    if room_still_exists and not room.submitted:
         try:
             await sio.emit(Events.USER_LEFT, user.details(), room=room.id)
             logging.debug(f"Emitted USER_LEFT to room {room.id}")
