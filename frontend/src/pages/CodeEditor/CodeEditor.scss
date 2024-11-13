@@ -14,33 +14,6 @@
   background: var(--Grey-10, #1a1a1a);
 }
 
-.ai-hint-button {
-  position: fixed;
-  top: 20px;
-  left: 20px;
-  background-color: #2e2e2e;
-  border-radius: 20px;
-  padding: 10px 20px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
-  transition:
-    background-color 0.2s ease,
-    transform 0.2s ease;
-  z-index: 1000;
-}
-
-.ai-hint-button:hover {
-  background-color: #373737;
-  transform: scale(1.05);
-}
-
-.ai-hint-button .MuiTypography-root {
-  color: #fff;
-  font-size: 1rem;
-  margin-left: 8px;
-}
 .buttons {
   margin: 10px;
 }

@@ -17,9 +17,11 @@ import { useMainDialog } from "../../contexts/MainDialogContext";
 import QuestionService from "../../services/question.service";
 import { SessionContext } from "../../contexts/SessionContext";
 import { UserContext } from "../../contexts/UserContext";
-import { Button } from "@mui/material";
+import { Button, Typography } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import "./CodeContainer.scss";
+import HintBox from "../HintBox/HintBox";
+import LightbulbIcon from "@mui/icons-material/Lightbulb";
 
 const COLLABORATION_WEBSOCKET_URL = process.env.REACT_APP_COLLABORATION_SERVICE_URL as string;
 
@@ -126,6 +128,8 @@ const CodeContainer: React.FC<CodeContainerProps> = ({
   const [language, setLanguage] = useState<Language>("python");
   const codeRef = useRef<string>(code);
   const languageRef = useRef<Language>(language);
+
+  const [isHintBoxExpanded, setIsHintBoxExpanded] = useState(false);
 
   const [joinedRoom, setJoinedRoom] = useState(false);
   const [isExecuting, setIsExecuting] = useState<boolean>(false);
@@ -447,6 +451,25 @@ const CodeContainer: React.FC<CodeContainerProps> = ({
           theme={okaidia}
         />
       </div>
+
+      {/* Floating AI Hint Button */}
+      {!isHintBoxExpanded && (
+        <div className="ai-hint-button" onClick={() => setIsHintBoxExpanded(true)}>
+          <LightbulbIcon style={{ marginRight: "8px", color: "#FFD700" }} />
+          <Typography variant="body1" style={{ color: "#fff" }}>
+            AI Hint
+          </Typography>
+        </div>
+      )}
+
+      {isHintBoxExpanded && questionData && (
+        <HintBox
+          questionId={questionId}
+          onClose={() => setIsHintBoxExpanded(false)}
+          code={code} // Pass the current code
+          language={language} // Pass the current language
+        />
+      )}
     </div>
   );
 };
