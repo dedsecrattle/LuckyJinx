@@ -1,6 +1,6 @@
 services:
   question:
-    image: echomo/cs3219-question
+    image: echomo/cs3219-question:test1
     ports:
       - "3002:3002"
     restart: always
@@ -11,7 +11,7 @@ services:
       - CODE_EXECUTION_SERVICE_URL=http://code-execution-server:7002
 
   user:
-    image: echomo/cs3219-user
+    image: echomo/cs3219-user:test0
     ports:
       - "3001:3001"
     restart: always
@@ -42,7 +42,7 @@ services:
       retries: 5
 
   code-execution-server:
-    image: echomo/cs3219-code-exec-server
+    image: echomo/cs3219-code-exec-server:test0
     ports:
       - "7002:7002"
     restart: always
@@ -59,7 +59,7 @@ services:
       - USER_SERVICE_URL=http://user:3001
 
   code-execution-worker:
-    image: echomo/cs3219-code-exec-worker
+    image: echomo/cs3219-code-exec-worker:test0
     pids_limit: 60
     cpus: 1
     mem_limit: 150M
@@ -95,7 +95,7 @@ services:
       retries: 5
 
   communication:
-    image: echomo/cs3219-communication
+    image: echomo/cs3219-communication:test0
     ports:
       - "3004:3004"
       - "9000:9000"
@@ -105,7 +105,7 @@ services:
       - PEERJS_PORT=9000
 
   matching:
-    image: echomo/cs3219-matching
+    image: echomo/cs3219-matching:test0
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -118,7 +118,7 @@ services:
       - RABBITMQ_URL=amqp://rabbitmq:5672
 
   collaboration:
-    image: echomo/cs3219-collaboration
+    image: echomo/cs3219-collaboration:test1
     ports:
       - "3005:3005"
     restart: always
@@ -128,17 +128,17 @@ services:
       - MATCHING_SERVICE_URL=http://matching:3003
 
   ai-hint-service:
-    build: ./backend/ai-hint-service
+    image: echomo/cs3219-ai-hint:test0
     ports:
       - "3006:8000"
     depends_on:
-      - question # Assuming 'question' service is needed to fetch question descriptions
+      - question
     environment:
       - OPENAI_API_KEY=sk-proj-<> # Add your own OpenAI API key
       - QUESTION_SERVICE_URL=http://question:3002
 
   frontend:
-    build: ./frontend
+    image: echomo/cs3219-frontend:test5
     environment:
       - REACT_APP_USER_SERVICE_URL=http://localhost:3001/
       - REACT_APP_QUESTION_SERVICE_URL=http://localhost:3002/
