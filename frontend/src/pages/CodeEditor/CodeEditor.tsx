@@ -11,7 +11,6 @@ import QuestionService from "../../services/question.service";
 import { UserContext } from "../../contexts/UserContext";
 import { ChatMessage } from "../../models/communication.model";
 import { SessionContext, SessionState } from "../../contexts/SessionContext";
-import { useConfirmationDialog } from "../../contexts/ConfirmationDialogContext";
 import Peer, { MediaConnection } from "peerjs";
 import TestCases from "../../components/TestCases/TestCases";
 import { Circle } from "@mui/icons-material";
@@ -25,8 +24,6 @@ const VIDEO_PEER_SERVICE_PORT = process.env.REACT_APP_VIDEO_SERVICE_PORT;
 const CodeEditor: React.FC = () => {
   const { user } = useContext(UserContext);
   const { sessionState, questionId, clearSession, otherUserId, otherUserProfile } = useContext(SessionContext);
-  const { setConfirmationDialogTitle, setConfirmationDialogContent, setConfirmationCallBack, openConfirmationDialog } =
-    useConfirmationDialog();
   const navigate = useNavigate();
 
   const { roomNumber } = useParams();
@@ -313,25 +310,6 @@ const CodeEditor: React.FC = () => {
             customTestCases={customTestCases}
             setCustomTestCases={setCustomTestCases}
           />
-        </div>
-
-        <div className="buttons">
-          <Button
-            variant="contained"
-            color="error"
-            className="buttons-leave"
-            onClick={() => {
-              setConfirmationDialogTitle("Leave Session");
-              setConfirmationDialogContent("Are you sure you want to leave the session?");
-              setConfirmationCallBack(() => () => {
-                clearSession();
-                navigate("/");
-              });
-              openConfirmationDialog();
-            }}
-          >
-            Leave Session
-          </Button>
         </div>
       </div>
 
