@@ -2,9 +2,7 @@ import React, { useState, useEffect, useRef, useContext } from "react";
 import { Button, Typography } from "@mui/material";
 import Chatbox from "../../components/Chatbox/Chatbox";
 import VideoCall from "../../components/VideoCall/VideoCall";
-import HintBox from "../../components/HintBox/HintBox";
 import VideoCallIcon from "@mui/icons-material/VideoCall";
-import LightbulbIcon from "@mui/icons-material/Lightbulb";
 import ChatIcon from "@mui/icons-material/Chat";
 import io, { Socket } from "socket.io-client";
 import "./CodeEditor.scss";
@@ -39,7 +37,6 @@ const CodeEditor: React.FC = () => {
   const [customTestCases, setCustomTestCases] = useState<TestCase[]>([]);
 
   // States for UI display
-  const [isHintBoxExpanded, setIsHintBoxExpanded] = useState(false);
   const [isChatboxExpanded, setIsChatboxExpanded] = useState(false);
   const [isVideoCallExpanded, setIsVideoCallExpanded] = useState(false);
   const [hasNewChatMessage, setHasNewChatMessage] = useState(false);
@@ -398,25 +395,6 @@ const CodeEditor: React.FC = () => {
           isAudioEnabled={isAudioEnabled}
         />
       </div>
-
-      {/* Floating AI Hint Button */}
-      {!isHintBoxExpanded && (
-        <div className="ai-hint-button" onClick={() => setIsHintBoxExpanded(true)}>
-          <LightbulbIcon style={{ marginRight: "8px", color: "#FFD700" }} />
-          <Typography variant="body1" style={{ color: "#fff" }}>
-            AI Hint
-          </Typography>
-        </div>
-      )}
-
-      {isHintBoxExpanded && questionData && (
-        <HintBox
-          questionId={questionId}
-          onClose={() => setIsHintBoxExpanded(false)}
-          code={code} // Pass the current code
-          language={language} // Pass the current language
-        />
-      )}
     </div>
   );
 };
