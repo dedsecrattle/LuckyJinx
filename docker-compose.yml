@@ -84,6 +84,7 @@ services:
 
   rabbitmq:
     image: dedsecrattle/rabbitmq-delayed-exchange
+    restart: always
     ports:
       - "5672:5672" # RabbitMQ message broker
       - "15672:15672" # RabbitMQ management plugin
@@ -132,15 +133,19 @@ services:
       - "3006:8000"
     depends_on:
       - question # Assuming 'question' service is needed to fetch question descriptions
+    environment:
+      - OPENAI_API_KEY=sk-proj-<> # Add your own OpenAI API key
+      - QUESTION_SERVICE_URL=http://question:3002
 
   frontend:
-    image: echomo/cs3219-frontend
+    build: ./frontend
     environment:
       - REACT_APP_USER_SERVICE_URL=http://localhost:3001/
       - REACT_APP_QUESTION_SERVICE_URL=http://localhost:3002/
       - REACT_APP_MATCHING_SERVICE_URL=http://localhost:3003
       - REACT_APP_COMMUNICATION_SERVICE_URL=http://localhost:3004
       - REACT_APP_COLLABORATION_SERVICE_URL=http://localhost:3005
+      - REACT_APP_AI_HINT_URL=http://localhost:3006
       - REACT_APP_VIDEO_SERVICE_PORT=9000
     ports:
       - "80:80"
@@ -151,4 +156,4 @@ services:
       - question
       - collaboration
       - rabbitmq
-      - ai-hint-service # Ensure frontend waits for ai-hint-service
+      - ai-hint-service
