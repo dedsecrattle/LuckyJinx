@@ -367,7 +367,7 @@ const CodeContainer: React.FC<CodeContainerProps> = ({
         if (submissionIndex !== -1) {
           return {
             ...tc,
-            actualOutput: outputs[submissionIndex],
+            actualOutput: outputs[submissionIndex + givenTestCases.length],
           };
         }
         return tc;
