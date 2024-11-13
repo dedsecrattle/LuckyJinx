@@ -206,7 +206,7 @@ async def disconnect(sid):
     
     if room_still_exists and not room.submitted:
         try:
-            await sio.emit(Events.USER_LEFT, user.details(), room=room.id)
+            await sio.emit(Events.USER_LEFT, {"sid": sid, "uid": user.user_id}, room=room.id)
             logging.debug(f"Emitted USER_LEFT to room {room.id}")
         except Exception as e:
             logging.error(f"Failed to emit USER_LEFT for room {room.id}: {e}")

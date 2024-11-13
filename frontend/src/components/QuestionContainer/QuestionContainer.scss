@@ -1,5 +1,14 @@
 .question-container {
   margin-bottom: 20px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+
+  .question-header {
+    display: flex;
+    flex-direction: column;
+  }
 
   .question-title {
     margin-bottom: 10px;
@@ -17,5 +26,9 @@
       color: #ffffff;
       border-radius: 6px;
     }
+  }
+
+  .leave-button {
+    margin-right: 20px;
   }
 }

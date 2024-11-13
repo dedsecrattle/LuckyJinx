@@ -145,13 +145,9 @@ export async function handleUserRequestWithRelaxedConstraints(userRequest: any) 
     // Update both clients about the successful match
     io.to(currentUserRecord.socketId).emit("matched", {
       matchedWith: existingMatch.userId,
-      roomNumber,
-      questionId: question.questionId,
     });
     io.to(existingMatch.socketId).emit("matched", {
       matchedWith: userId,
-      roomNumber,
-      questionId: question.questionId,
     });
 
     sendConfirmDelayedTimeoutMessage(currentUserRecord.recordId.toString());
