@@ -1,12 +1,12 @@
 .CodeContainer {
   display: flex;
+  justify-content: space-between;
 
   .left-side {
-    flex: 0.4;
-    padding: 10px;
+    width: 35%;
     color: #fff;
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
 
     .md-editor {
       background-color: #1e1e1e;
@@ -14,49 +14,58 @@
       border: 1px solid #3c3c3c;
       padding: 20px;
       color: #fff;
-      height: 500px;
       overflow: auto;
     }
   }
 
   .right-side {
-    flex: 0.6;
-    padding: 10px;
+    width: 63%;
+    max-width: 63%;
     color: #fff;
-    display: flex;
-    flex-direction: column;
+
+    .right-side-container {
+      background-color: #2c2c2c;
+      border-radius: 10px;
+      border: 1px solid #3c3c3c;
+    }
 
     .header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 10px;
+      margin-inline: 10px;
 
       .language-select {
         background-color: #1e1e1e;
         color: #fff;
         border: 1px solid #3c3c3c;
-        padding: 5px;
+        border-radius: 10px !important;
+        margin: 0px;
+      }
+
+      .language-select-icon {
+        color: white !important;
+      }
+
+      .buttons {
+        display: flex;
+        gap: 20px;
+      }
+
+      .runcode-button {
         border-radius: 5px;
       }
 
       .submit-button {
-        background-color: #caff33;
-        color: #121212;
         border-radius: 5px;
-
-        &.disabled {
-          color: #6c757d;
-        }
       }
     }
 
     .code-editor {
-      background-color: #1e1e1e;
-      border-radius: 10px;
       border: 1px solid #3c3c3c;
-      color: #fff;
       overflow: hidden;
+      font-size: 18px;
+      height: 500px;
     }
   }
 
