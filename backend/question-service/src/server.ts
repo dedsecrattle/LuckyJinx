@@ -24,7 +24,7 @@ app.use(
 app.use("/", questionRoutes);
 
 // Start the server
-app.listen(PORT, () => {
-  connectToDB();
+app.listen(PORT, async () => {
+  await connectToDB();
   console.log(`Server running on port ${PORT}`);
 });
