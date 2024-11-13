@@ -17,7 +17,7 @@ import { useMainDialog } from "../../contexts/MainDialogContext";
 import QuestionService from "../../services/question.service";
 import { SessionContext } from "../../contexts/SessionContext";
 import { UserContext } from "../../contexts/UserContext";
-import { Button, Typography } from "@mui/material";
+import { Button, MenuItem, Select, SelectChangeEvent, Typography } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import "./CodeContainer.scss";
 import HintBox from "../HintBox/HintBox";
@@ -285,7 +285,7 @@ const CodeContainer: React.FC<CodeContainerProps> = ({
     [sid: string]: { cursor_position: number; color: string };
   }>({});
 
-  const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleLanguageChange = (e: SelectChangeEvent) => {
     const newLanguage = e.target.value as Language;
     if (["python", "cpp", "javascript", "java"].includes(newLanguage)) {
       setLanguage(newLanguage);
@@ -420,36 +420,55 @@ const CodeContainer: React.FC<CodeContainerProps> = ({
       </div>
 
       <div className="right-side">
-        <div className="header">
-          <select className="language-select" onChange={handleLanguageChange} value={language}>
-            <option value="python">Python</option>
-            <option value="cpp">C++</option>
-            <option value="java">Java</option>
-          </select>
-          <div>
-            <Button
-              variant="contained"
+        <div className="right-side-container">
+          <div className="header">
+            <Select
+              className="language-select"
+              value={language}
               size="small"
-              className={"submit-button" + (isExecuting ? " disabled" : "")}
-              onClick={executeCode}
-              disabled={isExecuting}
+              autoWidth
+              onChange={handleLanguageChange}
+              inputProps={{
+                classes: {
+                  icon: "language-select-icon",
+                },
+              }}
             >
-              Run Code
-            </Button>
-            <Button variant="contained" size="small" onClick={submitAndEndSession} disabled={isExecuting}>
-              Submit
-            </Button>
+              <MenuItem value="python">Python</MenuItem>
+              <MenuItem value="cpp">C++</MenuItem>
+              <MenuItem value="java">Java</MenuItem>
+            </Select>
+            <div className="buttons">
+              <Button
+                variant="outlined"
+                size="small"
+                className="runcode-button"
+                onClick={executeCode}
+                disabled={isExecuting}
+              >
+                Run Code
+              </Button>
+              <Button
+                className="submit-button"
+                variant="contained"
+                size="small"
+                onClick={submitAndEndSession}
+                disabled={isExecuting}
+              >
+                Submit
+              </Button>
+            </div>
           </div>
+          <CodeMirror
+            value={code}
+            className={"code-editor"}
+            height="500px"
+            extensions={[...(languageExtensions[language] || []), cursorDecorationsExtension]}
+            onChange={handleCodeChange}
+            onUpdate={(viewUpdate) => handleCursorChange(viewUpdate)}
+            theme={okaidia}
+          />
         </div>
-        <CodeMirror
-          value={code}
-          height="500px"
-          style={{ fontSize: "18px" }}
-          extensions={[...(languageExtensions[language] || []), cursorDecorationsExtension]}
-          onChange={handleCodeChange}
-          onUpdate={(viewUpdate) => handleCursorChange(viewUpdate)}
-          theme={okaidia}
-        />
       </div>
 
       {/* Floating AI Hint Button */}
