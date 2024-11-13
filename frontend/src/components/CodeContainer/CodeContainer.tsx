@@ -219,16 +219,6 @@ const CodeContainer: React.FC<CodeContainerProps> = ({
       }));
     });
 
-    // Handle user disconnection to remove their cursor
-    socket.on("user_disconnected", (sid: string) => {
-      console.log(`User disconnected: ${sid}`);
-      setOtherCursors((prev) => {
-        const newCursors = { ...prev };
-        delete newCursors[sid];
-        return newCursors;
-      });
-    });
-
     // Handle other user submitting code and ending session
     socket.on("code_submitted", (sid: string) => {
       console.log(`Code submitted: ${sid}`);
@@ -246,8 +236,14 @@ const CodeContainer: React.FC<CodeContainerProps> = ({
       console.error("Socket error:", error);
     });
 
-    socket.on("user_left", (uid: string) => {
-      if (user && uid !== user.id) {
+    socket.on("user_left", (data: any) => {
+      console.log("User left: ", data);
+      if (user && user.id !== data.user_id) {
+        setOtherCursors((prev) => {
+          const newCursors = { ...prev };
+          delete newCursors[data.sid];
+          return newCursors;
+        });
         setConfirmationDialogTitle("Partner Disconnected");
         setConfirmationDialogContent(
           "Your partner has left the coding session. Would you like to end the session and return to home page?",
