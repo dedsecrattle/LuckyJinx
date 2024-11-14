@@ -105,7 +105,7 @@ services:
       - PEERJS_PORT=9000
 
   matching:
-    image: echomo/cs3219-matching:test0
+    image: echomo/cs3219-matching:test1
     depends_on:
       rabbitmq:
         condition: service_healthy
