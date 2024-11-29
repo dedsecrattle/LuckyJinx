@@ -1,8 +1,4 @@
-Below is the updated README with the **Tech Stack** section added and emphasized.
-
----
-
-# CS3219 Project: Collaborative Coding Platform
+# LuckyJinx
 
 ## Overview
 
